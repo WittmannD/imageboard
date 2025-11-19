@@ -1,0 +1,39 @@
+{
+  "name": "imageboard",
+  "version": "0.0.0",
+  "description": "",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "nx run-many -t=build",
+    "build:clean": "nx exec -- del-cli dist",
+    "test": "nx run-many -t=test",
+    "lint": "nx run-many -t=lint",
+    "release": "tsx ./bin/nx-release.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.27.0",
+    "@nx/js": "^21.1.2",
+    "@swc/cli": "^0.6.0",
+    "@swc/core": "^1.11.29",
+    "@types/node": "^22.15.26",
+    "@vitest/eslint-plugin": "^1.2.1",
+    "del-cli": "^6.0.0",
+    "eslint": "^9.27.0",
+    "nx": "^21.1.2",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.33.0",
+    "unplugin-swc": "^1.5.3",
+    "vitest": "^3.1.4"
+  },
+  "keywords": [],
+  "author": "WittmannD"
+}
