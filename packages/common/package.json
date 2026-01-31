@@ -1,0 +1,32 @@
+{
+  "name": "@hdotu1/common",
+  "version": "1.0.0",
+  "description": "Common methods, variables and utils for the image board project",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./src/index.ts"
+    },
+    "./image-processor": {
+      "import": "./dist/image-processor/index.js",
+      "types": "./src/image-processor/index.ts"
+    }
+  },
+  "scripts": {
+    "test": "vitest run",
+    "lint": "eslint",
+    "build": "nest build"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.7",
+    "@nestjs/testing": "^11.1.2"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0"
+  }
+}

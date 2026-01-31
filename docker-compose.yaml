@@ -1,0 +1,46 @@
+version: '3.9'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  image-server:
+    build:
+      context: .
+      dockerfile: apps/image-server/Dockerfile
+    container_name: image-server
+    command: npm run start:prod
+    depends_on:
+      - redis
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SHARED_PATH: /shared
+    volumes:
+      - shared-data:/shared
+    ports:
+      - "3000:3000"
+
+  image-processor:
+    build:
+      context: .
+      dockerfile: apps/image-processor/Dockerfile
+    container_name: image-processor
+    command: npm run start:prod
+    depends_on:
+      - redis
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SHARED_PATH: /shared
+    volumes:
+      - shared-data:/shared
+
+volumes:
+  redis-data:
+  shared-data:

@@ -1,0 +1,16 @@
+{
+  "name": "@hdotu1/image-processor-contract",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "lint": "eslint",
+    "build": "del-cli dist && tsc -p tsconfig.build.json"
+  }
+}

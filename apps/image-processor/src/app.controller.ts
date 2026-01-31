@@ -1,0 +1,14 @@
+import { Controller } from '@nestjs/common';
+import {MessagePattern} from "@nestjs/microservices";
+import {ImageProcessorMessagePattern, type ImageFromConfigRequest} from '@hdotu1/image-processor-contract';
+import { AppService } from './app.service.js';
+
+@Controller()
+export class AppController {
+  constructor(private appService: AppService) {}
+
+  @MessagePattern(ImageProcessorMessagePattern.ImageFromConfig)
+  public imageUploaded(data: ImageFromConfigRequest) {
+    this.appService.processFromConfig(data.path)
+  }
+}

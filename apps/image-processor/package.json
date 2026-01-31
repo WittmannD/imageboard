@@ -1,7 +1,7 @@
 {
-  "name": "image-server",
+  "name": "image-processor",
   "version": "0.0.0",
-  "description": "Image server",
+  "description": "Image processor microservice",
   "private": true,
   "type": "module",
   "main": "dist/app.js",
@@ -16,17 +16,19 @@
     "@nestjs/common": "^11.1.2",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.2",
-    "@nestjs/mapped-types": "*",
     "@nestjs/microservices": "^11.1.9",
     "@nestjs/platform-express": "^11.1.2",
+    "joi": "^18.0.2",
+    "js-yaml": "^4.1.1",
     "reflect-metadata": "^0.2.2",
-    "@hdotu1/image-processor-client": "file:../../packages/image-processor-client",
-    "@hdotu1/common": "file:../../packages/common",
-    "rxjs": "^7.8.2"
+    "rxjs": "^7.8.2",
+    "sharp": "^0.34.5",
+    "@hdotu1/image-processor-contract": "file:../../packages/image-processor-contract",
+    "@hdotu1/common": "file:../../packages/common"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.7",
     "@nestjs/testing": "^11.1.2",
-    "@types/multer": "^2.0.0"
+    "@types/js-yaml": "^4.0.9"
   }
 }

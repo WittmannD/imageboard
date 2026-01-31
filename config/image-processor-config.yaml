@@ -1,0 +1,16 @@
+mediaSource:
+  basePath: './'
+
+mediaStorage:
+  basePath: './'
+
+transform:
+  - operation: 'resize'
+    args:
+      width: 560
+  - operation: 'extend'
+    args:
+      left: 50
+  - operation: 'resize'
+    args:
+      width: 380
