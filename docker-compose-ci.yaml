@@ -15,9 +15,7 @@ services:
       - redis-data:/data
 
   image-server:
-    build:
-      context: .
-      dockerfile: apps/image-server/Dockerfile
+    image: ghcr.io/wittmannd/imageboard-image-server:latest
     container_name: image-server
     command: npm run start:prod
     depends_on:
@@ -33,9 +31,7 @@ services:
       - "3000:3000"
 
   image-processor:
-    build:
-      context: .
-      dockerfile: apps/image-processor/Dockerfile
+    image: ghcr.io/wittmannd/imageboard-image-processor:latest
     container_name: image-processor
     command: npm run start:prod
     depends_on:
