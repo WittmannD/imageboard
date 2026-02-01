@@ -17,7 +17,6 @@ services:
   image-server:
     image: ghcr.io/wittmannd/imageboard-image-server:latest
     container_name: image-server
-    command: npm run start:prod
     depends_on:
       redis:
         condition: service_healthy
@@ -33,7 +32,6 @@ services:
   image-processor:
     image: ghcr.io/wittmannd/imageboard-image-processor:latest
     container_name: image-processor
-    command: npm run start:prod
     depends_on:
       redis:
         condition: service_healthy

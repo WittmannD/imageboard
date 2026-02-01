@@ -53,5 +53,8 @@ for (const [projectName, versionData] of Object.entries(version.projectsVersionD
   });
 }
 
-// await release.releasePublish({});
-process.exit(0);
+const publishProjectsResult = await release.releasePublish({});
+process.exit(Object.values(publishProjectsResult).every((result) => result.code === 0)
+  ? 0
+  : 1
+);

@@ -6,7 +6,7 @@ import { AppModule } from './app.module.js';
 
 async function bootstrap(): Promise<string> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  await app.listen(8000);
+  await app.listen(3000);
 
   return app.getUrl();
 }
