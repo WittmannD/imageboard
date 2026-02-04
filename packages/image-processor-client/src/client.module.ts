@@ -1,12 +1,17 @@
 import { Module } from '@nestjs/common';
-import {type ClientProxy, ClientProxyFactory, Transport} from "@nestjs/microservices";
+import {
+  type ClientProxy,
+  ClientProxyFactory,
+  Transport,
+} from '@nestjs/microservices';
+
 import {
   ConfigurableModuleClass,
   MODULE_OPTIONS_TOKEN,
 } from './client.module-definition.js';
-import {IMAGE_PROCESSOR_CLIENT_TOKEN} from "./constants.js";
-import type {ImageProcessorClientOptions} from "./client-options.interface.js";
-import {ImageProcessorService} from "./client.service.js";
+import { ImageProcessorService } from './client.service.js';
+import type { ImageProcessorClientOptions } from './client-options.interface.js';
+import { IMAGE_PROCESSOR_CLIENT_TOKEN } from './constants.js';
 
 @Module({
   imports: [],
@@ -22,8 +27,12 @@ import {ImageProcessorService} from "./client.service.js";
       },
       inject: [MODULE_OPTIONS_TOKEN],
     },
-    ImageProcessorService
+    ImageProcessorService,
   ],
-  exports: [IMAGE_PROCESSOR_CLIENT_TOKEN, MODULE_OPTIONS_TOKEN, ImageProcessorService],
+  exports: [
+    IMAGE_PROCESSOR_CLIENT_TOKEN,
+    MODULE_OPTIONS_TOKEN,
+    ImageProcessorService,
+  ],
 })
 export class ImageProcessorClientModule extends ConfigurableModuleClass {}

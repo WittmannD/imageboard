@@ -1,5 +1,5 @@
-import type {RedisOptions} from "@nestjs/microservices";
+import type { RedisOptions } from '@nestjs/microservices';
 
 export interface ImageProcessorClientOptions {
-  redis: RedisOptions['options']
+  redis: RedisOptions['options'];
 }

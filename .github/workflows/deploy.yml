@@ -45,7 +45,7 @@ jobs:
         run: |
           REPO_LC=$(echo "${{ env.REPO }}" | tr '[:upper:]' '[:lower:]')
           APP_LC=$(echo "${{ matrix.app }}" | tr '[:upper:]' '[:lower:]')
-          
+
           echo "repo=$REPO_LC" >> $GITHUB_OUTPUT
           echo "app=$APP_LC" >> $GITHUB_OUTPUT
 
@@ -74,14 +74,14 @@ jobs:
           port: 22
           script: |
             set -e
-          
+
             mkdir -p /opt/${{ env.REPO }}
             cd /opt/${{ env.REPO }}
             CONFIG_URL="https://raw.githubusercontent.com/WittmannD/imageboard/${{ github.sha }}/docker-compose-ci.yaml"
             echo "Get docker compose config from ${CONFIG_URL}"
             wget -O docker-compose.yaml "$CONFIG_URL"
-          
+
             docker compose -f docker-compose.yaml pull
             docker compose -f docker-compose.yaml up -d
-          
+
             docker image prune -f

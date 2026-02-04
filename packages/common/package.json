@@ -19,6 +19,9 @@
   "scripts": {
     "test": "vitest run",
     "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
     "build": "nest build"
   },
   "devDependencies": {

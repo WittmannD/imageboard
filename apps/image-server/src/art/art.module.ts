@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
-import { ArtService } from './art.service.js';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+
+import { ImageProcessorClientModule } from '@hdotu1/image-processor-client';
+
 import { ArtController } from './art.controller.js';
-import {ImageProcessorClientModule} from "@hdotu1/image-processor-client";
-import {ConfigModule, ConfigService} from "@nestjs/config";
+import { ArtService } from './art.service.js';
 
 @Module({
   imports: [
@@ -11,10 +13,10 @@ import {ConfigModule, ConfigService} from "@nestjs/config";
       useFactory: (configService: ConfigService) => ({
         redis: {
           host: configService.get<string>('REDIS_HOST'),
-          port: configService.get<number>('REDIS_PORT')
-        }
+          port: configService.get<number>('REDIS_PORT'),
+        },
       }),
-      inject: [ConfigService]
+      inject: [ConfigService],
     }),
   ],
   controllers: [ArtController],

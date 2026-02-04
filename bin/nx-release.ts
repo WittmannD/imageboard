@@ -36,7 +36,9 @@ const version = await release.releaseVersion({
   firstRelease: true,
 });
 
-for (const [projectName, versionData] of Object.entries(version.projectsVersionData)) {
+for (const [projectName, versionData] of Object.entries(
+  version.projectsVersionData,
+)) {
   const fromTag = `${projectName}@${versionData.currentVersion}`;
 
   // Performed when tag information is available after the first release.
@@ -54,7 +56,8 @@ for (const [projectName, versionData] of Object.entries(version.projectsVersionD
 }
 
 const publishProjectsResult = await release.releasePublish({});
-process.exit(Object.values(publishProjectsResult).every((result) => result.code === 0)
-  ? 0
-  : 1
+process.exit(
+  Object.values(publishProjectsResult).every((result) => result.code === 0)
+    ? 0
+    : 1,
 );

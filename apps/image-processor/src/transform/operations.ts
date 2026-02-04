@@ -1,4 +1,10 @@
-import type {ExtendOptions, Region, ResizeOptions, Sharp, TrimOptions} from "sharp";
+import type {
+  ExtendOptions,
+  Region,
+  ResizeOptions,
+  Sharp,
+  TrimOptions,
+} from 'sharp';
 
 export interface ImageResizeOperationOptions {
   operation: 'resize';
@@ -24,10 +30,14 @@ export interface ImageTrimOperationOptions {
   condition: string;
 }
 
-export type ImageTransformOptions  = ImageResizeOperationOptions | ImageExtendOperationOptions | ImageExtractOperationOptions | ImageTrimOperationOptions;
+export type ImageTransformOptions =
+  | ImageResizeOperationOptions
+  | ImageExtendOperationOptions
+  | ImageExtractOperationOptions
+  | ImageTrimOperationOptions;
 
 export abstract class TransformOperation {
-  abstract process(pipeline: Sharp, args: ImageTransformOptions["args"]): Sharp;
+  abstract process(pipeline: Sharp, args: ImageTransformOptions['args']): Sharp;
 }
 
 export class ResizeOperation extends TransformOperation {
@@ -57,13 +67,13 @@ export class TrimOperation extends TransformOperation {
 export class OperationMapper {
   get(operationKey: ImageTransformOptions['operation']) {
     switch (operationKey) {
-      case "resize":
+      case 'resize':
         return new ResizeOperation();
-      case "extend":
+      case 'extend':
         return new ExtendOperation();
-      case "extract":
+      case 'extract':
         return new ExtractOperation();
-      case "trim":
+      case 'trim':
         return new TrimOperation();
     }
   }

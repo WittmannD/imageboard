@@ -1,11 +1,11 @@
-import {Module} from '@nestjs/common';
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MulterModule } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 
-import {AppController} from './app.controller.js';
-import {AppService} from './app.service.js';
-import {ConfigModule, ConfigService} from "@nestjs/config";
+import { AppController } from './app.controller.js';
+import { AppService } from './app.service.js';
 import { ArtModule } from './art/art.module.js';
-import {MulterModule} from "@nestjs/platform-express";
-import {diskStorage} from "multer";
 
 @Module({
   imports: [
@@ -14,10 +14,10 @@ import {diskStorage} from "multer";
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         storage: diskStorage({
-          destination: configService.get<string>('uploads.destination')
-        })
+          destination: configService.get<string>('uploads.destination'),
+        }),
       }),
-      inject: [ConfigService]
+      inject: [ConfigService],
     }),
     ArtModule,
   ],

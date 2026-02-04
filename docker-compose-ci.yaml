@@ -5,12 +5,12 @@ services:
     image: redis:7-alpine
     container_name: redis
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
       timeout: 3s
       retries: 5
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis-data:/data
 
@@ -27,7 +27,7 @@ services:
     volumes:
       - shared-data:/shared
     ports:
-      - "3000:3000"
+      - '3000:3000'
 
   image-processor:
     image: ghcr.io/wittmannd/imageboard-image-processor:latest

@@ -69,15 +69,19 @@ npm ci -w sample-nestjs-app --omit=dev
 ## Folders
 
 ```js
-+-- apps
-|   +-- sample-app // TypeScript simple sample-app
-|   +-- sample-nestjs-app // NestJS server sample-app
-+-- packages
-|   +-- sample-lib // TypeScript simple sample-package
-|   +-- sample-nestjs-lib // NestJS module sample-package
-+-- eslint.config.mjs // ESLint common configuration
-+-- vitest.config.ts // Vitest common configuration
-+-- nx.json // Nx task pipeline configuration
++--apps |
+  (+--sample - app) | // TypeScript simple sample-app
+  (+--sample -
+    nestjs -
+    app + // NestJS server sample-app
+    --packages) |
+  (+--sample - lib) | // TypeScript simple sample-package
+  (+--sample -
+    nestjs -
+    lib + // NestJS module sample-package
+    --eslint.config.mjs + // ESLint common configuration
+    --vitest.config.ts + // Vitest common configuration
+    --nx.json); // Nx task pipeline configuration
 ```
 
 ### Links
