@@ -4,7 +4,7 @@ import type { Writable } from 'node:stream';
 import { ConfigService } from '@nestjs/config';
 
 import { IMAGE_PROCESSOR_CONFIG } from '../config/image-processor-config.js';
-import type { FsMediaSourceConfig } from '../media-source/fs-media-source.js';
+import type { FsMediaSourceOptions } from '../media-source/fs-media-source.js';
 import type { MediaStorage, MediaStorageConfig } from './media-storage.js';
 
 export interface FsMediaStorageConfig extends MediaStorageConfig {
@@ -12,7 +12,7 @@ export interface FsMediaStorageConfig extends MediaStorageConfig {
 }
 
 export class FsMediaStorage implements MediaStorage {
-  private config: FsMediaSourceConfig;
+  private config: FsMediaSourceOptions;
 
   constructor(private configService: ConfigService) {
     const mediaStorageConfig = this.configService.get<FsMediaStorageConfig>(

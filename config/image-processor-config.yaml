@@ -5,12 +5,20 @@ mediaStorage:
   basePath: './'
 
 transform:
-  - operation: 'resize'
+  - operation: 'webp'
     args:
-      width: 560
-  - operation: 'extend'
-    args:
-      left: 50
-  - operation: 'resize'
-    args:
-      width: 380
+      quality: 82
+      effort: 5
+      smartSubsample: true
+
+  - - operation: 'webp'
+      args:
+        quality: 82
+        effort: 5
+        smartSubsample: true
+
+    - operation: 'webp'
+      args:
+        quality: 82
+        effort: 5
+        smartSubsample: true

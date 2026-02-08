@@ -13,7 +13,7 @@ export class AppController {
   constructor(private appService: AppService) {}
 
   @MessagePattern(ImageProcessorMessagePattern.ImageFromConfig)
-  public imageUploaded(data: ImageFromConfigRequest) {
+  public imageUploaded(data: ImageFromConfigRequest): void {
     this.appService.processFromConfig(data.path);
   }
 }

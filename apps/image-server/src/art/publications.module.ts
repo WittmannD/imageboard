@@ -3,8 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { ImageProcessorClientModule } from '@hdotu1/image-processor-client';
 
-import { ArtController } from './art.controller.js';
-import { ArtService } from './art.service.js';
+import { PostController } from './post.controller.js';
+import { PostService } from './post.service.js';
 
 @Module({
   imports: [
@@ -19,7 +19,7 @@ import { ArtService } from './art.service.js';
       inject: [ConfigService],
     }),
   ],
-  controllers: [ArtController],
-  providers: [ArtService],
+  controllers: [PostController],
+  providers: [PostService],
 })
-export class ArtModule {}
+export class PublicationsModule {}

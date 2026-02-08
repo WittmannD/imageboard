@@ -2,11 +2,13 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { Observable } from 'rxjs';
 
-import { IMAGE_PROCESSOR_CLIENT_TOKEN } from './constants.js';
 import {
-  PROCESS_IMAGE_MESSAGE,
-  type ProcessImageMessage,
-} from './messages/process-image-message.js';
+  type ImageFromConfigRequest,
+  type ImageFromConfigResponse,
+  ImageProcessorMessagePattern,
+} from '@hdotu1/image-processor-contract';
+
+import { IMAGE_PROCESSOR_CLIENT_TOKEN } from './constants.js';
 
 @Injectable()
 export class ImageProcessorService {
@@ -14,7 +16,9 @@ export class ImageProcessorService {
     @Inject(IMAGE_PROCESSOR_CLIENT_TOKEN) private client: ClientProxy,
   ) {}
 
-  public processImage(data: ProcessImageMessage): Observable<unknown> {
-    return this.client.send(PROCESS_IMAGE_MESSAGE, data);
+  public fromConfig(
+    data: ImageFromConfigRequest,
+  ): Observable<ImageFromConfigResponse> {
+    return this.client.send(ImageProcessorMessagePattern.ImageFromConfig, data);
   }
 }

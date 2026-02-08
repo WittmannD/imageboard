@@ -1,7 +1,7 @@
 import { Readable } from 'node:stream';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type MediaSourceConfig = Record<string, any>;
+export type MediaSourceOptions = Record<string, any>;
 
 export interface MediaSource {
   get(key: string): Readable;

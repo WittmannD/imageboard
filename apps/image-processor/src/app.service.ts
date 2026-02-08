@@ -1,62 +1,55 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { ConfigService } from '@nestjs/config';
-import sharp, { type Sharp } from 'sharp';
+import { ConfigService } from '@nestjs/config';
+import { first, fromEvent, map, Observable, takeUntil, toArray } from 'rxjs';
 
 import {
   IMAGE_PROCESSOR_CONFIG,
   type ImageProcessorConfig,
 } from './config/image-processor-config.js';
 import { MEDIA_SOURCE, type MediaSource } from './media-source/media-source.js';
-import {
-  MEDIA_STORAGE,
-  type MediaStorage,
-} from './media-storage/media-storage.js';
-import {
-  type ImageTransformOptions,
-  OperationMapper,
-  TransformOperation,
-} from './transform/operations.js';
+import { type FileOutputInfo, OutputEvent } from './transform/events.js';
+import { ImageTransformer } from './transform/image-transformer.js';
+import type { NestedTransformOperations } from './transform/operation/options.js';
 
 @Injectable()
 export class AppService {
   constructor(
     @Inject(MEDIA_SOURCE) private mediaSource: MediaSource,
-    @Inject(MEDIA_STORAGE) private mediaStorage: MediaStorage,
+    //@Inject(MEDIA_STORAGE) private mediaStorage: MediaStorage,
     private configService: ConfigService,
   ) {}
 
-  private createTransformPipeline(operations: ImageTransformOptions[]): Sharp {
-    const operationMapper = new OperationMapper();
-    const pipeline = sharp();
-
-    for (const options of operations) {
-      const operation: TransformOperation = operationMapper.get(
-        options.operation,
-      );
-
-      operation.process(pipeline, options.args);
-    }
-
-    return pipeline;
-  }
-
-  public process(imageKey: string, operations: ImageTransformOptions[]): void {
+  public process(
+    imageKey: string,
+    operations: NestedTransformOperations,
+  ): Observable<FileOutputInfo[]> {
     const imageStream = this.mediaSource.get(imageKey);
-    const transformPipeline = this.createTransformPipeline(operations);
-    const writable = this.mediaStorage.writableStream('');
+    const imageTransformer = new ImageTransformer(operations);
 
-    imageStream.pipe(transformPipeline).pipe(writable);
+    imageTransformer.transform(imageStream);
+    const end$ = fromEvent(imageTransformer.eventEmitter, 'end').pipe(first());
+    return fromEvent(imageTransformer.eventEmitter, 'output').pipe(
+      takeUntil(end$),
+      toArray(),
+      map((events) => {
+        const outputEvents = events as OutputEvent[];
+        return outputEvents.map((event) => event.data);
+      }),
+    );
   }
 
-  public processFromConfig(imageKey: string): void {
+  public processFromConfig(
+    imageKey: string,
+    configKey?: string,
+  ): Observable<FileOutputInfo[]> {
     const config = this.configService.get<ImageProcessorConfig>(
-      IMAGE_PROCESSOR_CONFIG,
+      configKey ?? IMAGE_PROCESSOR_CONFIG,
     );
 
     if (!config?.transform) {
-      return;
+      throw new Error('Invalid config');
     }
 
-    this.process(imageKey, config.transform);
+    return this.process(imageKey, config.transform);
   }
 }
