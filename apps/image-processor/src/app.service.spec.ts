@@ -96,7 +96,7 @@ describe('AppService', () => {
         {
           operation: 'save',
           args: {
-            path: './test/modified.jpeg',
+            path: './test/resized.jpeg',
           },
         },
       ]);
@@ -105,13 +105,65 @@ describe('AppService', () => {
       const promise = firstValueFrom(result);
       await expect(promise).resolves.toMatchObject([
         {
-          path: './test/modified.jpeg',
-          filename: 'modified.jpeg',
+          path: './test/resized.jpeg',
+          filename: 'resized.jpeg',
           format: 'jpeg',
           width: 300,
           height: 300,
         },
       ]);
+    });
+
+    it('saves multiple files', async () => {
+      const result = service.process('original.jpeg', [
+        [
+          {
+            operation: 'resize',
+            args: {
+              width: 300,
+              height: 300,
+            },
+          },
+          {
+            operation: 'save',
+            args: {
+              path: './test/resized300x300.jpeg',
+            },
+          },
+        ],
+        [
+          {
+            operation: 'resize',
+            args: {
+              width: 200,
+              height: 200,
+            },
+          },
+          {
+            operation: 'save',
+            args: {
+              path: './test/resized200x200.jpeg',
+            },
+          },
+        ],
+      ]);
+      expect(result).toBeInstanceOf(Observable);
+      const outputs = await firstValueFrom(result);
+
+      expect(outputs).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            width: 200,
+            height: 200,
+            path: './test/resized200x200.jpeg',
+          }),
+          expect.objectContaining({
+            width: 300,
+            height: 300,
+            path: './test/resized300x300.jpeg',
+          }),
+        ]),
+      );
     });
   });
 
@@ -134,7 +186,9 @@ describe('AppService', () => {
   });
 
   afterEach(async () => {
-    const files = fs.globSync('./test/modified.*');
+    const files = fs.globSync('./test/*.*', {
+      exclude: ['test\\original.jpeg'],
+    });
     if (files.length === 0) {
       return;
     }

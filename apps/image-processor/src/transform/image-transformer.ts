@@ -34,6 +34,7 @@ export class ImageTransformer extends EventEmitter {
   }
 
   private waitForWriteTasks() {
+    // method to wait until all images are written
     let intervalRef: NodeJS.Timeout;
 
     return new Promise<void>((resolve) => {
@@ -66,8 +67,6 @@ export class ImageTransformer extends EventEmitter {
         this.eventEmitter,
       );
 
-      console.log('apply', transformOptions.operation, operation.uuid);
-
       operation.process(transformPipeline, transformOptions.args);
     }
   }
@@ -75,14 +74,6 @@ export class ImageTransformer extends EventEmitter {
   transform(imageStream: Readable) {
     const sharpPipeline = sharp();
     this.applyOperations(sharpPipeline, this.operations);
-
-    this.eventEmitter.on('output', (output) => {
-      console.log(output);
-    });
-
-    this.eventEmitter.on('end', () => {
-      console.log('end');
-    });
 
     void pipeline(imageStream, sharpPipeline)
       .then(() => this.waitForWriteTasks())
