@@ -14,6 +14,7 @@ import {
   type FsMediaSourceOptions,
 } from './media-source/fs-media-source.js';
 import { MEDIA_SOURCE } from './media-source/media-source.js';
+import type { NestedTransformOperation } from './transform/operation/options.js';
 
 describe('AppService', () => {
   let service: AppService;
@@ -163,6 +164,52 @@ describe('AppService', () => {
             path: './test/resized300x300.jpeg',
           }),
         ]),
+      );
+    });
+
+    it('saves in different formats', async () => {
+      const formats = ['webp', 'jpeg', 'png', 'avif'] as const;
+      const saveOperations = formats.map(
+        (format) =>
+          [
+            {
+              operation: format,
+              args: {
+                quality: 88,
+              },
+            },
+            {
+              operation: 'save',
+              args: {
+                path: `./test/converted.${format}`,
+              },
+            },
+          ] satisfies NestedTransformOperation,
+      );
+      const result = service.process('original.jpeg', [
+        {
+          operation: 'resize',
+          args: {
+            width: 300,
+            height: 300,
+          },
+        },
+        ...saveOperations,
+      ]);
+
+      expect(result).toBeInstanceOf(Observable);
+      const outputs = await firstValueFrom(result);
+
+      expect(outputs).toHaveLength(formats.length);
+      expect(outputs).toEqual(
+        expect.arrayContaining(
+          formats.map((format) =>
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            expect.objectContaining({
+              path: `./test/converted.${format}`,
+            }),
+          ),
+        ),
       );
     });
   });

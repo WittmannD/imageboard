@@ -13,8 +13,8 @@ const YAML_CONFIG_FILENAME =
   process.env['IMAGE_PROCESSOR_CONFIG'] ?? 'image-processor-config.yaml';
 
 export interface ImageProcessorConfig {
-  mediaSource: MediaSourceOptions;
-  mediaStorage: MediaStorageConfig;
+  mediaSource?: MediaSourceOptions;
+  mediaStorage?: MediaStorageConfig;
   transform: NestedTransformOperations;
 }
 
