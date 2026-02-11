@@ -1,10 +1,16 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { Module, ValidationPipe } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_PIPE } from '@nestjs/core';
 
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
-import imageProcessorConfig from './config/image-processor-config.js';
-import { FsMediaSource } from './media-source/fs-media-source.js';
+import imageProcessorConfig, {
+  IMAGE_PROCESSOR_CONFIG,
+} from './config/image-processor-config.js';
+import {
+  FsMediaSource,
+  type FsMediaSourceOptions,
+} from './media-source/fs-media-source.js';
 import { MEDIA_SOURCE } from './media-source/media-source.js';
 import { FsMediaStorage } from './media-storage/fs-media-storage.js';
 import { MEDIA_STORAGE } from './media-storage/media-storage.js';
@@ -18,12 +24,23 @@ import { MEDIA_STORAGE } from './media-storage/media-storage.js';
   controllers: [AppController],
   providers: [
     {
+      inject: [ConfigService],
       provide: MEDIA_SOURCE,
-      useClass: FsMediaSource,
+      useFactory: (configService: ConfigService) =>
+        new FsMediaSource(
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          configService.get<FsMediaSourceOptions>(
+            `${IMAGE_PROCESSOR_CONFIG}.media-source`,
+          )!,
+        ),
     },
     {
       provide: MEDIA_STORAGE,
       useClass: FsMediaStorage,
+    },
+    {
+      provide: APP_PIPE,
+      useClass: ValidationPipe,
     },
     AppService,
   ],

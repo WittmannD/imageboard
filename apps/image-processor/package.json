@@ -17,18 +17,20 @@
     "debug": "nest start --debug --watch"
   },
   "dependencies": {
+    "@hdotu1/common": "file:../../packages/common",
+    "@hdotu1/image-processor-contract": "file:../../packages/image-processor-contract",
     "@nestjs/common": "^11.1.2",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.2",
     "@nestjs/microservices": "^11.1.9",
     "@nestjs/platform-express": "^11.1.2",
+    "image-transformer": "^0.0.4",
+    "image-validator": "^1.2.1",
     "joi": "^18.0.2",
     "js-yaml": "^4.1.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
-    "sharp": "^0.34.5",
-    "@hdotu1/image-processor-contract": "file:../../packages/image-processor-contract",
-    "@hdotu1/common": "file:../../packages/common"
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.7",

@@ -3,8 +3,8 @@ import { ClientProxy } from '@nestjs/microservices';
 import { Observable } from 'rxjs';
 
 import {
-  type ImageFromConfigRequest,
-  type ImageFromConfigResponse,
+  type ImageProcessingMessage,
+  type ImageProcessingResponse,
   ImageProcessorMessagePattern,
 } from '@hdotu1/image-processor-contract';
 
@@ -17,8 +17,8 @@ export class ImageProcessorService {
   ) {}
 
   public fromConfig(
-    data: ImageFromConfigRequest,
-  ): Observable<ImageFromConfigResponse> {
+    data: ImageProcessingMessage,
+  ): Observable<ImageProcessingResponse> {
     return this.client.send(ImageProcessorMessagePattern.ImageFromConfig, data);
   }
 }

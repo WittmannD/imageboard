@@ -38,12 +38,9 @@ export class AppService {
     );
   }
 
-  public processFromConfig(
-    imageKey: string,
-    configKey?: string,
-  ): Observable<FileOutputInfo[]> {
+  public processFromConfig(imageKey: string): Observable<FileOutputInfo[]> {
     const config = this.configService.get<ImageProcessorConfig>(
-      configKey ?? IMAGE_PROCESSOR_CONFIG,
+      IMAGE_PROCESSOR_CONFIG,
     );
 
     if (!config?.transform) {

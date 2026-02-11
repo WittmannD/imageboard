@@ -1,4 +1,4 @@
-import type { JpegOptions,Sharp } from 'sharp';
+import type { JpegOptions, Sharp } from 'sharp';
 
 import { TransformOperation } from './operation.js';
 

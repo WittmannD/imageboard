@@ -1,4 +1,4 @@
-import type { AvifOptions,Sharp } from 'sharp';
+import type { AvifOptions, Sharp } from 'sharp';
 
 import { TransformOperation } from './operation.js';
 
