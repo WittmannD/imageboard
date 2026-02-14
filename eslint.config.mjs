@@ -31,6 +31,9 @@ export default tseslint.config(
     rules: {
       // DIY
       '@typescript-eslint/no-extraneous-class': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
       'simple-import-sort/imports': [
         'warn',
         {

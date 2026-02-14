@@ -1,0 +1,9 @@
+$schema: './test.schema.json'
+props:
+  num: ${{ nested.num }}
+  bool: true
+  arr:
+    - 'abc'
+    - def
+    - 4
+  str: ${{ str }}
