@@ -1,4 +1,3 @@
-import { createWriteStream } from 'node:fs';
 import { basename } from 'node:path';
 import type { OutputInfo, Sharp } from 'sharp';
 
@@ -6,25 +5,25 @@ import { BeforeOutputEvent, OutputEvent } from '../events.js';
 import { TransformOperation } from './operation.js';
 
 export interface ImageSaveOperationArgs {
-  path: string;
+  key: string;
 }
 
 export class SaveOperation extends TransformOperation {
   override process(pipeline: Sharp, args: ImageSaveOperationArgs): Sharp {
-    const filename = basename(args.path);
+    const filename = basename(args.key);
 
     this.eventEmitter.emit('before-output', new BeforeOutputEvent(this.uuid));
     pipeline.once('info', (info: OutputInfo) => {
       this.eventEmitter.emit(
         'output',
         new OutputEvent(this.uuid, {
-          path: args.path,
+          key: args.key,
           filename,
           ...info,
         }),
       );
     });
-    pipeline.pipe(createWriteStream(args.path));
+    pipeline.pipe(this.outputFactory(args.key));
 
     return pipeline;
   }

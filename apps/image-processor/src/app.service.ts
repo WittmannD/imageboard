@@ -22,7 +22,10 @@ import {
   IMAGE_TRANSFORM_CONFIG_LOADER,
   ImageTransformConfigLoader,
 } from './config/image-transform-config.js';
-import { MEDIA_SOURCE, type MediaSource } from './media-source/media-source.js';
+import type { FsMediaSource } from './media-source/fs-media-source.js';
+import { MEDIA_SOURCE } from './media-source/media-source.js';
+import type { FsMediaStorage } from './media-storage/fs-media-storage.js';
+import { MEDIA_STORAGE } from './media-storage/media-storage.js';
 import { type FileOutputInfo, OutputEvent } from './transform/events.js';
 import { ImageOperationContext } from './transform/image-operation-context.js';
 import { ImageTransformer } from './transform/image-transformer.js';
@@ -34,8 +37,8 @@ export class AppService {
   constructor(
     @Inject(IMAGE_TRANSFORM_CONFIG_LOADER)
     private imageTransformConfigLoader: ImageTransformConfigLoader,
-    @Inject(MEDIA_SOURCE) private mediaSource: MediaSource,
-    //@Inject(MEDIA_STORAGE) private mediaStorage: MediaStorage,
+    @Inject(MEDIA_SOURCE) private mediaSource: FsMediaSource,
+    @Inject(MEDIA_STORAGE) private mediaStorage: FsMediaStorage,
     private configService: ConfigService,
   ) {}
 
@@ -43,11 +46,13 @@ export class AppService {
     source: Readable,
     operations: NestedTransformOperations,
   ): Observable<FileOutputInfo[]> {
-    const imageTransformer = new ImageTransformer(operations);
+    const imageTransformer = new ImageTransformer(operations, (key: string) =>
+      this.mediaStorage.writableStream(key),
+    );
 
     imageTransformer.transform(source);
-    const end$ = fromEvent(imageTransformer.eventEmitter, 'end').pipe(first());
-    return fromEvent(imageTransformer.eventEmitter, 'output').pipe(
+    const end$ = fromEvent(imageTransformer, 'end').pipe(first());
+    return fromEvent(imageTransformer, 'output').pipe(
       takeUntil(end$),
       toArray(),
       map((events) => {
@@ -71,6 +76,7 @@ export class AppService {
   ): Observable<FileOutputInfo[]> {
     configKey = configKey ?? DEFAULT_IMAGE_TRANSFORM_CONFIG;
     const imageStream = this.mediaSource.get(imageKey);
+
     const config = this.configService.get<ImageProcessorConfig>(
       IMAGE_PROCESSOR_CONFIG,
     );

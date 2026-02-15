@@ -13,7 +13,7 @@ import {
   type FsMediaSourceOptions,
 } from './media-source/fs-media-source.js';
 import { MEDIA_SOURCE } from './media-source/media-source.js';
-import { FsMediaStorage } from './media-storage/fs-media-storage.js';
+import { type FsMediaStorageOptions } from './media-storage/fs-media-storage.js';
 import { MEDIA_STORAGE } from './media-storage/media-storage.js';
 
 @Module({
@@ -36,8 +36,15 @@ import { MEDIA_STORAGE } from './media-storage/media-storage.js';
         ),
     },
     {
+      inject: [ConfigService],
       provide: MEDIA_STORAGE,
-      useClass: FsMediaStorage,
+      useFactory: (configService: ConfigService) =>
+        new FsMediaSource(
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          configService.get<FsMediaStorageOptions>(
+            `${IMAGE_PROCESSOR_CONFIG}.media-storage`,
+          )!,
+        ),
     },
     {
       provide: APP_PIPE,

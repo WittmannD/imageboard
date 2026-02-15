@@ -5,7 +5,7 @@ import { registerAs } from '@nestjs/config';
 import yaml from 'js-yaml';
 
 import type { MediaSourceOptions } from '../media-source/media-source.js';
-import type { MediaStorageConfig } from '../media-storage/media-storage.js';
+import type { MediaStorageOptions } from '../media-storage/media-storage.js';
 
 export const IMAGE_PROCESSOR_CONFIG = 'image-processor-config';
 const YAML_CONFIG_FILENAME =
@@ -13,7 +13,7 @@ const YAML_CONFIG_FILENAME =
 
 export interface ImageProcessorConfig {
   mediaSource?: MediaSourceOptions;
-  mediaStorage?: MediaStorageConfig;
+  mediaStorage?: MediaStorageOptions;
 }
 
 export default registerAs(IMAGE_PROCESSOR_CONFIG, () => {

@@ -6,7 +6,7 @@ export class ImageProcessingResponseFactory {
   createFromFileOutputs(outputs: FileOutputInfo[]): ImageProcessingResponse {
     return {
       images: outputs.map((output) => ({
-        path: output.path,
+        path: output.key,
         size: output.size,
         width: output.width,
         height: output.height,

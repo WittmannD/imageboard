@@ -22,6 +22,11 @@ import {
   type FsMediaSourceOptions,
 } from './media-source/fs-media-source.js';
 import { MEDIA_SOURCE } from './media-source/media-source.js';
+import {
+  FsMediaStorage,
+  type FsMediaStorageOptions,
+} from './media-storage/fs-media-storage.js';
+import { MEDIA_STORAGE } from './media-storage/media-storage.js';
 import type { NestedTransformOperation } from './transform/operation/options.js';
 
 describe('AppService', () => {
@@ -33,10 +38,17 @@ describe('AppService', () => {
         'media-source': {
           basePath: './test',
         } as unknown as FsMediaSourceOptions,
+        'media-storage': {
+          basePath: './test',
+        } as unknown as FsMediaStorageOptions,
       };
 
       if (key === 'image-processor-config') {
         return cfg;
+      }
+
+      if (key === 'image-processor-config.media-storage') {
+        return cfg['media-storage'];
       }
 
       if (key === 'image-processor-config.media-source') {
@@ -65,7 +77,7 @@ transform:
       height: 200
   - operation: save
     args:
-      path: './test/\${{file.name}}_200x200\${{file.ext}}'`,
+      key: '\${{file.name}}_200x200\${{file.ext}}'`,
           'utf-8',
         ),
       );
@@ -98,6 +110,17 @@ transform:
               )!,
             ),
         },
+        {
+          inject: [ConfigService],
+          provide: MEDIA_STORAGE,
+          useFactory: (configService: ConfigService) =>
+            new FsMediaStorage(
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              configService.get<FsMediaStorageOptions>(
+                'image-processor-config.media-storage',
+              )!,
+            ),
+        },
         AppService,
       ],
     }).compile();
@@ -122,7 +145,7 @@ transform:
         {
           operation: 'save',
           args: {
-            path: './test/resized.jpeg',
+            key: 'resized.jpeg',
           },
         },
       ]);
@@ -131,7 +154,7 @@ transform:
       const promise = firstValueFrom(result);
       await expect(promise).resolves.toMatchObject([
         {
-          path: './test/resized.jpeg',
+          key: 'resized.jpeg',
           filename: 'resized.jpeg',
           format: 'jpeg',
           width: 300,
@@ -153,7 +176,7 @@ transform:
           {
             operation: 'save',
             args: {
-              path: './test/resized300x300.jpeg',
+              key: 'resized300x300.jpeg',
             },
           },
         ],
@@ -168,7 +191,7 @@ transform:
           {
             operation: 'save',
             args: {
-              path: './test/resized200x200.jpeg',
+              key: 'resized200x200.jpeg',
             },
           },
         ],
@@ -181,12 +204,12 @@ transform:
           expect.objectContaining({
             width: 200,
             height: 200,
-            path: './test/resized200x200.jpeg',
+            key: 'resized200x200.jpeg',
           }),
           expect.objectContaining({
             width: 300,
             height: 300,
-            path: './test/resized300x300.jpeg',
+            key: 'resized300x300.jpeg',
           }),
         ]),
       );
@@ -206,7 +229,7 @@ transform:
             {
               operation: 'save',
               args: {
-                path: `./test/converted.${format}`,
+                key: `converted.${format}`,
               },
             },
           ] satisfies NestedTransformOperation,
@@ -231,7 +254,7 @@ transform:
           formats.map((format) =>
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             expect.objectContaining({
-              path: `./test/converted.${format}`,
+              key: `converted.${format}`,
             }),
           ),
         ),
@@ -247,7 +270,7 @@ transform:
       const promise = firstValueFrom(result);
       await expect(promise).resolves.toMatchObject([
         {
-          path: './test/original_200x200.jpeg',
+          key: 'original_200x200.jpeg',
           filename: 'original_200x200.jpeg',
           format: 'jpeg',
           width: 200,

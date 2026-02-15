@@ -1,6 +1,6 @@
 import { Buffer } from 'node:buffer';
 import { once } from 'node:events';
-import { Readable } from 'node:stream';
+import { Readable, Writable } from 'node:stream';
 import sharp, { type Metadata } from 'sharp';
 
 /**
@@ -62,4 +62,12 @@ export async function peekMetadata(
   input.unshift(Buffer.concat(chunks));
 
   return metadata;
+}
+
+export function devNull(): Writable {
+  return new Writable({
+    write(_chunk, _encoding, callback) {
+      callback();
+    },
+  });
 }
