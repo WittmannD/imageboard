@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "YAML file parser with the values interpolation",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
   "files": [
     "dist"
   ],

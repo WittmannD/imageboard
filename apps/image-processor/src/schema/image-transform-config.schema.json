@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "image-transform-config.schema.json",
+  "title": "Config",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["transform"],
+  "properties": {
+    "transform": { "$ref": "#/$defs/NestedTransformOperations" }
+  },
+  "$defs": {
+    "OperationName": {
+      "title": "OperationName",
+      "type": "string",
+      "enum": [
+        "resize",
+        "extend",
+        "extract",
+        "trim",
+        "save",
+        "webp",
+        "jpeg",
+        "png",
+        "avif"
+      ]
+    },
+
+    "TransformOperationBase": {
+      "title": "TransformOperationBase",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation", "args"],
+      "properties": {
+        "operation": { "$ref": "#/$defs/OperationName" },
+        "args": {
+          "title": "Args",
+          "type": "object",
+          "additionalProperties": true
+        },
+        "condition": {
+          "title": "Condition",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+
+    "TransformOperation": {
+      "title": "TransformOperation",
+      "description": "Equivalent to ImageTransformOptions union; currently all variants share the same shape, so a single base schema is enough.",
+      "allOf": [{ "$ref": "#/$defs/TransformOperationBase" }]
+    },
+
+    "NestedTransformOperation": {
+      "title": "NestedTransformOperation",
+      "description": "Either a TransformOperation object or a (nested) array of nested operations.",
+      "oneOf": [
+        { "$ref": "#/$defs/TransformOperation" },
+        { "$ref": "#/$defs/NestedTransformOperationArray" }
+      ]
+    },
+
+    "NestedTransformOperationArray": {
+      "title": "NestedTransformOperationArray",
+      "type": "array",
+      "items": { "$ref": "#/$defs/NestedTransformOperation" }
+    },
+
+    "NestedTransformOperations": {
+      "title": "NestedTransformOperations",
+      "type": "array",
+      "items": { "$ref": "#/$defs/NestedTransformOperation" }
+    }
+  }
+}

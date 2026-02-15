@@ -1,8 +1,14 @@
 import { createReadStream } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { cwd } from 'node:process';
+import * as process from 'node:process';
 import readline from 'node:readline';
 import { Readable } from 'node:stream';
 import type { AnySchema } from 'ajv';
+
+export function isDev() {
+  return process.env['NODE_ENV'] !== 'production';
+}
 
 export function createSourceStream(
   input: string | Readable | Buffer,
@@ -59,8 +65,7 @@ export async function resolveSchemaPathFromYaml(
   if (typeof input === 'string') {
     baseDir = dirname(resolve(input));
   } else {
-    const { fileURLToPath } = await import('node:url');
-    baseDir = fileURLToPath(import.meta.url);
+    baseDir = cwd();
   }
 
   const property = await getFirstYamlProperty(source);
@@ -74,7 +79,9 @@ export async function resolveSchemaPathFromYaml(
   // If it's an actual URL (https://..., etc.)
   try {
     const url = new URL(schemaPath);
-    return { kind: 'url', url };
+    if (['http:', 'https:'].includes(url.protocol)) {
+      return { kind: 'url', url };
+    }
   } catch {
     // not a URL → treat as path
   }
@@ -89,6 +96,7 @@ export async function resolveSchemaPathFromYaml(
 
   const { pathToFileURL } = await import('node:url');
   const absSchemaPath = resolve(baseDir, schemaPath);
+
   return {
     kind: 'file',
     path: absSchemaPath,

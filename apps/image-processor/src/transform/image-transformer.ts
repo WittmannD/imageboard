@@ -47,7 +47,7 @@ export class ImageTransformer extends EventEmitter {
     });
   }
 
-  private applyOperations(
+  private async applyOperations(
     transformPipeline: sharp.Sharp,
     operations: NestedTransformOperations,
   ) {
@@ -57,7 +57,7 @@ export class ImageTransformer extends EventEmitter {
         transformOptionsOrArray.length
       ) {
         const forkPipeline = transformPipeline.clone();
-        this.applyOperations(forkPipeline, transformOptionsOrArray);
+        await this.applyOperations(forkPipeline, transformOptionsOrArray);
         continue;
       }
 
@@ -67,15 +67,15 @@ export class ImageTransformer extends EventEmitter {
         this.eventEmitter,
       );
 
-      operation.process(transformPipeline, transformOptions.args);
+      await operation.process(transformPipeline, transformOptions.args);
     }
   }
 
   transform(imageStream: Readable) {
     const sharpPipeline = sharp();
-    this.applyOperations(sharpPipeline, this.operations);
 
-    void pipeline(imageStream, sharpPipeline)
+    void this.applyOperations(sharpPipeline, this.operations)
+      .then(() => pipeline(imageStream, sharpPipeline))
       .then(() => this.waitForWriteTasks())
       .then(() => {
         this.eventEmitter.emit('end', new EndEvent());

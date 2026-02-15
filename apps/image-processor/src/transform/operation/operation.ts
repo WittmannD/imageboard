@@ -11,5 +11,8 @@ export abstract class TransformOperation {
     this.uuid = randomUUID();
   }
 
-  abstract process(pipeline: Sharp, args: ImageTransformOptions['args']): Sharp;
+  abstract process(
+    pipeline: Sharp,
+    args: ImageTransformOptions['args'],
+  ): Sharp | Promise<Sharp>;
 }

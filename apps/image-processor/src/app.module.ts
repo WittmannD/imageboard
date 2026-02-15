@@ -7,6 +7,7 @@ import { AppService } from './app.service.js';
 import imageProcessorConfig, {
   IMAGE_PROCESSOR_CONFIG,
 } from './config/image-processor-config.js';
+import { ImageTransformConfigLoaderProvider } from './config/image-transform-config.js';
 import {
   FsMediaSource,
   type FsMediaSourceOptions,
@@ -42,6 +43,7 @@ import { MEDIA_STORAGE } from './media-storage/media-storage.js';
       provide: APP_PIPE,
       useClass: ValidationPipe,
     },
+    ImageTransformConfigLoaderProvider,
     AppService,
   ],
 })

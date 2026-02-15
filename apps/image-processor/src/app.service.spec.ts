@@ -1,14 +1,22 @@
 // app.service.spec.ts
 
+import { Buffer } from 'node:buffer';
 import fs from 'node:fs';
 import fsPromises from 'node:fs/promises';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { firstValueFrom, Observable } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { YamlTemplate } from '@hdotu1/yaml-template';
+
 import { AppService } from './app.service.js';
-import type { ImageProcessorConfig } from './config/image-processor-config.js';
+import {
+  IMAGE_TRANSFORM_CONFIG_LOADER,
+  type ImageTransformConfig,
+} from './config/image-transform-config.js';
 import {
   FsMediaSource,
   type FsMediaSourceOptions,
@@ -20,34 +28,47 @@ describe('AppService', () => {
   let service: AppService;
 
   const mockConfigService = {
-    get: vi.fn((key: string, defaultValue?: unknown) => {
-      if (key === 'image-processor-config.media-source') {
-        return {
+    get: vi.fn((key: string, defaultValue?: unknown): unknown => {
+      const cfg = {
+        'media-source': {
           basePath: './test',
-        } as unknown as FsMediaSourceOptions;
-      }
+        } as unknown as FsMediaSourceOptions,
+      };
 
       if (key === 'image-processor-config') {
-        return {
-          transform: [
-            {
-              operation: 'resize',
-              args: {
-                width: 300,
-                height: 300,
-              },
-            },
-            {
-              operation: 'save',
-              args: {
-                path: './test/modified.jpeg',
-              },
-            },
-          ],
-        } as ImageProcessorConfig;
+        return cfg;
+      }
+
+      if (key === 'image-processor-config.media-source') {
+        return cfg['media-source'];
       }
 
       return defaultValue;
+    }),
+  };
+
+  const mockImageTransformConfigLoader = {
+    get: vi.fn((): Promise<YamlTemplate<ImageTransformConfig>> => {
+      const __dirname = dirname(fileURLToPath(import.meta.url));
+      const schemaPath = resolve(
+        __dirname,
+        './schema/image-transform-config.schema.json',
+      );
+
+      return YamlTemplate.create(
+        Buffer.from(
+          `$schema: '${schemaPath}'
+transform:
+  - operation: resize
+    args:
+      width: 200
+      height: 200
+  - operation: save
+    args:
+      path: './test/\${{file.name}}_200x200\${{file.ext}}'`,
+          'utf-8',
+        ),
+      );
     }),
   };
 
@@ -61,6 +82,10 @@ describe('AppService', () => {
         {
           provide: ConfigService,
           useValue: mockConfigService,
+        },
+        {
+          provide: IMAGE_TRANSFORM_CONFIG_LOADER,
+          useValue: mockImageTransformConfigLoader,
         },
         {
           inject: [ConfigService],
@@ -222,11 +247,11 @@ describe('AppService', () => {
       const promise = firstValueFrom(result);
       await expect(promise).resolves.toMatchObject([
         {
-          path: './test/modified.jpeg',
-          filename: 'modified.jpeg',
+          path: './test/original_200x200.jpeg',
+          filename: 'original_200x200.jpeg',
           format: 'jpeg',
-          width: 300,
-          height: 300,
+          width: 200,
+          height: 200,
         },
       ]);
     });

@@ -6,7 +6,6 @@ import yaml from 'js-yaml';
 
 import type { MediaSourceOptions } from '../media-source/media-source.js';
 import type { MediaStorageConfig } from '../media-storage/media-storage.js';
-import type { NestedTransformOperations } from '../transform/operation/options.js';
 
 export const IMAGE_PROCESSOR_CONFIG = 'image-processor-config';
 const YAML_CONFIG_FILENAME =
@@ -15,7 +14,6 @@ const YAML_CONFIG_FILENAME =
 export interface ImageProcessorConfig {
   mediaSource?: MediaSourceOptions;
   mediaStorage?: MediaStorageConfig;
-  transform: NestedTransformOperations;
 }
 
 export default registerAs(IMAGE_PROCESSOR_CONFIG, () => {
