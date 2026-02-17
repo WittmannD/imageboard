@@ -80,8 +80,9 @@ jobs:
             CONFIG_URL="https://raw.githubusercontent.com/WittmannD/imageboard/${{ github.sha }}/docker-compose-ci.yaml"
             echo "Get docker compose config from ${CONFIG_URL}"
             wget -O docker-compose.yaml "$CONFIG_URL"
-
+            echo "${{ secrets.APP_ENV }}" > .env
+            
             docker compose -f docker-compose.yaml pull
-            docker compose -f docker-compose.yaml up -d
+            docker compose --env-file .env -f docker-compose.yaml up -d
 
             docker image prune -f

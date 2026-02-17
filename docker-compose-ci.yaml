@@ -10,9 +10,29 @@ services:
       timeout: 3s
       retries: 5
     ports:
-      - '6379:6379'
+      - '${REDIS_PORT:-6379}:6379'
     volumes:
       - redis-data:/data
+
+  postgres:
+    image: postgres:18-alpine
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    ports:
+      - '${DB_PORT:-5432}:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_NAME}']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-bridge
 
   image-server:
     image: ghcr.io/wittmannd/imageboard-image-server:latest
@@ -20,14 +40,23 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      database:
+        condition: service_healthy
     environment:
       REDIS_HOST: redis
-      REDIS_PORT: 6379
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      DB_HOST: postgres
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_PORT: ${DB_PORT:-5432}
       SHARED_PATH: /shared
     volumes:
       - shared-data:/shared
     ports:
-      - '3000:3000'
+      - '${API_PORT:-3000}:3000'
+    networks:
+      - app-bridge
 
   image-processor:
     image: ghcr.io/wittmannd/imageboard-image-processor:latest
@@ -37,7 +66,7 @@ services:
         condition: service_healthy
     environment:
       REDIS_HOST: redis
-      REDIS_PORT: 6379
+      REDIS_PORT: ${REDIS_PORT:-6379}
       SHARED_PATH: /shared
     volumes:
       - shared-data:/shared
@@ -45,3 +74,7 @@ services:
 volumes:
   redis-data:
   shared-data:
+
+networks:
+  app-bridge:
+    driver: bridge

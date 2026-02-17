@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { defer, EMPTY, from, mergeMap, switchMap } from 'rxjs';
-import type { DataSource } from 'typeorm';
+import { DataSource } from 'typeorm';
 
 import { ImageProcessorService } from '@hdotu1/image-processor-client';
 
 import type { FileUpload } from '../multer/file-upload.js';
 import type { CreatePostDto } from './dto/create-post.dto.js';
 import type { PostEntity } from './entities/post.entity.js';
-import type { PhotoRepository } from './repositories/photo.repository.js';
+import { PhotoRepository } from './repositories/photo.repository.js';
 import { PostRepository } from './repositories/post.repository.js';
 
 @Injectable()

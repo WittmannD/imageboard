@@ -1,13 +1,41 @@
 import { Module, ValidationPipe } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_PIPE } from '@nestjs/core';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { PublicationsModule } from './art/publications.module.js';
+import { isDev } from './common/dev.js';
 
 @Module({
-  imports: [ConfigModule.forRoot(), PublicationsModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '../../.env',
+    }),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        const sslEnabled = config.get('DB_SSL') === 'true';
+
+        return {
+          type: 'postgres',
+          host: config.get<string>('DB_HOST'),
+          port: Number(config.get('DB_PORT')),
+          username: config.get<string>('DB_USER'),
+          password: config.get<string>('DB_PASS'),
+          database: config.get<string>('DB_NAME'),
+
+          autoLoadEntities: true,
+          synchronize: isDev(),
+
+          ssl: sslEnabled ? { rejectUnauthorized: false } : false,
+        };
+      },
+    }),
+    PublicationsModule,
+  ],
   controllers: [AppController],
   providers: [
     {
