@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { Observable } from 'rxjs';
+import {from, mergeMap, Observable} from 'rxjs';
 
 import {
   type ImageProcessingMessage,
@@ -20,5 +20,13 @@ export class ImageProcessorService {
     data: ImageProcessingMessage,
   ): Observable<ImageProcessingResponse> {
     return this.client.send(ImageProcessorMessagePattern.ImageFromConfig, data);
+  }
+
+  public multipleFromConfig(
+    data: ImageProcessingMessage[],
+  ): Observable<ImageProcessingResponse> {
+    return from(data).pipe(
+      mergeMap(() => this.client.send(ImageProcessorMessagePattern.ImageFromConfig, data))
+    );
   }
 }

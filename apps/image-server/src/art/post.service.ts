@@ -1,52 +1,71 @@
 import { Injectable } from '@nestjs/common';
-import { defer, switchMap } from 'rxjs';
-import { DataSource } from 'typeorm';
+import { defer, EMPTY, from, mergeMap, switchMap } from 'rxjs';
+import type { DataSource } from 'typeorm';
 
 import { ImageProcessorService } from '@hdotu1/image-processor-client';
 
+import type { FileUpload } from '../multer/file-upload.js';
 import type { CreatePostDto } from './dto/create-post.dto.js';
-import { PhotoEntity } from './entities/photo.entity.js';
-import { PostEntity } from './entities/post.entity.js';
+import type { PostEntity } from './entities/post.entity.js';
+import type { PhotoRepository } from './repositories/photo.repository.js';
+import { PostRepository } from './repositories/post.repository.js';
 
 @Injectable()
 export class PostService {
   constructor(
-    private imageProcessor: ImageProcessorService,
-    private dataSource: DataSource,
+    private readonly imageProcessor: ImageProcessorService,
+    private readonly dataSource: DataSource,
+    private readonly postRepository: PostRepository,
+    private readonly photoRepository: PhotoRepository,
   ) {}
 
-  createUserPost(file: Express.Multer.File, data: CreatePostDto) {
-    this.imageProcessor
-      .fromConfig({
-        path: file.path,
-        mimetype: file.mimetype,
-      })
-      .pipe(
-        switchMap((processed) => {
-          return defer(() =>
-            this.dataSource.transaction(async (manager) => {
-              const photoEntities = processed.images.map((image) => {
-                return manager.create(PhotoEntity, {
-                  file: image.path,
-                  mimetype: image.mimetype,
-                  width: image.width,
-                  height: image.height,
-                });
-              });
+  async createUserPost(files: FileUpload[], dto: CreatePostDto) {
+    return await this.dataSource.transaction(
+      async (entityManager): Promise<PostEntity> => {
+        const postRepository = entityManager.withRepository(
+          this.postRepository,
+        );
+        const photoRepository = entityManager.withRepository(
+          this.photoRepository,
+        );
 
-              const postEntity = manager.create(PostEntity, {
-                caption: data.caption,
-                photos: photoEntities,
-                isPublished: false,
-              });
+        const postEntity = postRepository.createDraft({
+          caption: dto.caption,
+        });
+        const photoEntities = photoRepository.createDraftsForPost(
+          postEntity,
+          files,
+        );
 
-              await manager.save(postEntity);
+        await entityManager.save([postEntity, ...photoEntities]);
+
+        from(photoEntities)
+          .pipe(
+            mergeMap((photoEntity) => {
+              const file = files.find((f) => f.uuid === photoEntity.uploadUuid);
+
+              if (!file) {
+                return EMPTY;
+              }
+
+              return this.imageProcessor.fromConfig({ path: file.path }).pipe(
+                switchMap((processed) => {
+                  return defer(async () => {
+                    const readyPhotoEntity =
+                      await this.photoRepository.setProcessedAssets(
+                        photoEntity,
+                        processed.images,
+                      );
+                    await this.photoRepository.save(readyPhotoEntity);
+                  });
+                }),
+              );
             }),
-          );
-        }),
-      )
-      .subscribe({
-        next: (processed) => {},
-      });
+          )
+          .subscribe();
+
+        return postEntity;
+      },
+    );
   }
 }

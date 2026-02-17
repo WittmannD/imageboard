@@ -1,12 +1,12 @@
 import {
   Column,
   CreateDateColumn,
-  JoinTable,
-  ManyToMany,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
+import { PostStatus } from '../enums/post-status.enum.js';
 import { PhotoEntity } from './photo.entity.js';
 
 export class PostEntity {
@@ -16,8 +16,8 @@ export class PostEntity {
   @Column({ type: 'text', nullable: true })
   caption: string | null = null;
 
-  @Column({ default: false })
-  isPublished!: boolean;
+  @Column({ type: 'enum', enum: PostStatus, default: PostStatus.Draft })
+  status: PostStatus = PostStatus.Draft;
 
   @CreateDateColumn()
   createdAt!: Date;
@@ -25,7 +25,6 @@ export class PostEntity {
   @UpdateDateColumn()
   updatedAt!: Date;
 
-  @ManyToMany(() => PhotoEntity)
-  @JoinTable()
+  @OneToMany(() => PhotoEntity, (photo) => photo.post)
   photos!: PhotoEntity[];
 }

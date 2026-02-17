@@ -1,29 +1,45 @@
 import {
   Column,
   CreateDateColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
+import type { ImageOutput } from '@hdotu1/image-processor-contract';
+
+import { PhotoProcessingStatus } from '../enums/photo-status.enum.js';
+import { PostEntity } from './post.entity.js';
 
 export class PhotoEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column()
-  file!: string;
+  @Column({ unique: true })
+  uploadUuid!: string;
 
   @Column()
-  mimetype!: string;
+  key!: string;
 
-  @Column()
-  width!: number;
+  @Column({
+    type: 'jsonb',
+    default: [],
+  })
+  sourceSet: ImageOutput[] = [];
 
-  @Column()
-  height!: number;
+  @Column({
+    type: 'enum',
+    enum: PhotoProcessingStatus,
+    default: PhotoProcessingStatus.Pending,
+  })
+  status: PhotoProcessingStatus = PhotoProcessingStatus.Pending;
 
   @CreateDateColumn()
   createdAt!: Date;
 
   @UpdateDateColumn()
   updatedAt!: Date;
+
+  @ManyToOne(() => PostEntity, (post) => post.photos)
+  post!: PostEntity;
 }

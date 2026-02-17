@@ -1,5 +1,5 @@
 export interface ImageOutput {
-  path: string;
+  key: string;
   mimetype: string;
   size: number;
   width: number;
