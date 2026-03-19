@@ -1,29 +1,16 @@
-import {
-  Column,
-  CreateDateColumn,
-  OneToMany,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 
+import { BaseEntity } from '../../common/entity/base.entity.js';
 import { PostStatus } from '../enums/post-status.enum.js';
 import { PhotoEntity } from './photo.entity.js';
 
-export class PostEntity {
-  @PrimaryGeneratedColumn()
-  id!: number;
-
+@Entity()
+export class PostEntity extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   caption: string | null = null;
 
   @Column({ type: 'enum', enum: PostStatus, default: PostStatus.Draft })
   status: PostStatus = PostStatus.Draft;
-
-  @CreateDateColumn()
-  createdAt!: Date;
-
-  @UpdateDateColumn()
-  updatedAt!: Date;
 
   @OneToMany(() => PhotoEntity, (photo) => photo.post)
   photos!: PhotoEntity[];
