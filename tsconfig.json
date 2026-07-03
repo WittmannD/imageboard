@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {},
+    "paths": {
+      "src/*": ["./src/*"]
+    },
+    "types": ["node", "vitest"],
     "target": "es2023",
     "module": "nodenext",
     "moduleResolution": "nodenext",
