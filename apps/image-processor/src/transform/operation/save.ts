@@ -9,7 +9,7 @@ export interface ImageSaveOperationArgs {
 }
 
 export class SaveOperation extends TransformOperation {
-  override process(pipeline: Sharp, args: ImageSaveOperationArgs): Sharp {
+  override async process(pipeline: Sharp, args: ImageSaveOperationArgs): Promise<Sharp> {
     const filename = basename(args.key);
 
     this.eventEmitter.emit('before-output', new BeforeOutputEvent(this.uuid));
@@ -23,7 +23,8 @@ export class SaveOperation extends TransformOperation {
         }),
       );
     });
-    pipeline.pipe(this.outputFactory(args.key));
+    console.log(args.key);
+    pipeline.pipe(await this.outputFactory(args.key));
 
     return pipeline;
   }

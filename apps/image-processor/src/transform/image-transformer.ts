@@ -12,7 +12,7 @@ import type {
   NestedTransformOperations,
 } from './operation/options.js';
 
-export type OutputFactory = (key: string) => Writable;
+export type OutputFactory = (key: string) => Promise<Writable> | Writable;
 
 export class ImageTransformer extends ImageTransformerEventEmitter {
   private readonly operationMapper = new OperationMapper();

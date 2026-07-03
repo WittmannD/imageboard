@@ -25,7 +25,7 @@ services:
     ports:
       - '${DB_PORT:-5432}:5432'
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pg-data:/var/lib/postgresql/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_NAME}']
       interval: 5s
@@ -33,6 +33,21 @@ services:
       retries: 5
     networks:
       - app-bridge
+
+  pgweb:
+    container_name: pgweb
+    restart: always
+    image: sosedoff/pgweb
+    ports:
+      - "8081:8081"
+    links:
+      - postgres:postgres
+    networks:
+      - app-bridge
+    environment:
+      - PGWEB_DATABASE_URL=postgres://${DB_USER}:${DB_PASS}@postgres:${DB_PORT}/${DB_NAME}?sslmode=disable
+    depends_on:
+      - postgres
 
   image-server:
     build:
@@ -42,7 +57,7 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-      database:
+      postgres:
         condition: service_healthy
     environment:
       REDIS_HOST: redis
@@ -76,6 +91,7 @@ services:
       - shared-data:/shared
 
 volumes:
+  pg-data:
   redis-data:
   shared-data:
 

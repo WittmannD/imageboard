@@ -1,55 +1,25 @@
 import { Module, ValidationPipe } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { APP_PIPE } from '@nestjs/core';
 
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
-import imageProcessorConfig, {
-  IMAGE_PROCESSOR_CONFIG,
-} from './config/image-processor-config.js';
 import { ImageTransformConfigLoaderProvider } from './config/image-transform-config.js';
-import {
-  FsMediaSource,
-  type FsMediaSourceOptions,
-} from './media-source/fs-media-source.js';
-import { MEDIA_SOURCE } from './media-source/media-source.js';
-import { type FsMediaStorageOptions } from './media-storage/fs-media-storage.js';
-import { MEDIA_STORAGE } from './media-storage/media-storage.js';
+import { SourceStorageProvider } from './providers/storage/source-storage.provider.js';
+import { TransformStorageProvider } from './providers/storage/transform-storage.provider.js';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      load: [imageProcessorConfig],
-    }),
+    ConfigModule.forRoot({}),
   ],
   controllers: [AppController],
   providers: [
     {
-      inject: [ConfigService],
-      provide: MEDIA_SOURCE,
-      useFactory: (configService: ConfigService) =>
-        new FsMediaSource(
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          configService.get<FsMediaSourceOptions>(
-            `${IMAGE_PROCESSOR_CONFIG}.media-source`,
-          )!,
-        ),
-    },
-    {
-      inject: [ConfigService],
-      provide: MEDIA_STORAGE,
-      useFactory: (configService: ConfigService) =>
-        new FsMediaSource(
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          configService.get<FsMediaStorageOptions>(
-            `${IMAGE_PROCESSOR_CONFIG}.media-storage`,
-          )!,
-        ),
-    },
-    {
       provide: APP_PIPE,
       useClass: ValidationPipe,
     },
+    SourceStorageProvider,
+    TransformStorageProvider,
     ImageTransformConfigLoaderProvider,
     AppService,
   ],

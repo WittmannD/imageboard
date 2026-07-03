@@ -29,7 +29,6 @@ export default tseslint.config(
       vitest,
     },
     rules: {
-      // DIY
       '@typescript-eslint/no-extraneous-class': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',

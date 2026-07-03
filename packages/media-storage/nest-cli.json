@@ -1,7 +1,7 @@
 {
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
-  "entryFile": "app",
+  "entryFile": "index",
   "compilerOptions": {
     "tsConfigPath": "tsconfig.build.json",
     "deleteOutDir": true,
@@ -11,18 +11,6 @@
         "swcrcPath": "../../.swcrc"
       }
     },
-    "assets": [
-      {
-        "include": "../config/image-processor-config.yaml",
-        "outDir": "dist",
-        "watchAssets": true
-      },
-      {
-        "include": "./schema",
-        "outDir": "dist",
-        "watchAssets": true
-      }
-    ],
     "typeCheck": true
   }
 }

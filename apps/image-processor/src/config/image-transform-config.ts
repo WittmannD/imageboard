@@ -5,6 +5,7 @@ import { YamlTemplate } from '@hdotu1/yaml-template';
 
 import type { NestedTransformOperations } from '../transform/operation/options.js';
 
+const __dirname = import.meta.dirname;
 export const IMAGE_TRANSFORM_CONFIG_LOADER = 'IMAGE_TRANSFORM_CONFIG_LOADER';
 export const DEFAULT_IMAGE_TRANSFORM_CONFIG = 'image-transform.config.yaml';
 
@@ -34,7 +35,7 @@ export class ImageTransformConfigLoader {
   }
 }
 
-export const ImageTransformConfigLoaderProvider = {
+export const ImageTransformConfigLoaderProvider: Provider = {
   provide: IMAGE_TRANSFORM_CONFIG_LOADER,
   useClass: ImageTransformConfigLoader,
-} as Provider;
+};

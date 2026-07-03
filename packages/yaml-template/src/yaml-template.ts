@@ -75,6 +75,9 @@ export class YamlTemplate<T extends AnyObject> {
     return new YamlTemplate<T>(raw, validate, ajv);
   }
 
+  /**
+   * Interpolates the yaml config with the given context.
+   */
   public resolve(context: AnyObject): T {
     const resolved = Mustache.render(this.raw, context, {}, this.tags);
     const parsed = yaml.load(resolved, {

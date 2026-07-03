@@ -1,7 +1,6 @@
 // app.service.spec.ts
 
 import { Buffer } from 'node:buffer';
-import fs from 'node:fs';
 import fsPromises from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,59 +16,57 @@ import {
   IMAGE_TRANSFORM_CONFIG_LOADER,
   type ImageTransformConfig,
 } from './config/image-transform-config.js';
-import {
-  FsMediaSource,
-  type FsMediaSourceOptions,
-} from './media-source/fs-media-source.js';
-import { MEDIA_SOURCE } from './media-source/media-source.js';
-import {
-  FsMediaStorage,
-  type FsMediaStorageOptions,
-} from './media-storage/fs-media-storage.js';
-import { MEDIA_STORAGE } from './media-storage/media-storage.js';
 import type { NestedTransformOperation } from './transform/operation/options.js';
+import { SourceStorageProvider } from './providers/storage/source-storage.provider.js';
+import { TransformStorageProvider } from './providers/storage/transform-storage.provider.js';
+import path from 'node:path';
 
 describe('AppService', () => {
+  let mockConfigService;
   let service: AppService;
+  let root: string;
+  let mockImageTransformConfigLoader;
 
-  const mockConfigService = {
-    get: vi.fn((key: string, defaultValue?: unknown): unknown => {
-      const cfg = {
-        'media-source': {
-          basePath: './test',
-        } as unknown as FsMediaSourceOptions,
-        'media-storage': {
-          basePath: './test',
-        } as unknown as FsMediaStorageOptions,
-      };
+  beforeEach(async () => {
+    // reset mock call history + implementations between tests
+    vi.clearAllMocks();
 
-      if (key === 'image-processor-config') {
-        return cfg;
-      }
+    root = await fsPromises.mkdtemp(path.resolve('./test', 'app-service-'));
 
-      if (key === 'image-processor-config.media-storage') {
-        return cfg['media-storage'];
-      }
+    mockConfigService = {
+      get: vi.fn((key: string, defaultValue?: unknown): unknown => {
+        const cfg: Record<string, unknown> = {
+          SOURCE_STORAGE_PATH: './test',
+          TRANSFORM_STORAGE_PATH: './test',
+        };
 
-      if (key === 'image-processor-config.media-source') {
-        return cfg['media-source'];
-      }
+        return cfg[key] ?? defaultValue;
+      }),
+      getOrThrow: vi.fn((key: string): unknown => {
+        const cfg: Record<string, unknown> = {
+          SOURCE_STORAGE_PATH: './test',
+          TRANSFORM_STORAGE_PATH: root,
+        };
 
-      return defaultValue;
-    }),
-  };
+        if (!(key in cfg)) {
+          throw new Error();
+        }
 
-  const mockImageTransformConfigLoader = {
-    get: vi.fn((): Promise<YamlTemplate<ImageTransformConfig>> => {
-      const __dirname = dirname(fileURLToPath(import.meta.url));
-      const schemaPath = resolve(
-        __dirname,
-        './schema/image-transform-config.schema.json',
-      );
+        return cfg[key];
+      }),
+    };
 
-      return YamlTemplate.create(
-        Buffer.from(
-          `$schema: '${schemaPath}'
+    mockImageTransformConfigLoader = {
+      get: vi.fn((): Promise<YamlTemplate<ImageTransformConfig>> => {
+        const __dirname = dirname(fileURLToPath(import.meta.url));
+        const schemaPath = resolve(
+          __dirname,
+          './schema/image-transform-config.schema.json',
+        );
+
+        return YamlTemplate.create(
+          Buffer.from(
+            `$schema: '${schemaPath}'
 transform:
   - operation: resize
     args:
@@ -78,15 +75,11 @@ transform:
   - operation: save
     args:
       key: '\${{file.name}}_200x200\${{file.ext}}'`,
-          'utf-8',
-        ),
-      );
-    }),
-  };
-
-  beforeEach(async () => {
-    // reset mock call history + implementations between tests
-    vi.clearAllMocks();
+            'utf-8',
+          ),
+        );
+      }),
+    };
 
     const moduleRef = await Test.createTestingModule({
       imports: [],
@@ -99,33 +92,18 @@ transform:
           provide: IMAGE_TRANSFORM_CONFIG_LOADER,
           useValue: mockImageTransformConfigLoader,
         },
-        {
-          inject: [ConfigService],
-          provide: MEDIA_SOURCE,
-          useFactory: (configService: ConfigService) =>
-            new FsMediaSource(
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              configService.get<FsMediaSourceOptions>(
-                'image-processor-config.media-source',
-              )!,
-            ),
-        },
-        {
-          inject: [ConfigService],
-          provide: MEDIA_STORAGE,
-          useFactory: (configService: ConfigService) =>
-            new FsMediaStorage(
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              configService.get<FsMediaStorageOptions>(
-                'image-processor-config.media-storage',
-              )!,
-            ),
-        },
+        SourceStorageProvider,
+        TransformStorageProvider,
         AppService,
       ],
     }).compile();
 
     service = moduleRef.get(AppService);
+  });
+
+  afterEach(async () => {
+    // remove artifacts
+    await fsPromises.rm(root, { recursive: true, force: true });
   });
 
   it('should be defined', () => {
@@ -278,20 +256,5 @@ transform:
         },
       ]);
     });
-  });
-
-  afterEach(async () => {
-    const files = fs.globSync('./test/*.*', {
-      exclude: ['test\\original.jpeg'],
-    });
-    if (files.length === 0) {
-      return;
-    }
-
-    await Promise.allSettled(
-      files.map(async (file) => {
-        return fsPromises.unlink(file);
-      }),
-    );
   });
 });

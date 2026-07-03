@@ -1,0 +1,5 @@
+mediaSource:
+  basePath: './'
+
+mediaStorage:
+  basePath: './'

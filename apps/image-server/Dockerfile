@@ -6,7 +6,7 @@ ARG APP=image-server
 WORKDIR /usr/src/app
 
 COPY package*.json ./
-COPY packages/*/package.json ./packages/
+COPY --parents packages/*/package.json ./
 COPY apps/${APP}/package.json ./apps/${APP}/package.json
 
 RUN npm i

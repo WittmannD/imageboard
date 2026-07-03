@@ -1,0 +1,44 @@
+{
+  "name": "@hdotu1/media-storage",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "exports": {
+    "./core": {
+      "import": "./dist/core/index.js",
+      "types": "./src/core/index.ts"
+    },
+    "./drivers": {
+      "import": "./dist/drivers/index.js",
+      "types": "./src/drivers/index.ts"
+    },
+    "./errors": {
+      "import": "./dist/errors/index.js",
+      "types": "./src/errors/index.ts"
+    },
+    "./common": {
+      "import": "./dist/common/index.js",
+      "types": "./src/common/index.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
+    "build": "nest build"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.7",
+    "@nestjs/testing": "^11.1.2"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "rxjs": "^7.8.2"
+  }
+}

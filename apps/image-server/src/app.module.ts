@@ -6,7 +6,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { PublicationsModule } from './art/publications.module.js';
-import { isDev } from './common/dev.js';
 
 @Module({
   imports: [
@@ -28,7 +27,7 @@ import { isDev } from './common/dev.js';
           database: config.get<string>('DB_NAME'),
 
           autoLoadEntities: true,
-          synchronize: isDev(),
+          synchronize: true,
 
           ssl: sslEnabled ? { rejectUnauthorized: false } : false,
         };

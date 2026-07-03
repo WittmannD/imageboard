@@ -70,7 +70,7 @@ export async function resolveSchemaPathFromYaml(
 
   const property = await getFirstYamlProperty(source);
 
-  if (!property || property.key !== '$schema') {
+  if (property?.key !== '$schema') {
     throw new Error('JSON schema must be on top of the YAML file');
   }
 
