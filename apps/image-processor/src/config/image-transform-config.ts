@@ -3,14 +3,14 @@ import type { Provider } from '@nestjs/common';
 
 import { YamlTemplate } from '@hdotu1/yaml-template';
 
-import type { NestedTransformOperations } from '../transform/operation/options.js';
+import type { OperationNestedConfigs } from '../transform/operation/operation-map.js';
 
 const __dirname = import.meta.dirname;
 export const IMAGE_TRANSFORM_CONFIG_LOADER = 'IMAGE_TRANSFORM_CONFIG_LOADER';
 export const DEFAULT_IMAGE_TRANSFORM_CONFIG = 'image-transform.config.yaml';
 
 export interface ImageTransformConfig {
-  transform: NestedTransformOperations;
+  transform: OperationNestedConfigs;
 }
 
 export class ImageTransformConfigLoader {

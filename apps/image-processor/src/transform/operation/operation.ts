@@ -1,22 +1,12 @@
-import { randomUUID } from 'node:crypto';
-import { EventEmitter } from 'node:events';
 import type { Sharp } from 'sharp';
 
-import type { OutputFactory } from '../image-transformer.js';
-import type { ImageTransformOptions } from './options.js';
+import type { OperationContext } from './operation-context.js';
+import type { OperationArgsMap } from './operation-map.js';
 
-export abstract class TransformOperation {
-  public readonly uuid;
-
-  constructor(
-    public readonly outputFactory: OutputFactory,
-    public readonly eventEmitter = new EventEmitter(),
-  ) {
-    this.uuid = randomUUID();
-  }
-
-  abstract process(
+export interface Operation<K extends keyof OperationArgsMap> {
+  process(
     pipeline: Sharp,
-    args: ImageTransformOptions['args'],
+    args: OperationArgsMap[K],
+    context: OperationContext,
   ): Sharp | Promise<Sharp>;
 }

@@ -3,6 +3,7 @@
 import { Buffer } from 'node:buffer';
 import fsPromises from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
@@ -16,10 +17,11 @@ import {
   IMAGE_TRANSFORM_CONFIG_LOADER,
   type ImageTransformConfig,
 } from './config/image-transform-config.js';
-import type { NestedTransformOperation } from './transform/operation/options.js';
 import { SourceStorageProvider } from './providers/storage/source-storage.provider.js';
 import { TransformStorageProvider } from './providers/storage/transform-storage.provider.js';
-import path from 'node:path';
+import type {
+  OperationNestedConfigs,
+} from './transform/operation/operation-map.js';
 
 describe('AppService', () => {
   let mockConfigService;
@@ -37,7 +39,7 @@ describe('AppService', () => {
       get: vi.fn((key: string, defaultValue?: unknown): unknown => {
         const cfg: Record<string, unknown> = {
           SOURCE_STORAGE_PATH: './test',
-          TRANSFORM_STORAGE_PATH: './test',
+          TRANSFORM_STORAGE_PATH: root,
         };
 
         return cfg[key] ?? defaultValue;
@@ -210,7 +212,7 @@ transform:
                 key: `converted.${format}`,
               },
             },
-          ] satisfies NestedTransformOperation,
+          ] satisfies OperationNestedConfigs,
       );
       const result = service.process('original.jpeg', [
         {

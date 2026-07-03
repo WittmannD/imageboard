@@ -1,7 +1,5 @@
-import * as fs from 'node:fs';
 import type { Readable } from 'node:stream';
 import { Inject, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import {
   defer,
   first,
@@ -22,12 +20,12 @@ import {
   ImageTransformConfigLoader,
 } from './config/image-transform-config.js';
 import { SOURCE_STORAGE } from './providers/storage/source-storage.provider.js';
+import { TRANSFORM_STORAGE } from './providers/storage/transform-storage.provider.js';
 import { type FileOutputInfo, OutputEvent } from './transform/events.js';
-import { ImageOperationContext } from './transform/image-operation-context.js';
 import { ImageTransformer } from './transform/image-transformer.js';
-import type { NestedTransformOperations } from './transform/operation/options.js';
+import type { OperationNestedConfigs } from './transform/operation/operation-map.js';
+import { TransformConfigContext } from './transform/transform-config-context.js';
 import { peekMetadata } from './utils/stream.js';
-import * as path from "node:path";
 
 @Injectable()
 export class AppService {
@@ -35,19 +33,16 @@ export class AppService {
     @Inject(IMAGE_TRANSFORM_CONFIG_LOADER)
     private imageTransformConfigLoader: ImageTransformConfigLoader,
     @Inject(SOURCE_STORAGE) private sourceStorage: StorageDriver,
-    // @Inject(TRANSFORM_STORAGE) private outputStorage: StorageDriver,
-    private configService: ConfigService,
+    @Inject(TRANSFORM_STORAGE) private outputStorage: StorageDriver,
   ) {}
 
   private transform(
     source: Readable,
-    operations: NestedTransformOperations,
+    operations: OperationNestedConfigs,
   ): Observable<FileOutputInfo[]> {
-    const imageTransformer = new ImageTransformer(operations, (key) =>
-      // todo: replace with storage upload method
-      fs.createWriteStream(
-        path.resolve(this.configService.getOrThrow<string>('TRANSFORM_STORAGE_PATH'), key),
-      ),
+    const imageTransformer = new ImageTransformer(
+      operations,
+      this.outputStorage,
     );
 
     imageTransformer.transform(source);
@@ -64,7 +59,7 @@ export class AppService {
 
   public process(
     imageKey: string,
-    operations: NestedTransformOperations,
+    operations: OperationNestedConfigs,
   ): Observable<FileOutputInfo[]> {
     return from(this.sourceStorage.download(imageKey)).pipe(
       switchMap((imageStream) => this.transform(imageStream, operations)),
@@ -83,7 +78,7 @@ export class AppService {
           const metadata = await peekMetadata(imageStream);
           const transformConfig =
             await this.imageTransformConfigLoader.get(configKey);
-          const context = ImageOperationContext.create({
+          const context = TransformConfigContext.create({
             metadata,
             key: imageKey,
           });

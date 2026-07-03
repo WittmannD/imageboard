@@ -1,41 +1,41 @@
-import type { Readable, Writable } from 'node:stream';
+import * as crypto from 'node:crypto';
+import type { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import sharp from 'sharp';
+
+import type { StorageDriver } from '@hdotu1/media-storage/drivers';
 
 import { devNull } from '../utils/stream.js';
 import { ImageTransformerEventEmitter } from './event-emitter.js';
 import { EndEvent } from './events.js';
-import type { TransformOperation } from './operation/operation.js';
-import { OperationMapper } from './operation/operation-mapper.js';
-import type {
-  ImageTransformOptions,
-  NestedTransformOperations,
-} from './operation/options.js';
-
-export type OutputFactory = (key: string) => Promise<Writable> | Writable;
+import { createOperationContext } from './operation/operation-context.js';
+import {
+  type OperationArgsMap,
+  type OperationConfig,
+  operationMap,
+  type OperationNestedConfig,
+  type OperationNestedConfigs,
+} from './operation/operation-map.js';
 
 export class ImageTransformer extends ImageTransformerEventEmitter {
-  private readonly operationMapper = new OperationMapper();
   private readonly writeTasks: Set<string> = new Set<string>();
-  private readonly outputFactory: OutputFactory;
 
   constructor(
-    private readonly operations: NestedTransformOperations,
-    createOutput?: OutputFactory,
+    private readonly operationConfig: OperationNestedConfigs,
+    private readonly storage: StorageDriver,
   ) {
     super();
 
-    this.outputFactory = createOutput ?? (() => devNull());
     this.addWriteTaskListeners();
   }
 
   private addWriteTaskListeners() {
     this.on('before-output', (event) => {
-      this.writeTasks.add(event.uuid);
+      this.writeTasks.add(event.operationUuid);
     });
 
     this.on('output', (event) => {
-      this.writeTasks.delete(event.uuid);
+      this.writeTasks.delete(event.operationUuid);
     });
   }
 
@@ -53,36 +53,50 @@ export class ImageTransformer extends ImageTransformerEventEmitter {
     });
   }
 
+  private isOperationArray(
+    operations: OperationNestedConfig,
+  ): operations is readonly OperationNestedConfig[] {
+    return Array.isArray(operations);
+  }
+
+  private async executeOperation<K extends keyof OperationArgsMap>(
+    pipeline: sharp.Sharp,
+    config: OperationConfig<K>,
+  ) {
+    const context = createOperationContext(
+      crypto.randomUUID(),
+      this.storage,
+      this,
+    );
+    await operationMap[config.operation].process(
+      pipeline,
+      config.args,
+      context,
+    );
+  }
+
   private async applyOperations(
     transformPipeline: sharp.Sharp,
-    operations: NestedTransformOperations,
+    configs: OperationNestedConfigs,
   ) {
-    for (const transformOptionsOrArray of operations) {
-      if (
-        Array.isArray(transformOptionsOrArray) &&
-        transformOptionsOrArray.length
-      ) {
+    for (const configOrArray of configs) {
+      if (this.isOperationArray(configOrArray) && configOrArray.length) {
         const forkPipeline = transformPipeline.clone();
-        await this.applyOperations(forkPipeline, transformOptionsOrArray);
+        await this.applyOperations(forkPipeline, configOrArray);
         continue;
       }
 
-      const transformOptions = transformOptionsOrArray as ImageTransformOptions;
-      const operation: TransformOperation = this.operationMapper.getInstance(
-        transformOptions.operation,
-        this.outputFactory,
-        this,
-      );
-
-      await operation.process(transformPipeline, transformOptions.args);
+      const operationConfig = configOrArray as OperationConfig;
+      await this.executeOperation(transformPipeline, operationConfig);
     }
   }
 
   transform(imageStream: Readable): this {
     const sharpPipeline = sharp();
 
-    void this.applyOperations(sharpPipeline, this.operations)
-      .then(() => pipeline(imageStream, sharpPipeline))
+    void this.applyOperations(sharpPipeline, this.operationConfig)
+      // We pipe the image stream to devnull so that if there are no save operations, the stream does not hang
+      .then(() => pipeline(imageStream, sharpPipeline, devNull()))
       .then(() => this.waitForWriteTasks())
       .then(() => {
         this.emit('end', new EndEvent());

@@ -1,11 +1,11 @@
 import type { Sharp, TrimOptions } from 'sharp';
 
-import { TransformOperation } from './operation.js';
+import type { Operation } from './operation.js';
 
 export type ImageTrimOperationArgs = TrimOptions;
 
-export class TrimOperation extends TransformOperation {
-  override process(pipeline: Sharp, args: ImageTrimOperationArgs): Sharp {
+export const TrimOperation: Operation<'trim'> = {
+  process(pipeline: Sharp, args: ImageTrimOperationArgs): Sharp {
     return pipeline.trim(args);
   }
 }

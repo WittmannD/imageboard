@@ -1,11 +1,11 @@
 import type { Sharp, WebpOptions } from 'sharp';
 
-import { TransformOperation } from './operation.js';
+import type { Operation } from './operation.js';
 
 export type ImageWebpOperationArgs = WebpOptions;
 
-export class WebpOperation extends TransformOperation {
-  override process(pipeline: Sharp, args: ImageWebpOperationArgs): Sharp {
+export const WebpOperation: Operation<'webp'> = {
+  process(pipeline: Sharp, args: ImageWebpOperationArgs): Sharp {
     return pipeline.webp(args);
   }
 }

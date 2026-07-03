@@ -8,7 +8,7 @@ export interface ImageOperationContextValues {
   key: string;
 }
 
-export class ImageOperationContext {
+export class TransformConfigContext {
   public readonly uuid: string;
   private constructor(
     public readonly file: ImageOperationContextImageFile,
@@ -18,7 +18,7 @@ export class ImageOperationContext {
   }
 
   static create(values: ImageOperationContextValues) {
-    return new ImageOperationContext(
+    return new TransformConfigContext(
       parse(values.key),
       values.metadata,
     );

@@ -1,11 +1,11 @@
 import type { AvifOptions, Sharp } from 'sharp';
 
-import { TransformOperation } from './operation.js';
+import type { Operation } from './operation.js';
 
 export type ImageAvifOperationArgs = AvifOptions;
 
-export class AvifOperation extends TransformOperation {
-  override process(pipeline: Sharp, args: ImageAvifOperationArgs): Sharp {
+export const AvifOperation: Operation<'avif'> = {
+  process(pipeline: Sharp, args: ImageAvifOperationArgs): Sharp {
     return pipeline.avif(args);
   }
 }

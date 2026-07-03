@@ -9,7 +9,7 @@ export abstract class ImageTransformerEvent {}
 
 export class OutputEvent extends ImageTransformerEvent {
   constructor(
-    public readonly uuid: string,
+    public readonly operationUuid: string,
     public readonly data: FileOutputInfo,
   ) {
     super();
@@ -17,9 +17,18 @@ export class OutputEvent extends ImageTransformerEvent {
 }
 
 export class BeforeOutputEvent extends ImageTransformerEvent {
-  constructor(public readonly uuid: string) {
+  constructor(public readonly operationUuid: string) {
     super();
   }
 }
 
 export class EndEvent extends ImageTransformerEvent {}
+
+export class ErrorEvent extends ImageTransformerEvent {
+  constructor(
+    public readonly operationUuid: string,
+    public readonly error: Error,
+  ) {
+    super();
+  }
+}

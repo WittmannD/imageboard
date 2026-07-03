@@ -6,6 +6,7 @@ interface EventMap {
   'before-output': [BeforeOutputEvent];
   output: [OutputEvent];
   end: [EndEvent];
+  error: [ErrorEvent];
 }
 
 export class ImageTransformerEventEmitter extends EventEmitter<EventMap> {}
