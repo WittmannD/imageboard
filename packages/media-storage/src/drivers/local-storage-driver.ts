@@ -12,11 +12,15 @@ import { StorageError } from '../errors/storage-error.js';
 import { errorFromCode } from '../helpers/error-from-code.js';
 import { InvalidKeyError } from '../errors/index.js';
 
+export interface LocalStorageDriverOptions {
+  root: string;
+}
+
 export class LocalStorageDriver implements ReadableStorage, WritableStorage {
   private readonly root: string;
 
-  constructor(root: string) {
-    this.root = path.resolve(root);
+  constructor(options: LocalStorageDriverOptions) {
+    this.root = path.resolve(options.root);
   }
 
   async upload(

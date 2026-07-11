@@ -16,7 +16,7 @@ import { AppService } from './app.service.js';
 import {
   IMAGE_TRANSFORM_CONFIG_LOADER,
   type ImageTransformConfig,
-} from './config/image-transform-config.js';
+} from './providers/image-transform-config.js';
 import { SourceStorageProvider } from './providers/storage/source-storage.provider.js';
 import { TransformStorageProvider } from './providers/storage/transform-storage.provider.js';
 import type {

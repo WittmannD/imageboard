@@ -89,6 +89,8 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: ${REDIS_PORT:-6379}
       SHARED_PATH: /shared
+    env_file:
+      - '.env'
     volumes:
       - shared-data:/shared
     networks:

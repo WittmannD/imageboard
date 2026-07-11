@@ -18,7 +18,7 @@ import {
   DEFAULT_IMAGE_TRANSFORM_CONFIG,
   IMAGE_TRANSFORM_CONFIG_LOADER,
   ImageTransformConfigLoader,
-} from './config/image-transform-config.js';
+} from './providers/image-transform-config.js';
 import { SOURCE_STORAGE } from './providers/storage/source-storage.provider.js';
 import { TRANSFORM_STORAGE } from './providers/storage/transform-storage.provider.js';
 import { type FileOutputInfo, OutputEvent } from './transform/events.js';
