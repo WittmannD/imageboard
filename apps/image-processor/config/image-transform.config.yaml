@@ -1,0 +1,11 @@
+$schema: './schema/image-transform-config.schema.json'
+transform:
+  - operation: resize
+    args:
+      width: 480
+  - operation: jpeg
+    args:
+      quality: 80
+  - operation: save
+    args:
+      key: '${{file.name}}_w480.jpeg'

@@ -8,6 +8,6 @@ export const SOURCE_STORAGE = 'SOURCE_STORAGE';
 export const SourceStorageProvider: Provider = {
   provide: SOURCE_STORAGE,
   useFactory: (configService: ConfigService) =>
-    new LocalStorageDriver(configService.get('SOURCE_STORAGE_PATH', '/')),
+    new LocalStorageDriver(configService.get('SHARED_PATH', '/tmp')),
   inject: [ConfigService]
 };

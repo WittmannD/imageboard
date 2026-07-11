@@ -13,7 +13,7 @@
     },
     "assets": [
       {
-        "include": "../config/image-processor-config.yaml",
+        "include": "../config/image-transform.config.yaml",
         "outDir": "dist",
         "watchAssets": true
       },

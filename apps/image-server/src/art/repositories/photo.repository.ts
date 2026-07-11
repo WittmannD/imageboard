@@ -4,6 +4,7 @@ import { type DataSource, Repository } from 'typeorm';
 
 import type { ImageOutput } from '@hdotu1/image-processor-contract';
 
+import { prototypeToObject } from '../../common/utils/object.js';
 import type { FileUpload } from '../../multer/file-upload.js';
 import { PhotoEntity } from '../entities/photo.entity.js';
 import type { PostEntity } from '../entities/post.entity.js';
@@ -45,6 +46,6 @@ export const PhotoRepositoryProvider = {
   useFactory: (dataSource: DataSource) => {
     return dataSource
       .getRepository(PhotoEntity)
-      .extend(PhotoRepository.prototype);
+      .extend(prototypeToObject(PhotoRepository.prototype));
   },
 } as Provider;

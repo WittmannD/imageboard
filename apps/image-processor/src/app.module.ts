@@ -10,7 +10,9 @@ import { TransformStorageProvider } from './providers/storage/transform-storage.
 
 @Module({
   imports: [
-    ConfigModule.forRoot({}),
+    ConfigModule.forRoot({
+      isGlobal: true
+    }),
   ],
   controllers: [AppController],
   providers: [

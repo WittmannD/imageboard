@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { defer, EMPTY, from, mergeMap, switchMap } from 'rxjs';
+import { catchError, defer, EMPTY, from, mergeMap, switchMap } from 'rxjs';
 import { DataSource, In } from 'typeorm';
 
 import { ImageProcessorService } from '@hdotu1/image-processor-client';
@@ -66,6 +66,10 @@ export class PostService {
                     await this.postRepository.save(postEntity);
                     await this.photoRepository.save(readyPhotoEntity);
                   });
+                }),
+                catchError((error) => {
+                  console.log('ImageProcessor Error', error);
+                  return EMPTY;
                 }),
               );
             }),

@@ -5,6 +5,7 @@ import { type DataSource, type DeepPartial, Repository } from 'typeorm';
 import type { PageMetadataDecoded } from '../../common/dto/page.dto.js';
 import { PostEntity } from '../entities/post.entity.js';
 import { PostStatus } from '../enums/post-status.enum.js';
+import { prototypeToObject } from '../../common/utils/object.js';
 
 export interface PostPage extends PageMetadataDecoded<PostEntity> {
   items: PostEntity[];
@@ -25,6 +26,6 @@ export const PostRepositoryProvider = {
   useFactory: (dataSource: DataSource) => {
     return dataSource
       .getRepository(PostEntity)
-      .extend(PostRepository.prototype);
+      .extend(prototypeToObject(PostRepository.prototype));
   },
-} as Provider;
+} satisfies Provider;

@@ -1,6 +1,39 @@
+POST http://localhost:3000/posts
+Content-Type: multipart/form-data; boundary=Boundary
+
+--Boundary
+Content-Disposition: form-data; name="body"
+Content-Type: application/json
+
+{
+  "caption": "Test post"
+}
+
+--Boundary
+Content-Disposition: form-data; name="images"; filename="a.png"
+Content-Type: image/png
+
+< ../images/a.png
+
+--Boundary
+Content-Disposition: form-data; name="images"; filename="b.jpg"
+Content-Type: image/jpeg
+
+< ../images/b.jpg
+
+--Boundary
+Content-Disposition: form-data; name="images"; filename="c.jpg"
+Content-Type: image/jpeg
+
+< ../images/c.jpg
+
+--Boundary--
+
+###
 GET http://localhost:3000/posts
 Accept: application/json
 
 ###
+
 
 ###

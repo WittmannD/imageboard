@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import * as path from 'node:path';
 import type { Provider } from '@nestjs/common';
 
 import { YamlTemplate } from '@hdotu1/yaml-template';
@@ -14,7 +14,7 @@ export interface ImageTransformConfig {
 }
 
 export class ImageTransformConfigLoader {
-  private readonly publicConfigDir = '../../config';
+  private readonly publicConfigDir = path.resolve(__dirname, '../');
   private readonly configs = new Map<
     string,
     YamlTemplate<ImageTransformConfig>
@@ -28,7 +28,7 @@ export class ImageTransformConfigLoader {
     }
 
     const yamlConfigTemplate = await YamlTemplate.create<ImageTransformConfig>(
-      join(__dirname, this.publicConfigDir, key),
+      path.resolve(this.publicConfigDir, key),
     );
     this.configs.set(key, yamlConfigTemplate);
     return yamlConfigTemplate;

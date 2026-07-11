@@ -13,6 +13,8 @@ services:
       - '${REDIS_PORT:-6379}:6379'
     volumes:
       - redis-data:/data
+    networks:
+      - app-bridge
 
   postgres:
     image: postgres:18-alpine
@@ -89,6 +91,8 @@ services:
       SHARED_PATH: /shared
     volumes:
       - shared-data:/shared
+    networks:
+      - app-bridge
 
 volumes:
   pg-data:
