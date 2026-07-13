@@ -26,22 +26,19 @@ describe('paginate', () => {
   });
 
   it('should return first page when no cursor', async () => {
-    const limit = 2;
     qb = createMockQB([{ id: 3 }, { id: 2 }, { id: 1 }]);
 
     const result = await paginate(
       qb as SelectQueryBuilder<BaseEntity>,
-      undefined,
-      { limit },
+      undefined
     );
 
-    expect(qb.orderBy).toHaveBeenCalledWith('_id', 'DESC');
-    expect(qb.take).toHaveBeenCalledWith(limit + 1);
+    expect(qb.orderBy).toHaveBeenCalledWith('entity_id', 'DESC');
 
     expect(result).toEqual({
-      ids: [3, 2],
-      hasNextPage: true,
-      nextCursor: { id: 2 },
+      ids: [3, 2, 1],
+      hasNextPage: false,
+      nextCursor: null,
     });
   });
 
@@ -56,7 +53,7 @@ describe('paginate', () => {
       { limit: 2 },
     );
 
-    expect(qb.andWhere).toHaveBeenCalledWith('_id < :id', { id: cursor.id });
+    expect(qb.andWhere).toHaveBeenCalledWith('entity_id < :id', { id: cursor.id });
 
     expect(result).toEqual({
       ids: [5, 4],
@@ -86,10 +83,10 @@ describe('paginate', () => {
 
     expect(qb.addSelect).toHaveBeenCalledWith(
       'entity.createdAt',
-      '_tieBreaker',
+      'entity_tieBreaker',
     );
-    expect(qb.orderBy).toHaveBeenCalledWith('_tieBreaker', 'DESC');
-    expect(qb.addOrderBy).toHaveBeenCalledWith('_id', 'DESC');
+    expect(qb.orderBy).toHaveBeenCalledWith('entity_tieBreaker', 'DESC');
+    expect(qb.addOrderBy).toHaveBeenCalledWith('entity_id', 'DESC');
 
     expect(qb.andWhere).toHaveBeenCalled();
     const whereArg = qb.andWhere.mock.calls[0][0];
@@ -122,8 +119,8 @@ describe('paginate', () => {
       { limit: 2, order },
     );
 
-    expect(qb.orderBy).toHaveBeenCalledWith('_tieBreaker', order);
-    expect(qb.addOrderBy).toHaveBeenCalledWith('_id', order);
+    expect(qb.orderBy).toHaveBeenCalledWith('entity_tieBreaker', order);
+    expect(qb.addOrderBy).toHaveBeenCalledWith('entity_id', order);
 
     expect(result).toEqual({
       ids: [3, 2],

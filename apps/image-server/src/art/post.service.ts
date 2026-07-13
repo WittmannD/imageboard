@@ -63,6 +63,7 @@ export class PostService {
                         photoEntity,
                         processed.images,
                       );
+                    readyPhotoEntity.post = postEntity;
                     await this.postRepository.save(postEntity);
                     await this.photoRepository.save(readyPhotoEntity);
                   });

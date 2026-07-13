@@ -26,29 +26,32 @@ export async function paginate<Entity extends BaseEntity>(
     tieBreakerKey !== undefined && tieBreakerValue !== undefined;
   const op = order === 'DESC' ? '<' : '>';
 
-  query = query.addSelect(`${query.alias}.id`, '_id');
+  query = query.addSelect(`${query.alias}.id`, `${query.alias}_id`);
 
   if (id === undefined) {
     // if there is no id in the cursor return the first page
-    query = query.orderBy(`_id`, order).take(limit + 1);
+    query = query.orderBy(`${query.alias}_id`, order).take(limit + 1);
   } else if (tieBroken) {
     // if there are id and tieBreaker values in the cursor return key-set-paginated page
     query = query
-      .addSelect(`${query.alias}.${tieBreakerKey}`, '_tieBreaker')
-      .orderBy(`_tieBreaker`, order)
-      .addOrderBy('_id', order)
+      .addSelect(
+        `${query.alias}.${tieBreakerKey}`,
+        `${query.alias}_tieBreaker`,
+      )
+      .orderBy(`${query.alias}_tieBreaker`, order)
+      .addOrderBy(`${query.alias}_id`, order)
       .take(limit + 1)
       .andWhere(
         new Brackets((w) => {
-          w.where(`_tieBreaker ${op} :tieBreakerValue`, {
+          w.where(`${query.alias}_tieBreaker ${op} :tieBreakerValue`, {
             tieBreakerKey,
             tieBreakerValue,
           }).orWhere(
             new Brackets((w2) => {
-              w2.where(`_tieBreaker = :tieBreakerValue`, {
+              w2.where(`${query.alias}_tieBreaker = :tieBreakerValue`, {
                 tieBreakerKey,
                 tieBreakerValue,
-              }).andWhere(`_id ${op} :id`, { id });
+              }).andWhere(`${query.alias}_id ${op} :id`, { id });
             }),
           );
         }),
@@ -56,9 +59,9 @@ export async function paginate<Entity extends BaseEntity>(
   } else {
     // if there is only id return a page based on it
     query = query
-      .orderBy(`_id`, order)
+      .orderBy(`${query.alias}_id`, order)
       .take(limit + 1)
-      .andWhere(`_id ${op} :id`, { id });
+      .andWhere(`${query.alias}_id ${op} :id`, { id });
   }
   const idRows = await query.getMany();
 
