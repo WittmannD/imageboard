@@ -1,0 +1,21 @@
+{
+  "name": "@hdotu1/gallery-layout-engine",
+  "version": "1.0.0",
+  "description": "Virtual calculations for gallery layout",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
+    "build": "del-cli dist && tsc -p tsconfig.build.json"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
