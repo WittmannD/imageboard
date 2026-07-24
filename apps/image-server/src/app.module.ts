@@ -7,6 +7,7 @@ import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { PublicationsModule } from './art/publications.module.js';
 import AppConfig from './config/app-config.js';
+import { TransactionService } from './common/services/transaction.service.js';
 
 @Module({
   imports: [
@@ -43,7 +44,11 @@ import AppConfig from './config/app-config.js';
       provide: APP_PIPE,
       useClass: ValidationPipe,
     },
+    TransactionService,
     AppService,
   ],
+  exports: [
+    TransactionService
+  ]
 })
 export class AppModule {}

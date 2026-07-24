@@ -29,11 +29,11 @@ export class PostController {
   @Post()
   @UseInterceptors(FilesInterceptor('images', 3))
   @SerializeOptions({ type: PostDraftDto })
-  public async upload(
+  public async create(
     @UploadedFiles() images: FileUpload[],
     @Body() body: CreatePostDto,
   ): Promise<PostDraftDto> {
-    return (await this.postService.createUserPost(
+    return (await this.postService.createPost(
       images,
       body,
     )) as PostDraftDto;
@@ -41,10 +41,10 @@ export class PostController {
 
   @Get()
   @SerializeOptions({ type: PageDto<PostDto>(PostDto) })
-  public async getPublished(
+  public async getPaginated(
     @Query() queryParams: KeySetQueryDto<PostEntity>,
   ): Promise<PostPage> {
-    return await this.postService.list(queryParams.cursor, {
+    return await this.postService.getPaginatedPosts(queryParams.cursor, {
       limit: queryParams.limit,
       order: queryParams.order,
     });

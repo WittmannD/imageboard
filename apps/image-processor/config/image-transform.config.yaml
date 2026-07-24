@@ -2,10 +2,12 @@ $schema: './schema/image-transform-config.schema.json'
 transform:
   - operation: resize
     args:
-      width: 480
+      width: ${{variables.tile.width}}
+      height: ${{variables.tile.height}}
+      fir: ${{variables.tile.fit}}
   - operation: jpeg
     args:
       quality: 80
   - operation: save
     args:
-      key: '${{file.name}}_w480.jpeg'
+      key: ${{file.name}}_tile.jpeg

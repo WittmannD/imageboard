@@ -7,9 +7,9 @@ export interface ImageOutput {
 }
 
 export interface ImageProcessingMessage {
-  path: string;
+  key: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  overrides?: Record<string, any>;
+  variables?: Record<string, any>;
 }
 
 export interface ImageProcessingResponse {

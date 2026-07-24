@@ -4,9 +4,9 @@ import type { ImageProcessingMessage } from '@hdotu1/image-processor-contract';
 
 export class ImageProcessingMessageDto implements ImageProcessingMessage {
   @IsString()
-  path!: string;
+  key!: string;
 
   @IsOptional()
   @IsObject()
-  overrides?: Record<string, unknown>;
+  variables?: Record<string, unknown>;
 }

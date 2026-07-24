@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@hdotu1/common": "file:../../packages/common",
+    "@hdotu1/gallery-layout-engine": "file:../../packages/gallery-layout-engine",
     "@hdotu1/image-processor-client": "file:../../packages/image-processor-client",
     "@nestjs/common": "^11.1.2",
     "@nestjs/config": "^4.0.2",
@@ -28,6 +29,7 @@
     "@nestjs/typeorm": "^11.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
+    "image-size": "^2.0.2",
     "ioredis": "^5.9.3",
     "pg": "^8.18.0",
     "reflect-metadata": "^0.2.2",

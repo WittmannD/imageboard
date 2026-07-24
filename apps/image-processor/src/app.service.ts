@@ -68,6 +68,7 @@ export class AppService {
 
   public processFromConfig(
     imageKey: string,
+    variables?: Record<string, unknown>,
     configKey?: string,
   ): Observable<FileOutputInfo[]> {
     configKey = configKey ?? DEFAULT_IMAGE_TRANSFORM_CONFIG;
@@ -78,8 +79,9 @@ export class AppService {
           const metadata = await peekMetadata(imageStream);
           const transformConfig =
             await this.imageTransformConfigLoader.get(configKey);
-          const context = TransformConfigContext.create({
+          const context = TransformConfigContext.from({
             metadata,
+            variables,
             key: imageKey,
           });
 
