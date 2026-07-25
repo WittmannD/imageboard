@@ -16,7 +16,7 @@ export class AppController {
   constructor(private appService: AppService) {}
 
   @MessagePattern(ImageProcessorMessagePattern.ImageFromConfig)
-  public async imageFromConfig(
+  public async processFromConfig(
     data: ImageProcessingMessageDto,
   ): Promise<ImageProcessingResponse> {
     const outputs = await firstValueFrom(

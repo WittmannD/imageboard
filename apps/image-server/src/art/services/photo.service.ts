@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { imageSizeFromFile } from 'image-size/fromFile';
-import { defer, EMPTY, forkJoin, from, mergeMap, of, switchMap } from 'rxjs';
+import { defer, EMPTY, from, map, mergeMap, switchMap } from 'rxjs';
 import type { EntityManager } from 'typeorm';
 
 import { LayoutEngine } from '@hdotu1/gallery-layout-engine';
 import { ImageProcessorService } from '@hdotu1/image-processor-client';
 
-import type { TransactionService } from '../../common/services/transaction.service.js';
+import { TransactionService } from '../../common/services/transaction.service.js';
 import type { FileUpload } from '../../multer/file-upload.js';
 import type { PhotoEntity } from '../entities/photo.entity.js';
-import type { PhotoRepository } from '../repositories/photo.repository.js';
+import { PhotoRepository } from '../repositories/photo.repository.js';
 
 @Injectable()
 export class PhotoService {
@@ -17,7 +17,7 @@ export class PhotoService {
     private readonly imageProcessor: ImageProcessorService,
     private readonly photoRepository: PhotoRepository,
     private readonly layoutEngine: LayoutEngine,
-    private readonly tx: TransactionService
+    private readonly tx: TransactionService,
   ) {}
 
   private async createLayoutFromUploads(files: FileUpload[]) {
@@ -51,23 +51,33 @@ export class PhotoService {
               return EMPTY;
             }
 
-            return forkJoin({
-              file: of(file),
-              processed: this.imageProcessor.fromConfig({
+            return this.imageProcessor
+              .fromConfig({
                 key: tile.key,
-                variables: tile,
-              }),
-            })
+                variables: { tile },
+              })
+              .pipe(
+                map((processed) => ({
+                  processed,
+                  file,
+                })),
+              );
           }),
         ),
       ),
     );
   }
 
-  async createPhotoGallery(drafts: PhotoEntity[], files: FileUpload[], em?: EntityManager) {
-    return await this.tx.withManager(em, async (entityManager) => {
-      const photoRepository = entityManager.withRepository(this.photoRepository);
-      
+  createPhotoGallery(
+    drafts: PhotoEntity[],
+    files: FileUpload[],
+    em?: EntityManager,
+  ) {
+    return this.tx.withManager$(em, (entityManager) => {
+      const photoRepository = entityManager.withRepository(
+        this.photoRepository,
+      );
+
       return this.processPhotoUploads(files).pipe(
         mergeMap(({ file, processed }) => {
           const photoEntity = drafts.find((e) => e.uploadUuid === file.uuid);
@@ -87,6 +97,6 @@ export class PhotoService {
           });
         }),
       );
-    })
+    });
   }
 }

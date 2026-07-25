@@ -10,7 +10,8 @@ export class ImageProcessingResponseFactory {
         size: output.size,
         width: output.width,
         height: output.height,
-        mimetype: output.format,
+        format: output.format,
+        metadata: output.metadata ?? {}
       })),
     };
   }

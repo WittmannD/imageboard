@@ -9,7 +9,7 @@ import  { type ImageSaveOperationArgs, SaveOperation } from './save.js';
 import  { type ImageTrimOperationArgs, TrimOperation } from './trim.js';
 import  { type ImageWebpOperationArgs, WebpOperation } from './webp.js';
 
-// This map is the main interface for further typing of operations.
+// This map is the main interface for further adding operation types.
 // Adding a new field here will allow adding a new operation.
 // This should be done strictly in this way; so TypeScript can associate the type of
 // arguments with the interface of the operation itself in mapped types.

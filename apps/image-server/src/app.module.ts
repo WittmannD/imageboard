@@ -6,11 +6,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { PublicationsModule } from './art/publications.module.js';
+import { CommonModule } from './common/common.module.js';
 import AppConfig from './config/app-config.js';
-import { TransactionService } from './common/services/transaction.service.js';
 
 @Module({
   imports: [
+    CommonModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [AppConfig],
@@ -44,11 +45,7 @@ import { TransactionService } from './common/services/transaction.service.js';
       provide: APP_PIPE,
       useClass: ValidationPipe,
     },
-    TransactionService,
     AppService,
-  ],
-  exports: [
-    TransactionService
   ]
 })
 export class AppModule {}

@@ -7,6 +7,7 @@ import type { OperationContext } from './operation-context.js';
 
 export interface ImageSaveOperationArgs {
   key: string;
+  metadata?: Record<string, unknown>;
 }
 
 export const SaveOperation: Operation<'save'> = {
@@ -26,6 +27,7 @@ export const SaveOperation: Operation<'save'> = {
         'output',
         new OutputEvent(context.uuid, {
           key: args.key,
+          metadata: args.metadata,
           filename,
           ...info,
         }),

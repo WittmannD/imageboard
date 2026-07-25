@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import type { DataSource, EntityManager } from 'typeorm';
+import { from, lastValueFrom, Observable } from 'rxjs';
+import { DataSource, type EntityManager } from 'typeorm';
 
 @Injectable()
 export class TransactionService {
@@ -14,5 +15,20 @@ export class TransactionService {
     }
 
     return this.dataSource.transaction(callback);
+  }
+
+  withManager$<T>(
+    manager: EntityManager | undefined,
+    callback: (manager: EntityManager) => Observable<T>,
+  ): Observable<T> {
+    if (manager) {
+      return callback(manager);
+    }
+
+    return from(
+      this.dataSource.transaction(async (manager) => {
+        return lastValueFrom(callback(manager));
+      }),
+    );
   }
 }

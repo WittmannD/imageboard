@@ -1,13 +1,39 @@
 $schema: './schema/image-transform-config.schema.json'
 transform:
-  - operation: resize
-    args:
-      width: ${{variables.tile.width}}
-      height: ${{variables.tile.height}}
-      fir: ${{variables.tile.fit}}
-  - operation: jpeg
-    args:
-      quality: 80
-  - operation: save
-    args:
-      key: ${{file.name}}_tile.jpeg
+  - - operation: jpeg
+      args:
+        quality: 80
+    - operation: resize
+      args:
+        width: 1920
+        height: 1080
+        fit: inside
+        withoutEnlargement: true
+    - operation: save
+      args:
+        key: ${{file.name}}_lightbox.jpeg
+        metadata:
+          variant: lightbox
+
+  - - operation: resize
+      args:
+        width: ${{variables.tile.width}}
+        height: ${{variables.tile.height}}
+        fit: ${{variables.tile.fit}}
+    - operation: jpeg
+      args:
+        quality: 80
+    - operation: save
+      args:
+        key: ${{file.name}}_tile.jpeg
+        metadata:
+          variant: tile
+          tile:
+            key: ${{variables.tile.key}}
+            width: ${{variables.tile.width}}
+            height: ${{variables.tile.height}}
+            fit: ${{variables.tile.fit}}
+            column: ${{variables.tile.column}}
+            row: ${{variables.tile.row}}
+            columnSpan: ${{variables.tile.columnSpan}}
+            rowSpan: ${{variables.tile.rowSpan}}

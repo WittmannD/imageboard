@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { defer, switchMap } from 'rxjs';
 import { EntityManager, In } from 'typeorm';
 
-import type { TransactionService } from '../common/services/transaction.service.js';
+import { TransactionService } from '../common/services/transaction.service.js';
 import type { KeySetCursor } from '../common/types/cursor.js';
 import { paginate, type PaginateOptions } from '../common/utils/paginate.js';
 import type { FileUpload } from '../multer/file-upload.js';
@@ -14,7 +14,8 @@ import {
   type PostPage,
   PostRepository,
 } from './repositories/post.repository.js';
-import type { PhotoService } from './services/photo.service.js';
+import { PhotoService } from './services/photo.service.js';
+import * as util from 'node:util';
 
 @Injectable()
 export class PostService {
@@ -25,45 +26,71 @@ export class PostService {
     private readonly tx: TransactionService,
   ) {}
 
+  private createPhotoGalleryForPost(
+    post: PostEntity,
+    files: FileUpload[],
+    em?: EntityManager,
+  ) {
+    const photoEntities = post.photos;
+
+    return this.tx.withManager$(em, (entityManager) =>
+      this.photoService
+        .createPhotoGallery(photoEntities, files, entityManager)
+        .pipe(
+          switchMap(() =>
+            defer(async () => {
+              const postRepository = entityManager.withRepository(
+                this.postRepository,
+              );
+
+              post.status = PostStatus.Published;
+              await postRepository.save(post);
+            }),
+          ),
+        ),
+    );
+  }
+
   async createPost(
     files: FileUpload[],
     dto: CreatePostDto,
     em?: EntityManager,
   ) {
-    return await this.tx.withManager(em, async (entityManager) => {
+    const postEntity = await this.tx.withManager(em, async (entityManager) => {
       const postRepository = entityManager.withRepository(this.postRepository);
       const photoRepository = entityManager.withRepository(
         this.photoRepository,
       );
 
-      const postEntity = postRepository.createDraft({
+      let postEntity = postRepository.createDraft({
         caption: dto.caption,
       });
-      const photoEntities = photoRepository.createDraftsForPost(
+
+      postEntity = await entityManager.save(postEntity);
+
+      let photoEntities = photoRepository.createDraftsForPost(
         postEntity,
         files,
       );
 
-      await this.photoService.createPhotoGallery(
-        photoEntities,
-        files,
-        entityManager,
+      photoEntities = await entityManager.save(photoEntities);
+      postEntity.photos = photoEntities;
+
+      console.log(
+        'createPost photoEntities',
+        util.inspect(photoEntities, { depth: 5 }),
       );
-
-      await entityManager.save([postEntity, ...photoEntities]);
-
-      (await this.photoService.createPhotoGallery(photoEntities, files)).pipe(
-        switchMap((photoEntity) =>
-          defer(async () => {
-            postEntity.photos.push(photoEntity);
-            postEntity.status = PostStatus.Published;
-            await postRepository.save(postEntity);
-          }),
-        ),
-      ).subscribe();
 
       return postEntity;
     });
+
+    console.log('createPost files', util.inspect(files, { depth: 5 }));
+    console.log('createPost post', util.inspect(postEntity, { depth: 5 }));
+
+    // we don't need to pass entity manager here, let it run in its own transaction
+    this.createPhotoGalleryForPost(postEntity, files).subscribe();
+
+    return postEntity;
   }
 
   async getPaginatedPosts(

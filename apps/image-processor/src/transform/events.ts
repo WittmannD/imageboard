@@ -3,6 +3,7 @@ import type { OutputInfo } from 'sharp';
 export interface FileOutputInfo extends OutputInfo {
   filename: string;
   key: string;
+  metadata?: Record<string, unknown>;
 }
 
 export abstract class ImageTransformerEvent {}

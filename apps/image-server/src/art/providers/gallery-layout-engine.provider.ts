@@ -39,5 +39,7 @@ export const GalleryLayoutEngineProvider = {
       .registerPenalty(balancePenalty(), 20)
       .registerPenalty(sizePenalty(), 10)
       .registerPenalty(aspectPenalty(), 10);
+
+    return layoutEngine;
   },
 } satisfies Provider;

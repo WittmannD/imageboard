@@ -25,6 +25,7 @@ export class PhotoRepository extends Repository<PhotoEntity> {
     return files.map((file) => this.createDraftForPost(post, file));
   }
 
+  // Set different image derivatives and mark it as ready
   async setProcessedAssets(
     photo: PhotoEntity['id'] | PhotoEntity,
     images: ImageOutput[],
