@@ -22,7 +22,7 @@ describe('LocalStorageDriver', () => {
 
   beforeEach(async () => {
     root = await fs.mkdtemp(path.resolve('./test', 'local-storage-driver-'));
-    driver = new LocalStorageDriver(root);
+    driver = new LocalStorageDriver({ root });
   });
 
   afterEach(async () => {

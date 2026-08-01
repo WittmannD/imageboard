@@ -1,6 +1,7 @@
-import { Column, Entity, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
 import { BaseEntity } from '../../common/entity/base.entity.js';
+import { UserEntity } from '../../user/entities/user.entity.js';
 import { PostStatus } from '../enums/post-status.enum.js';
 import { PhotoEntity } from './photo.entity.js';
 
@@ -14,4 +15,7 @@ export class PostEntity extends BaseEntity {
 
   @OneToMany(() => PhotoEntity, (photo) => photo.post)
   photos!: PhotoEntity[];
+
+  @ManyToOne(() => UserEntity, (user) => user.posts)
+  user!: UserEntity;
 }

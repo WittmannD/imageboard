@@ -3,13 +3,12 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_PIPE } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { AppController } from './app.controller.js';
-import { AppService } from './app.service.js';
-import { PublicationsModule } from './art/publications.module.js';
-import { AuthModule } from './auth/auth.module.js';
+import { AppConfig } from './app.config.js';
 import { CommonModule } from './common/common.module.js';
-import AppConfig from './config/app-config.js';
+import { OidcModule } from './oidc/oidc.module.js';
+import { CredentialsModule } from './credentials/credentials.module.js';
 import { UserModule } from './user/user.module.js';
+import { InteractionModule } from './interaction/interaction.module.js';
 
 @Module({
   imports: [
@@ -19,6 +18,10 @@ import { UserModule } from './user/user.module.js';
       load: [AppConfig],
       envFilePath: './.env',
     }),
+    OidcModule,
+    CredentialsModule,
+    UserModule,
+    InteractionModule,
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
@@ -34,22 +37,16 @@ import { UserModule } from './user/user.module.js';
           dropSchema: true,
           autoLoadEntities: true,
           synchronize: true,
-
           ssl: sslEnabled ? { rejectUnauthorized: false } : false,
         };
       },
     }),
-    PublicationsModule,
-    UserModule,
-    AuthModule,
   ],
-  controllers: [AppController],
   providers: [
     {
       provide: APP_PIPE,
       useClass: ValidationPipe,
-    },
-    AppService,
-  ]
+    }
+  ],
 })
 export class AppModule {}

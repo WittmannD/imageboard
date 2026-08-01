@@ -24,6 +24,7 @@ import { PhotoService } from './services/photo.service.js';
         redis: {
           host: configService.get<string>('REDIS_HOST'),
           port: configService.get<number>('REDIS_PORT'),
+          keyPrefix: 'pubsub:'
         },
       }),
       inject: [ConfigService],

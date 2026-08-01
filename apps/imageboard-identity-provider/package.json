@@ -1,7 +1,7 @@
 {
-  "name": "image-processor",
+  "name": "imageboard-identity-provider",
   "version": "0.0.0",
-  "description": "Image processor microservice",
+  "description": "Open ID authentication server for imageboard",
   "private": true,
   "type": "module",
   "main": "dist/app.js",
@@ -17,21 +17,20 @@
     "debug": "nest start --debug --watch"
   },
   "dependencies": {
-    "@hdotu1/common": "file:../../packages/common",
-    "@hdotu1/image-processor-contract": "file:../../packages/image-processor-contract",
-    "@hdotu1/yaml-template": "file:../../packages/yaml-template",
-    "@hdotu1/media-storage": "file:../../packages/media-storage",
+    "@keyv/redis": "^5.1.6",
+    "@nestjs/axios": "^4.0.1",
     "@nestjs/common": "^11.1.2",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.2",
-    "@nestjs/microservices": "^11.1.9",
     "@nestjs/platform-express": "^11.1.2",
-    "@aws-sdk/client-s3": "^3.1079.0",
-    "@aws-sdk/s3-request-presigner": "^3.1079.0",
-    "@aws-sdk/lib-storage": "^3.1079.0",
+    "axios": "^1.19.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
-    "js-yaml": "^4.1.1",
+    "hbs": "^4.2.1",
+    "ioredis": "^5.9.3",
+    "mustache": "^4.2.0",
+    "nodemailer": "^9.0.3",
+    "oidc-provider": "^9.11.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "sharp": "^0.34.5"
@@ -39,6 +38,10 @@
   "devDependencies": {
     "@nestjs/cli": "^11.0.7",
     "@nestjs/testing": "^11.1.2",
-    "@types/js-yaml": "^4.0.9"
+    "@types/bcrypt": "^6.0.0",
+    "@types/hbs": "^4.0.5",
+    "@types/nodemailer": "^8.0.1",
+    "@types/oidc-provider": "^9.5.0",
+    "bcrypt": "^6.0.0"
   }
 }
