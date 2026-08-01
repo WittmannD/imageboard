@@ -6,12 +6,13 @@ import type { InputImage, Template } from './templates.js';
 export interface LayoutEvaluationResult {
   template: string;
   layout: Layout;
-  score: number;
+  score: number | null;
 }
 
 export class LayoutEngine {
   private templates: Template[] = [];
   private penalties: TemplatePenalty[] = [];
+  private fallbackTemplate: Template | null = null;
   private readonly context: LayoutContext;
 
   constructor(preferences: LayoutPreferences) {
@@ -28,6 +29,11 @@ export class LayoutEngine {
       fn: penaltyFn,
       weight,
     });
+    return this;
+  }
+
+  setFallbackTemplate(template: Template): this {
+    this.fallbackTemplate = template;
     return this;
   }
 
@@ -48,13 +54,24 @@ export class LayoutEngine {
       console.log(`\ntemplate: ${template.name}`);
       const score = this.score(layout);
 
-      if (best === null || score > best.score) {
+      if (best === null || score > (best.score ?? 0)) {
         best = { template: template.name, layout, score };
       }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return best!;
+    if (best === null && this.fallbackTemplate) {
+      const layout = this.fallbackTemplate.solve(images, this.context);
+
+      if (layout) {
+        best = { template: this.fallbackTemplate.name, layout, score: null }
+      }
+    }
+
+    if (best === null) {
+      throw new Error('No layout meets the conditions for the given images');
+    }
+
+    return best;
   }
 
   private score(layout: Layout) {
