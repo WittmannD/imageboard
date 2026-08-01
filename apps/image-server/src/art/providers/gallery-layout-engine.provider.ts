@@ -40,6 +40,8 @@ export const GalleryLayoutEngineProvider = {
       .registerPenalty(sizePenalty(), 10)
       .registerPenalty(aspectPenalty(), 10);
 
+    layoutEngine.setFallbackTemplate(landscapeTilesLayoutTemplate);
+
     return layoutEngine;
   },
 } satisfies Provider;
