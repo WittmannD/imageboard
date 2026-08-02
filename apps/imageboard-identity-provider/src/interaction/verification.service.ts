@@ -1,0 +1,112 @@
+import crypto from 'node:crypto';
+import type { Keyv } from '@keyv/redis';
+import { Inject, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import bcrypt from 'bcrypt';
+
+import type { VerificationSession } from '../common/interfaces.js';
+import { KEYV_STORE } from '../keyv-store/keyv-store.provider.js';
+
+@Injectable()
+export class VerificationService {
+  constructor(
+    private readonly configService: ConfigService,
+    @Inject(KEYV_STORE)
+    private readonly keyv: Keyv,
+  ) {}
+
+  private getUserKey(id: string) {
+    return `verify:user:${id}`;
+  }
+
+  private getSessionKey(id: string) {
+    return `verify:session:${id}`;
+  }
+
+  private createOTP() {
+    const digits = '0123456789';
+    let otp = '';
+
+    const randomValues = new Uint32Array(length);
+    crypto.getRandomValues(randomValues);
+
+    for (let i = 0; i < length; i++) {
+      otp += digits[randomValues[i] % 10];
+    }
+    return otp;
+  }
+
+  private async createVerificationSession(
+    userId: string,
+    purpose: VerificationSession['purpose'],
+  ) {
+    const ttl = this.configService.getOrThrow<number>('verificationSessionTTL');
+    const rounds = this.configService.getOrThrow<number>(
+      'verificationOTPSaltRounds',
+    );
+    let sessionId = await this.keyv.get<string>(this.getUserKey(userId));
+    const existingSession = sessionId
+      ? await this.keyv.get<VerificationSession>(this.getSessionKey(sessionId))
+      : undefined;
+
+    if (sessionId && existingSession) {
+      // Delete old session if exists
+      await this.keyv.delete(this.getSessionKey(sessionId));
+    }
+
+    sessionId = crypto.randomBytes(32).toString('base64url');
+    const otp = this.createOTP();
+    const otpHash = await bcrypt.hash(otp, rounds);
+    const session = {
+      purpose,
+      userId,
+      otpHash,
+      ttl,
+      createdAt: Date.now(),
+    } satisfies VerificationSession;
+
+    await this.keyv.set<VerificationSession>(
+      this.getSessionKey(sessionId),
+      session,
+      ttl,
+    );
+    await this.keyv.set(this.getUserKey(userId), sessionId, ttl);
+    return { otp, session, sessionId };
+  }
+
+  private async getSessionById(sessionId: string) {
+    const session = await this.keyv.get<VerificationSession>(this.getSessionKey(sessionId));
+    return session ?? null;
+  }
+
+  private async deleteSession(sessionId: string) {
+    const session = await this.keyv.get<VerificationSession>(this.getSessionKey(sessionId));
+    if (session) {
+      await this.keyv.delete(this.getUserKey(session.userId));
+      await this.keyv.delete(this.getSessionKey(sessionId));
+    }
+  }
+
+  async createEmailVerificationSession(userId: string) {
+    return await this.createVerificationSession(
+      userId,
+      'email-verification',
+    );
+  }
+
+  async deleteSessionIfOtpMatch(sessionId: string, otp: string, purpose: VerificationSession['purpose']) {
+    const session = await this.getSessionById(sessionId);
+
+    if (session?.purpose !== purpose) {
+      return null;
+    }
+
+    const otpMatch = await bcrypt.compare(otp, session.otpHash);
+
+    if (otpMatch) {
+      await this.deleteSession(sessionId);
+    }
+
+    return session;
+  }
+}

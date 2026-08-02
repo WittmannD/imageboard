@@ -7,39 +7,14 @@ export const oidcConfiguration: Readonly<Configuration> = {
     revocation: { enabled: true },
   },
 
-  scopes: [
-    'openid',
-    'profile',
-    'email',
-  ],
+  scopes: ['openid', 'profile', 'email'],
 
   claims: {
     openid: ['sub'],
-    profile: [
-      'family_name',
-      'given_name',
-    ],
-    email: [
-      'email',
-      'email_verified',
-    ],
+    profile: ['family_name', 'given_name'],
+    email: ['email', 'email_verified'],
   },
 
-  clients: [
-    {
-      client_id: 'client',
-      client_secret: 'secret',
-      redirect_uris: [
-        'https://httpbin.org/get',
-      ],
-      response_types: ['code'],
-      grant_types: [
-        'authorization_code'
-      ],
-      token_endpoint_auth_method: 'client_secret_post',
-    },
-  ],
-  
   routes: {
     authorization: '/auth',
     backchannel_authentication: '/backchannel',
@@ -55,5 +30,9 @@ export const oidcConfiguration: Readonly<Configuration> = {
     revocation: '/token/revocation',
     token: '/token',
     userinfo: '/me',
-  }
+  },
+
+  extraClientMetadata: {
+    properties: ['trusted']
+  },
 };

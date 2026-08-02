@@ -4,6 +4,7 @@ import { type EntityManager } from 'typeorm';
 import { TransactionService } from '../common/services/transaction.service.js';
 import { UserRepository } from './user.repository.js';
 import type { CreateUser } from '../common/interfaces.js';
+import type { UserEntity } from './user.entity.js';
 
 @Injectable()
 export class UserService {
@@ -26,14 +27,14 @@ export class UserService {
     });
   }
 
-  async setEmailVerified(userId: string, em?: EntityManager) {
+  async markEmailVerified(userId: string, em?: EntityManager) {
     return await this.tx.withManager(em, async (entityManager) => {
       const userRepository = entityManager.withRepository(this.userRepository);
       const result = await userRepository.update(
         { id: userId },
         { emailVerified: true },
       );
-      return !!result.affected;
+      return Boolean(result.affected);
     });
   }
 
@@ -48,5 +49,9 @@ export class UserService {
       });
       return await userRepository.save(user);
     });
+  }
+
+  generateId(): UserEntity['id'] {
+    return crypto.randomUUID();
   }
 }

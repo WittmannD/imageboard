@@ -1,6 +1,6 @@
 import type { Provider } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import IdProvider, { type AdapterFactory } from 'oidc-provider';
+import IdProvider, { type AdapterFactory, type ClientMetadata, } from 'oidc-provider';
 
 import { KEYV_STORAGE_ADAPTER } from './oidc-storage-adapter.provider.js';
 import { oidcConfiguration } from './oidc.config.js';
@@ -20,13 +20,36 @@ export const OidcProvider = {
       pkce: {
         required: () => true,
       },
+      clients: [configService.getOrThrow<ClientMetadata>('oidcClient')],
+      loadExistingGrant: async (context) => {
+        const grantId =
+          context.oidc.result?.consent?.grantId ??
+          (context.oidc.client &&
+            context.oidc.session?.grantIdFor(context.oidc.client.clientId));
+
+        if (grantId) {
+          return context.oidc.provider.Grant.find(grantId);
+        }
+
+        // If the client is trusted, grant with all scopes
+        if (
+          context.oidc.client?.metadata()['trusted'] &&
+          context.oidc.result?.login &&
+          typeof context.oidc.params?.['scope'] === 'string'
+        ) {
+          const grant = new context.oidc.provider.Grant({
+            accountId: context.oidc.result.login.accountId,
+            clientId: context.oidc.client.clientId,
+          });
+          grant.addOIDCScope(context.oidc.params['scope']);
+          await grant.save();
+          return grant;
+        }
+
+        return undefined;
+      },
       interactions: {
-        url: (_context, interaction) => {
-          return new URL(
-            `?uid=${interaction.uid}`,
-            configService.getOrThrow('INTERACTIONS_BASE_URL'),
-          ).href;
-        },
+        url: (_context, interaction) => `/interactions/${interaction.uid}`,
       },
       findAccount: async (_context, accountId) =>
         oidcService.findAccount(accountId),

@@ -17,31 +17,34 @@
     "debug": "nest start --debug --watch"
   },
   "dependencies": {
+    "@hdotu1/database-common": "file:../../packages/database-common",
     "@keyv/redis": "^5.1.6",
-    "@nestjs/axios": "^4.0.1",
+    "@keyv/serialize": "^1.1.1",
     "@nestjs/common": "^11.1.2",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.2",
+    "@nestjs/mapped-types": "*",
     "@nestjs/platform-express": "^11.1.2",
-    "axios": "^1.19.0",
+    "@nestjs/typeorm": "^11.0.0",
+    "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
-    "hbs": "^4.2.1",
     "ioredis": "^5.9.3",
+    "keyv": "^5.6.0",
     "mustache": "^4.2.0",
     "nodemailer": "^9.0.3",
     "oidc-provider": "^9.11.1",
+    "pg": "^8.18.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
-    "sharp": "^0.34.5"
+    "sharp": "^0.34.5",
+    "typeorm": "^0.3.28"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.7",
     "@nestjs/testing": "^11.1.2",
     "@types/bcrypt": "^6.0.0",
-    "@types/hbs": "^4.0.5",
     "@types/nodemailer": "^8.0.1",
-    "@types/oidc-provider": "^9.5.0",
-    "bcrypt": "^6.0.0"
+    "@types/oidc-provider": "^9.5.0"
   }
 }

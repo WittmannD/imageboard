@@ -6,21 +6,21 @@ import { CredentialsEntity } from '../credentials/credentials.entity.js';
 
 @Entity()
 export class UserEntity extends BaseEntity {
-  @Column({ type: 'text', nullable: true, unique: true })
+  @Column({ type: 'text', nullable: true })
   @OidcClaimField('given_name')
   firstName?: string;
 
-  @Column({ type: 'text', nullable: true, unique: true })
+  @Column({ type: 'text', nullable: true })
   @OidcClaimField('family_name')
   lastName?: string;
 
-  @Column({ type: 'text', nullable: false, unique: true, default: false })
+  @Column({ type: 'text', nullable: false, unique: true })
   @OidcClaimField('email')
   email!: string;
 
   @Column({ type: 'boolean', nullable: false, default: false })
   @OidcClaimField('email_verified')
-  emailVerified: boolean = false;
+  emailVerified = false;
 
   @OneToMany(() => CredentialsEntity, (credentials) => credentials.user)
   credentials!: CredentialsEntity[];

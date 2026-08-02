@@ -9,6 +9,7 @@ export const KeyvStoreProvider = {
   useFactory: (configService: ConfigService) => {
     return new Keyv({
       store: new KeyvRedis({
+
         url: configService.getOrThrow<string>('redisUrl'),
       }),
       namespace: 'oidc'

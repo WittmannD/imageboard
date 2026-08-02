@@ -5,7 +5,10 @@ export interface CreateUser {
   lastName?: string;
 }
 
-export interface AccountVerificationSession {
-  interactionUid: string,
-  userId: string
+export interface VerificationSession {
+  purpose: 'email-verification' | 'password-reset' | 'mfa';
+  userId: string;
+  otpHash: string;
+  createdAt: number;
+  ttl: number;
 }

@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import type { AccountClaims } from 'oidc-provider';
+
+import type { UserEntity } from '../user/user.entity.js';
 import { UserService } from '../user/user.service.js';
 import { oidcConfiguration } from './oidc.config.js';
-import type { UserEntity } from '../user/user.entity.js';
 
 @Injectable()
 export class OidcService {
@@ -12,7 +13,6 @@ export class OidcService {
     const fieldsMap = user.getOidcFieldsMap();
 
     if (
-      !oidcConfiguration.scopes ||
       !oidcConfiguration.claims ||
       scopes.length === 0 ||
       Object.keys(fieldsMap).length === 0
@@ -24,24 +24,27 @@ export class OidcService {
 
     const picked: Record<string, UserEntity[keyof UserEntity]> = {};
 
-    for (const scope of oidcConfiguration.scopes) {
-      if (!oidcConfiguration.claims[scope] || !scopes.includes(scope)) {
+    for (const scope of scopes) {
+      if (!oidcConfiguration.claims[scope]) {
         continue;
       }
 
       for (const key of oidcConfiguration.claims[scope]) {
-        const userFieldKey = fieldsMap[key];
-        picked[key] = user[userFieldKey];
+        const userFieldKey = fieldsMap[key] as keyof UserEntity | undefined;
+
+        if (!userFieldKey) {
+          continue;
+        }
+
+        if (user[userFieldKey]) picked[key] = user[userFieldKey];
       }
     }
 
-    return { sub: user.id, ...picked };
+    return { ...picked, sub: user.id };
   }
 
   async findAccount(accountId: string) {
-    const user = await this.userService.findOne(accountId);
-
-    console.log('findAccount', accountId);
+    const user = await this.userService.findOneById(accountId);
 
     if (!user) {
       return undefined;
@@ -50,8 +53,9 @@ export class OidcService {
     return {
       accountId: user.id,
 
-      claims: async (_use: string, scope: string): Promise<AccountClaims> =>
-        this.claimsFromScope(user, scope.split(' ')),
+      claims: (_use: string, scope: string) => {
+        return this.claimsFromScope(user, scope.split(' '));
+      },
     };
   }
 }

@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { type EntityManager } from 'typeorm';
-
-import { TransactionService } from '../../common/services/transaction.service.js';
-import { UserRepository } from '../repositories/user.repository.js';
 import { adjectives, DEFAULT_PROFANITY, nouns, uniqueUsernameGenerator } from 'unique-username-generator';
-import { UserEntity } from '../entities/user.entity.js';
-import { isUniqueViolation } from '../../common/utils/db-error.js';
+
+import { isUniqueViolation } from '@hdotu1/database-common';
+
 import type { ExternalProfile } from '../../auth/types.js';
+import { TransactionService } from '../../common/services/transaction.service.js';
+import { UserEntity } from '../entities/user.entity.js';
+import { UserRepository } from '../repositories/user.repository.js';
 
 @Injectable()
 export class UserService {

@@ -15,6 +15,6 @@ export class OidcController {
   @All("/*path")
   public async mountedOidc(@Req() req: Request, @Res() res: Response): Promise<unknown> {
     req.url = req.originalUrl.replace("/oidc", "");
-    return await this.callback(req, res);
+    return this.callback(req, res);
   }
 }

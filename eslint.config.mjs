@@ -34,17 +34,23 @@ export default defineConfig({
         '@typescript-eslint/no-extraneous-class': 'off',
         '@typescript-eslint/no-unsafe-assignment': 'off',
         '@typescript-eslint/require-await': 'off',
-        "@typescript-eslint/no-unused-vars": [
-          "error",
+        '@typescript-eslint/no-unused-vars': [
+          'error',
           {
-            "args": "all",
-            "argsIgnorePattern": "^_",
-            "caughtErrors": "all",
-            "caughtErrorsIgnorePattern": "^_",
-            "destructuredArrayIgnorePattern": "^_",
-            "varsIgnorePattern": "^_",
-            "ignoreRestSiblings": true
-          }
+            args: 'all',
+            argsIgnorePattern: '^_',
+            caughtErrors: 'all',
+            caughtErrorsIgnorePattern: '^_',
+            destructuredArrayIgnorePattern: '^_',
+            varsIgnorePattern: '^_',
+            ignoreRestSiblings: true,
+          },
+        ],
+        '@typescript-eslint/restrict-template-expressions': [
+          'error',
+          {
+            allowNumber: true,
+          },
         ],
         'simple-import-sort/imports': [
           'warn',

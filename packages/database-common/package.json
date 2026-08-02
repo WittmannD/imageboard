@@ -1,7 +1,7 @@
 {
-  "name": "@hdotu1/common",
+  "name": "@hdotu1/database-common",
   "version": "1.0.0",
-  "description": "Common methods, variables and utils for the image board project",
+  "description": "",
   "type": "module",
   "files": [
     "dist"
@@ -26,8 +26,6 @@
   },
   "peerDependencies": {
     "@nestjs/common": "^11.0.0",
-    "@nestjs/core": "^11.0.0",
-    "@nestjs/typeorm": "^11.0.0",
-    "typeorm": "^0.3.28"
+    "@nestjs/core": "^11.0.0"
   }
 }

@@ -5,19 +5,24 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AppConfig } from './app.config.js';
 import { CommonModule } from './common/common.module.js';
-import { OidcModule } from './oidc/oidc.module.js';
 import { CredentialsModule } from './credentials/credentials.module.js';
-import { UserModule } from './user/user.module.js';
 import { InteractionModule } from './interaction/interaction.module.js';
+import { KeyvStoreModule } from './keyv-store/keyv-store.module.js';
+import { OidcModule } from './oidc/oidc.module.js';
+import { UserModule } from './user/user.module.js';
+import { OidcClientConfig } from './oidc-client.config.js';
 
 @Module({
   imports: [
-    CommonModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [AppConfig],
+      load: [AppConfig, OidcClientConfig],
       envFilePath: './.env',
     }),
+    // KeyvStoreModule is global module
+    KeyvStoreModule,
+    // CommonModule is global module
+    CommonModule,
     OidcModule,
     CredentialsModule,
     UserModule,
@@ -46,7 +51,7 @@ import { InteractionModule } from './interaction/interaction.module.js';
     {
       provide: APP_PIPE,
       useClass: ValidationPipe,
-    }
+    },
   ],
 })
 export class AppModule {}

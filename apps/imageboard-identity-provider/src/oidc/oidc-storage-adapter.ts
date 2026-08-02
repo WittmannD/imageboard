@@ -1,4 +1,4 @@
-import Keyv from 'keyv';
+import type Keyv from 'keyv';
 import type { Adapter, AdapterPayload } from 'oidc-provider';
 
 const grantable = new Set([
