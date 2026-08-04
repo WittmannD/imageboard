@@ -31,17 +31,18 @@ export const OidcProvider = {
           return context.oidc.provider.Grant.find(grantId);
         }
 
+        const scope = context.oidc.params?.['scope'] as string | undefined;
+
         // If the client is trusted, grant with all scopes
         if (
           context.oidc.client?.metadata()['trusted'] &&
-          context.oidc.result?.login &&
-          typeof context.oidc.params?.['scope'] === 'string'
+          context.oidc.result?.login
         ) {
           const grant = new context.oidc.provider.Grant({
             accountId: context.oidc.result.login.accountId,
             clientId: context.oidc.client.clientId,
           });
-          grant.addOIDCScope(context.oidc.params['scope']);
+          grant.addOIDCScope(scope ?? 'openid');
           await grant.save();
           return grant;
         }

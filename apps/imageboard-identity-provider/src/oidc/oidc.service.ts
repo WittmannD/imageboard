@@ -46,6 +46,8 @@ export class OidcService {
   async findAccount(accountId: string) {
     const user = await this.userService.findOneById(accountId);
 
+    console.log('findAccount', accountId, user, );
+
     if (!user) {
       return undefined;
     }

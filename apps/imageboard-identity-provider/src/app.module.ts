@@ -1,4 +1,7 @@
-import { Module, ValidationPipe } from '@nestjs/common';
+import {
+  Module,
+  ValidationPipe,
+} from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_PIPE } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -9,8 +12,8 @@ import { CredentialsModule } from './credentials/credentials.module.js';
 import { InteractionModule } from './interaction/interaction.module.js';
 import { KeyvStoreModule } from './keyv-store/keyv-store.module.js';
 import { OidcModule } from './oidc/oidc.module.js';
-import { UserModule } from './user/user.module.js';
 import { OidcClientConfig } from './oidc-client.config.js';
+import { UserModule } from './user/user.module.js';
 
 @Module({
   imports: [
@@ -53,5 +56,6 @@ import { OidcClientConfig } from './oidc-client.config.js';
       useClass: ValidationPipe,
     },
   ],
+  controllers: []
 })
 export class AppModule {}

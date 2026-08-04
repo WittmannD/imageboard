@@ -8,21 +8,21 @@ import {
   Req,
   Res,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
 import IdProvider from 'oidc-provider';
 
 import { CredentialsService } from '../credentials/credentials.service.js';
+import { EmailService } from '../email/email.service.js';
+import { accountVerificationEmail } from '../email/email-templates.js';
 import { OIDC_PROVIDER } from '../oidc/oidc.provider.js';
 import { UserService } from '../user/user.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import type { RegistrationDto } from './dto/registration.dto.js';
-import { InteractionService } from './interaction.service.js';
-import { ConfigService } from '@nestjs/config';
-import { VerificationService } from './verification.service.js';
 import type { VerificationDto } from './dto/verification.dto.js';
-import { accountVerificationEmail } from '../email/email-templates.js';
-import { EmailService } from '../email/email.service.js';
 import { VerificationCompleteDto } from './dto/verification-complete.dto.js';
+import { InteractionService } from './interaction.service.js';
+import { VerificationService } from './verification.service.js';
 
 @Controller('interactions')
 export class InteractionController {

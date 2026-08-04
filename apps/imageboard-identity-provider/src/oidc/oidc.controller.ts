@@ -1,10 +1,10 @@
-import { All, Controller, Inject, Req, Res } from '@nestjs/common';
+import { All, Controller, Inject, Next, Req, Res } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import type IdProvider from 'oidc-provider';
 
 import { OIDC_PROVIDER } from './oidc.provider.js';
 
-@Controller("oidc")
+@Controller()
 export class OidcController {
   private readonly callback: (req: Request, res: Response) => Promise<unknown>;
 
@@ -12,8 +12,12 @@ export class OidcController {
     this.callback = oidc.callback();
   }
 
-  @All("/*path")
-  public async mountedOidc(@Req() req: Request, @Res() res: Response): Promise<unknown> {
+  @All("*path")
+  public async mountedOidc(@Req() req: Request, @Res() res: Response, @Next() next: () => unknown): Promise<unknown> {
+    if (req.originalUrl.startsWith("/interactions")) {
+      return next();
+    }
+
     req.url = req.originalUrl.replace("/oidc", "");
     return this.callback(req, res);
   }

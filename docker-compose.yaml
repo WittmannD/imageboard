@@ -114,6 +114,16 @@ services:
     networks:
       - app-bridge
 
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./apps/imageboard-identity-provider
+          target: /src/imageboard-identity-provider
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./apps/imageboard-identity-provider/package.json
+
 volumes:
   pg-data:
   redis-data:
