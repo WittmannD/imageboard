@@ -6,10 +6,10 @@ import type { EntityManager } from 'typeorm';
 import { LayoutEngine } from '@hdotu1/gallery-layout-engine';
 import { ImageProcessorService } from '@hdotu1/image-processor-client';
 
-import { TransactionService } from '../../common/services/transaction.service.js';
 import type { FileUpload } from '../../multer/file-upload.js';
 import type { PhotoEntity } from '../entities/photo.entity.js';
 import { PhotoRepository } from '../repositories/photo.repository.js';
+import { TransactionService } from '@hdotu1/database-common';
 
 @Injectable()
 export class PhotoService {

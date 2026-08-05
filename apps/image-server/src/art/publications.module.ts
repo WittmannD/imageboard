@@ -13,9 +13,11 @@ import { GalleryLayoutEngineProvider } from './providers/gallery-layout-engine.p
 import { PhotoRepositoryProvider } from './repositories/photo.repository.js';
 import { PostRepositoryProvider } from './repositories/post.repository.js';
 import { PhotoService } from './services/photo.service.js';
+import { TransactionModule } from '@hdotu1/database-common';
 
 @Module({
   imports: [
+    TransactionModule,
     TypeOrmModule.forFeature([PostEntity, PhotoEntity]),
     UploadsModuleFactory(),
     ImageProcessorClientModule.registerAsync({

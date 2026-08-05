@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { defer, switchMap } from 'rxjs';
 import { EntityManager, In } from 'typeorm';
 
-import { TransactionService } from '../common/services/transaction.service.js';
 import type { KeySetCursor } from '../common/types/cursor.js';
 import { paginate, type PaginateOptions } from '../common/utils/paginate.js';
 import type { FileUpload } from '../multer/file-upload.js';
@@ -16,6 +15,7 @@ import {
 } from './repositories/post.repository.js';
 import { PhotoService } from './services/photo.service.js';
 import * as util from 'node:util';
+import { TransactionService } from '@hdotu1/database-common';
 
 @Injectable()
 export class PostService {

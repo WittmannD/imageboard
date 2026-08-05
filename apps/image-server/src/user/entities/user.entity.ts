@@ -1,8 +1,8 @@
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 
 import { PostEntity } from '../../art/entities/post.entity.js';
-import { CredentialsEntity } from '../../auth/entities/credentials.entity.js';
 import { BaseEntity } from '../../common/entity/base.entity.js';
+import { FederatedCredentialsEntity } from '../../federated-credentials/entities/federated-credentials.entity.js';
 
 @Entity()
 export class UserEntity extends BaseEntity {
@@ -15,6 +15,6 @@ export class UserEntity extends BaseEntity {
   @OneToMany(() => PostEntity, (post) => post.user)
   posts!: PostEntity[];
 
-  @ManyToOne(() => CredentialsEntity, (credentials) => credentials.user)
-  credentials!: CredentialsEntity;
+  @OneToMany(() => FederatedCredentialsEntity, (credentials) => credentials.user)
+  credentials!: FederatedCredentialsEntity[];
 }

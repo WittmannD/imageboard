@@ -88,7 +88,7 @@ export class InteractionController {
     await this.oidc.interactionFinished(req, res, {
       login: {
         accountId: user.id,
-        remember: false,
+        remember: true,
       },
     });
   }
@@ -99,16 +99,18 @@ export class InteractionController {
     @Res() res: Response,
     @Body() body: RegistrationDto,
   ) {
-    console.log(req.url, body);
     const user = await this.interactionService.registration(body);
+    // If creating a new user fails due to email uniqueness violation,
+    // proceed with a fake user ID to disallow guessing existing emails.
+    // Later it will fail in the `findAccount` method, and the user will get a generic error
 
-    console.log('registration', user);
+    const userId = user?.id ?? 'untrusted-' + this.userService.generateId();
 
     if (req.header('Content-Type') === 'application/json') {
       const redirectTo = await this.oidc.interactionResult(req, res, {
         login: {
-          accountId: user?.id ?? this.userService.generateId(),
-          remember: false,
+          accountId: userId,
+          remember: true,
         },
       });
       return { redirectTo };
@@ -116,8 +118,8 @@ export class InteractionController {
       // Finish with redirect
       await this.oidc.interactionFinished(req, res, {
         login: {
-          accountId: user?.id ?? this.userService.generateId(),
-          remember: false,
+          accountId: userId,
+          remember: true,
         },
       });
       return;
@@ -129,7 +131,8 @@ export class InteractionController {
     const user = await this.userService.findOneById(body.userId);
     const { otp, session, sessionId } =
       await this.verificationService.createEmailVerificationSession(
-        user?.id ?? this.userService.generateId(),
+        // Continue with fake user ID to disallow guessing existing emails.
+        user?.id ?? 'untrusted-' + this.userService.generateId(),
       );
 
     if (user && !user.emailVerified) {
