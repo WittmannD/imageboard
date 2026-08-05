@@ -1,60 +1,37 @@
 import type { Provider } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import IdProvider, { type AdapterFactory, type ClientMetadata, } from 'oidc-provider';
+import IdProvider, { type AdapterFactory } from 'oidc-provider';
 
+import { UserService } from '../user/user.service.js';
+import clientBasedCors from './helpers/client-based-cors.js';
+import createFindAccount from './helpers/find-account.js';
+import loadExistingGrant from './helpers/load-existing-grant.js';
+import pairwiseIdentifier from './helpers/pairwise-identifier.js';
+import renderError from './helpers/render-error.js';
+import rotateRefreshToken from './helpers/rotate-refresh-token.js';
+import oidcConfiguration from './oidc.config.js';
 import { KEYV_STORAGE_ADAPTER } from './oidc-storage-adapter.provider.js';
-import { oidcConfiguration } from './oidc.config.js';
-import { OidcService } from './oidc.service.js';
 
 export const OIDC_PROVIDER = Symbol('OIDC_PROVIDER');
 export const OidcProvider = {
   provide: OIDC_PROVIDER,
   useFactory: (
-    oidcService: OidcService,
     configService: ConfigService,
+    userService: UserService,
     adapter: AdapterFactory,
   ) => {
     return new IdProvider(configService.getOrThrow<string>('ISSUER_URL'), {
-      ...oidcConfiguration,
+      ...oidcConfiguration(),
       adapter,
-      pkce: {
-        required: () => true,
-      },
-      clients: [configService.getOrThrow<ClientMetadata>('oidcClient')],
-      loadExistingGrant: async (context) => {
-        const grantId =
-          context.oidc.result?.consent?.grantId ??
-          (context.oidc.client &&
-            context.oidc.session?.grantIdFor(context.oidc.client.clientId));
-
-        if (grantId) {
-          return context.oidc.provider.Grant.find(grantId);
-        }
-
-        const scope = context.oidc.params?.['scope'] as string | undefined;
-
-        // If the client is trusted, grant with all scopes
-        if (
-          context.oidc.client?.metadata()['trusted'] &&
-          context.oidc.result?.login
-        ) {
-          const grant = new context.oidc.provider.Grant({
-            accountId: context.oidc.result.login.accountId,
-            clientId: context.oidc.client.clientId,
-          });
-          grant.addOIDCScope(scope ?? 'openid');
-          await grant.save();
-          return grant;
-        }
-
-        return undefined;
-      },
-      interactions: {
-        url: (_context, interaction) => `/interactions/${interaction.uid}`,
-      },
-      findAccount: async (_context, accountId) =>
-        oidcService.findAccount(accountId),
+      findAccount: createFindAccount(userService),
+      loadExistingGrant: loadExistingGrant(),
+      clientBasedCORS: clientBasedCors(),
+      // add 'pairwise' to list to enable pairwise subject identifier
+      subjectTypes: ['public'],
+      pairwiseIdentifier: pairwiseIdentifier(),
+      renderError: renderError(),
+      rotateRefreshToken: rotateRefreshToken(),
     });
   },
-  inject: [OidcService, ConfigService, KEYV_STORAGE_ADAPTER],
+  inject: [ConfigService, UserService, KEYV_STORAGE_ADAPTER],
 } satisfies Provider<IdProvider>;

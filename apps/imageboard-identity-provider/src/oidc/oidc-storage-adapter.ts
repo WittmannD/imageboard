@@ -1,6 +1,10 @@
 import type Keyv from 'keyv';
 import type { Adapter, AdapterPayload } from 'oidc-provider';
 
+// TODO: restrict the authorization server to only statically configured clients
+//  and disable dynamic registration. Configure the adapter to return falsy values
+//  for client lookup operations (e.g., return Promise.resolve()).
+
 const grantable = new Set([
   'AccessToken',
   'AuthorizationCode',
