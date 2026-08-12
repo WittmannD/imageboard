@@ -16,5 +16,8 @@ import { FederatedCredentialsRepositoryProvider } from './repositories/federated
     FederatedCredentialsService,
     FederatedCredentialsRepositoryProvider,
   ],
+  exports: [
+    FederatedCredentialsService,
+  ]
 })
 export class FederatedCredentialsModule {}

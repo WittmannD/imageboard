@@ -9,7 +9,7 @@ COPY package*.json ./
 COPY --parents packages/*/package.json ./
 COPY apps/${APP}/package.json ./apps/${APP}/package.json
 
-RUN npm i
+RUN npm i --include=optional --os=linux --libc=musl --cpu=x64
 
 COPY . .
 

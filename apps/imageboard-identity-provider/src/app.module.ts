@@ -12,14 +12,13 @@ import { CredentialsModule } from './credentials/credentials.module.js';
 import { InteractionModule } from './interaction/interaction.module.js';
 import { KeyvStoreModule } from './keyv-store/keyv-store.module.js';
 import { OidcModule } from './oidc/oidc.module.js';
-import { OidcClientConfig } from './oidc-client.config.js';
 import { UserModule } from './user/user.module.js';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [AppConfig, OidcClientConfig],
+      load: [AppConfig],
       envFilePath: './.env',
     }),
     // KeyvStoreModule is global module

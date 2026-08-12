@@ -9,6 +9,7 @@ import pkceConfig from './config/pkce.config.js';
 import routesConfig from './config/routes.config.js';
 import scopesConfig from './config/scopes.config.js';
 import ttlConfig from './config/ttl.config.js';
+import cookiesConfig from './config/cookies.config.js';
 
 export default () =>
   ({
@@ -20,6 +21,7 @@ export default () =>
     extraClientMetadata: extraClientMetadataConfig(),
     interactions: interactionsConfig(),
     pkce: pkceConfig(),
+    cookies: cookiesConfig(),
     ttl: ttlConfig(),
     // jwks: [],
   }) satisfies Readonly<Configuration>;

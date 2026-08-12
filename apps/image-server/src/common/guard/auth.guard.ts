@@ -1,6 +1,6 @@
 import { type CanActivate, type ExecutionContext, Injectable, } from '@nestjs/common';
 
-import type { AuthService } from '../../auth/auth.service.js';
+import { AuthService } from '../../auth/auth.service.js';
 import type { AuthorizedRequest } from '../types/request.js';
 
 function parseAuthorizationHeader(header: string): { type?: string, token?: string } {

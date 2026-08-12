@@ -7,8 +7,9 @@ import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { PublicationsModule } from './art/publications.module.js';
 import AppConfig from './config/app-config.js';
+import { FederatedCredentialsModule } from './federated-credentials/federated-credentials.module.js';
 import { UserModule } from './user/user.module.js';
-import { FederatedCredentialsModule } from './federated-credentials/federated-credentials.module';
+import { AuthModule } from './auth/auth.module.js';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { FederatedCredentialsModule } from './federated-credentials/federated-cr
     }),
     PublicationsModule,
     UserModule,
+    AuthModule,
     FederatedCredentialsModule,
   ],
   controllers: [AppController],

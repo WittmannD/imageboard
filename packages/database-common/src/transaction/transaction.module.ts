@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { TransactionService } from './transaction.service.js';
 
 @Module({
-  imports: [DataSource],
+  imports: [TypeOrmModule],
   providers: [TransactionService],
   exports: [TransactionService],
 })

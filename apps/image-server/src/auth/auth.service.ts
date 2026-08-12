@@ -1,15 +1,17 @@
 import { Injectable, type OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { createRemoteJWKSet, jwtVerify, type RemoteJWKSet } from 'jose';
-import type { ConfigService } from '@nestjs/config';
-import { discovery } from 'openid-client';
-import type { UserService } from '../user/service/user.service.js';
-import type { FederatedCredentialsService } from '../federated-credentials/federated-credentials.service.js';
-import { TransactionService } from '@hdotu1/database-common';
+import * as oidcClient from 'openid-client';
 import type { EntityManager } from 'typeorm';
+
+import { TransactionService } from '@hdotu1/database-common';
+
 import type {
   OidcUserInfo,
   UnvalidatedOidcClaims,
 } from '../common/types/oidc.js';
+import { FederatedCredentialsService } from '../federated-credentials/federated-credentials.service.js';
+import { UserService } from '../user/service/user.service.js';
 import {
   EmailIsNotVerifiedError,
   MissingClaimsError,
@@ -19,6 +21,7 @@ import {
 export class AuthService implements OnModuleInit {
   private readonly requiredClaims = ['sub', 'email', 'email_verified'];
   private readonly issuer: string;
+  private readonly issuerUrl: string;
   private readonly audience: string;
   private jwks: RemoteJWKSet | null = null;
 
@@ -29,15 +32,24 @@ export class AuthService implements OnModuleInit {
     private readonly tx: TransactionService,
   ) {
     this.issuer = this.configService.getOrThrow<string>('OIDC_ISSUER');
+    this.issuerUrl = this.configService.getOrThrow<string>('OIDC_ISSUER_URL');
     this.audience = new URL(
       this.configService.getOrThrow<string>('BASE_URL'),
     ).origin;
   }
 
   async onModuleInit() {
-    const config = await discovery(
-      new URL(this.issuer),
+    const config = await oidcClient.discovery(
+      new URL(this.issuerUrl),
       this.configService.getOrThrow<string>('OIDC_CLIENT_ID'),
+      {},
+      () => {
+        /* empty */
+      },
+      {
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        execute: [oidcClient.allowInsecureRequests],
+      },
     );
     const jwksUri = config.serverMetadata().jwks_uri;
 
@@ -59,10 +71,10 @@ export class AuthService implements OnModuleInit {
       return existingUser;
     }
 
-    return await this.findOrCreateUserWithFederatedCredential(userInfo, em);
+    return await this.createOrFindUserWithFederatedCredential(userInfo, em);
   }
 
-  private async findOrCreateUserWithFederatedCredential(
+  private async createOrFindUserWithFederatedCredential(
     userInfo: OidcUserInfo,
     em?: EntityManager,
   ) {

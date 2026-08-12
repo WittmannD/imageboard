@@ -45,14 +45,15 @@ export class InteractionController {
     const params = new URLSearchParams(queryString);
     params.append('uid', interaction.uid);
 
+    console.log('interaction', req.headers);
+    console.log('interaction', interaction.uid, interaction.prompt, interaction.params);
+
     res.redirect(
       new URL(
         `${interaction.prompt.name}?${params.toString()}`,
         this.configService.getOrThrow('INTERACTIONS_BASE_URL'),
       ).href,
     );
-
-    return interaction;
   }
 
   @Post(':uid/login')

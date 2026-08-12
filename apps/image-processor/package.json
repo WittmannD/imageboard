@@ -17,7 +17,6 @@
     "debug": "nest start --debug --watch"
   },
   "dependencies": {
-    "@hdotu1/common": "file:../../packages/common",
     "@hdotu1/image-processor-contract": "file:../../packages/image-processor-contract",
     "@hdotu1/yaml-template": "file:../../packages/yaml-template",
     "@hdotu1/media-storage": "file:../../packages/media-storage",
@@ -35,6 +34,9 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "sharp": "^0.34.5"
+  },
+  "optionalDependencies": {
+    "@img/sharp-linuxmusl-x64": "0.34.5"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.7",

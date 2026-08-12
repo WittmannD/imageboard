@@ -9,7 +9,7 @@ async function bootstrap(): Promise<string> {
   // TODO: proper cors
   app.enableCors();
 
-  await app.listen(process.env['PORT'] ?? 3000);
+  await app.listen(process.env['PORT'] ?? 3000, '0.0.0.0');
 
   return app.getUrl();
 }

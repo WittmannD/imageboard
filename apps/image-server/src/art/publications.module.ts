@@ -14,6 +14,7 @@ import { PhotoRepositoryProvider } from './repositories/photo.repository.js';
 import { PostRepositoryProvider } from './repositories/post.repository.js';
 import { PhotoService } from './services/photo.service.js';
 import { TransactionModule } from '@hdotu1/database-common';
+import { AuthModule } from '../auth/auth.module.js';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { TransactionModule } from '@hdotu1/database-common';
       }),
       inject: [ConfigService],
     }),
+    AuthModule
   ],
   controllers: [PostController],
   providers: [

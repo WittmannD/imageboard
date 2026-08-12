@@ -8,7 +8,7 @@ async function bootstrap(): Promise<string> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.enableCors();
 
-  await app.listen(3000);
+  await app.listen(process.env['PORT'] ?? 3000, '0.0.0.0');
 
   return app.getUrl();
 }

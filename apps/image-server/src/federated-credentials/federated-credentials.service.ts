@@ -5,7 +5,7 @@ import { TransactionService } from '@hdotu1/database-common';
 
 import type { UserEntity } from '../user/entities/user.entity.js';
 import { FederatedCredentialsEntity, ISSUER_SUBJECT_UNIQUE_CONSTRAINT } from './entities/federated-credentials.entity.js';
-import type { FederatedCredentialsRepository } from './repositories/federated-credentials.repository.js';
+import { FederatedCredentialsRepository } from './repositories/federated-credentials.repository.js';
 
 @Injectable()
 export class FederatedCredentialsService {
