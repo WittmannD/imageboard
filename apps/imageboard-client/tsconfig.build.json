@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "tsBuildInfoFile": "dist/tsconfig.build.tsbuildinfo"
+  },
+  "include": ["src/**/*", ".react-router/types/**/*"],
+  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts", "**/*.test.tsx"]
+}
