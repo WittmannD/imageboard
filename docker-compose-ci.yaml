@@ -34,9 +34,9 @@ services:
     networks:
       - app-bridge
 
-  image-server:
-    image: ghcr.io/wittmannd/imageboard-image-server:latest
-    container_name: image-server
+  imageboard-api:
+    image: ghcr.io/wittmannd/imageboard-api:latest
+    container_name: imageboard-api
     depends_on:
       redis:
         condition: service_healthy

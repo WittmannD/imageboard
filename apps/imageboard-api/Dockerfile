@@ -1,7 +1,7 @@
 FROM node:22-alpine AS builder
 
 ENV NODE_ENV=build
-ARG APP=image-server
+ARG APP=imageboard-api
 
 WORKDIR /usr/src/app
 
@@ -18,7 +18,7 @@ RUN npm -w ${APP} run build && npm prune --omit=dev
 FROM node:22-alpine
 
 ENV NODE_ENV=production
-ARG APP=image-server
+ARG APP=imageboard-api
 
 WORKDIR /usr/src/app
 

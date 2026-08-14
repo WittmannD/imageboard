@@ -1,7 +1,7 @@
 {
-  "name": "image-server",
+  "name": "imageboard-api",
   "version": "0.0.0",
-  "description": "Image server",
+  "description": "Imageboard API",
   "private": true,
   "type": "module",
   "main": "dist/main.js",
