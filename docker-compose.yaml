@@ -24,7 +24,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASS}
     volumes:
       - ./sh/multiple-databases.sh:/docker-entrypoint-initdb.d/multiple-databases.sh
-      - pg-data:/var/lib/postgresql/data
+      - pg-data:/var/lib/postgresql
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ${DB_USER}']
       interval: 5s
@@ -53,6 +53,8 @@ services:
       context: .
       dockerfile: apps/imageboard-web/Dockerfile
     container_name: imageboard-web
+    env_file:
+      - './apps/imageboard-web/.env'
     ports:
       - "80:80"
       - "443:443"
@@ -132,6 +134,9 @@ services:
     container_name: imageboard-client
     env_file:
       - './apps/imageboard-client/.env'
+    depends_on:
+      imageboard-identity-provider:
+        condition: service_healthy
     networks:
       - internal
       - public

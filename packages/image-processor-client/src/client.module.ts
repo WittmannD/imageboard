@@ -1,9 +1,7 @@
 import { Module } from '@nestjs/common';
-import {
-  type ClientProxy,
-  ClientProxyFactory,
-  Transport,
-} from '@nestjs/microservices';
+import { type ClientProxy, ClientProxyFactory } from '@nestjs/microservices';
+
+import { RedisTransportClient } from '@hdotu1/redis-transport';
 
 import {
   ConfigurableModuleClass,
@@ -21,7 +19,7 @@ import { IMAGE_PROCESSOR_CLIENT_TOKEN } from './constants.js';
       provide: IMAGE_PROCESSOR_CLIENT_TOKEN,
       useFactory: (options: ImageProcessorClientOptions): ClientProxy => {
         return ClientProxyFactory.create({
-          transport: Transport.REDIS,
+          customClass: RedisTransportClient,
           options: options.redis,
         });
       },

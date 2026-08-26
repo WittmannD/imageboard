@@ -8,7 +8,8 @@
     "builder": {
       "type": "swc",
       "options": {
-        "swcrcPath": "../../.swcrc"
+        "swcrcPath": "../../.swcrc",
+        "stripLeadingPaths": true
       }
     },
     "typeCheck": true

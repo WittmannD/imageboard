@@ -9,7 +9,7 @@
     "declaration": false,
     "declarationMap": false,
 
-    "types": ["node", "vite/client", "vitest"],
+    "types": ["node", "vite/client", "vitest", "./environment.d.ts"],
 
     /* Bundler mode */
     "moduleResolution": "bundler",

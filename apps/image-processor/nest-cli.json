@@ -8,7 +8,9 @@
     "builder": {
       "type": "swc",
       "options": {
-        "swcrcPath": "../../.swcrc"
+        "swcrcPath": "../../.swcrc",
+        "stripLeadingPaths": true,
+        "ignore": ["**/*.spec.ts"]
       }
     },
     "assets": [

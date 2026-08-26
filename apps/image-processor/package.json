@@ -20,6 +20,7 @@
     "@hdotu1/image-processor-contract": "file:../../packages/image-processor-contract",
     "@hdotu1/yaml-template": "file:../../packages/yaml-template",
     "@hdotu1/media-storage": "file:../../packages/media-storage",
+    "@hdotu1/redis-transport": "file:../../packages/redis-transport",
     "@nestjs/common": "^11.1.2",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.2",
