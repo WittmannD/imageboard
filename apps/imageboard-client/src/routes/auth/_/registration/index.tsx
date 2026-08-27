@@ -12,7 +12,7 @@ export const loader: LoaderFunction = async ({
 
   const action = new URL(
     `/interactions/${uid}/registration`,
-    process.env.OIDC_ISSUER_URI,
+    process.env['OIDC_ISSUER_URL'],
   ).toString();
 
   return {

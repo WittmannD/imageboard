@@ -30,5 +30,6 @@ COPY --from=builder /usr/src/app/apps/${APP}/dist/ ./dist/
 
 EXPOSE 5734
 ENV PORT=5734
+ENV HOST=0.0.0.0
 
 CMD ["node", "node_modules/@react-router/serve/bin.cjs", "dist/server/index.js"]

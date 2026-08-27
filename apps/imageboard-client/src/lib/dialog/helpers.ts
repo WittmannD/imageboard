@@ -1,4 +1,5 @@
 import React from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
 export const DialogID = Symbol('__dialog_id__');
 export type FCWithID<P> = React.FC<P> & { [DialogID]: string };
@@ -9,7 +10,7 @@ export const getDialogId = (
   if (typeof dialog === 'string') return dialog;
 
   if (!dialog[DialogID]) {
-    dialog[DialogID] = crypto.randomUUID();
+    dialog[DialogID] = uuidv4();
   }
   return dialog[DialogID];
 };

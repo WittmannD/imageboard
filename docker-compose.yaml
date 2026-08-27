@@ -59,7 +59,11 @@ services:
       - "80:80"
       - "443:443"
     networks:
-      - public
+      public:
+        aliases:
+          - auth.spottish.website
+          - api.spottish.website
+          - spottish.website
 
   imageboard-api:
     build:

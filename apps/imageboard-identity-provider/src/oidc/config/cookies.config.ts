@@ -8,7 +8,7 @@ export default () => ({
   },
   short: {
     httpOnly: true,
-    sameSite: 'none'
+    sameSite: 'lax'
   },
   long: {
     httpOnly: true,

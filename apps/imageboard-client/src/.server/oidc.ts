@@ -3,7 +3,7 @@ import * as client from 'openid-client';
 import type { OidcAuthState } from 'src/.server/interfaces.ts';
 import { install } from 'undici';
 
-const server = new URL(process.env.OIDC_ISSUER_URI);
+const server = new URL(process.env.OIDC_ISSUER_URL);
 const clientId = process.env.OIDC_CLIENT_ID;
 const clientSecret = process.env.OIDC_CLIENT_SECRET;
 

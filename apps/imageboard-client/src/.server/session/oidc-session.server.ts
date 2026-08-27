@@ -24,7 +24,7 @@ export const oidcSession = createCookieSessionStorage<
     path: '/',
     sameSite: 'lax',
     secrets: [process.env.SESSION_COOKIE_SECRET],
-    secure: true,
+    //secure: true,
   },
 });
 

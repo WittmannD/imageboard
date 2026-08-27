@@ -1,6 +1,7 @@
 import type { ClientMetadata } from 'oidc-provider';
 
 import type { OIDCDefinedConfig } from '../types/config.js';
+import { TRUSTED_METADATA_PROPERTY } from './extra-client-metadata.config.js';
 
 const imageboardClient = {
   client_id: process.env['OIDC_CLIENT_ID'] ?? '',
@@ -11,7 +12,7 @@ const imageboardClient = {
   grant_types: ['authorization_code'],
   token_endpoint_auth_method: 'client_secret_post',
   // Give the client all grants
-  trusted: true,
+  [TRUSTED_METADATA_PROPERTY]: true,
 } satisfies ClientMetadata;
 
 export default () => [imageboardClient] satisfies OIDCDefinedConfig<'clients'>;
