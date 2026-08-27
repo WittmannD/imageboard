@@ -1,6 +1,7 @@
 import {
   index,
-  layout, prefix,
+  layout,
+  prefix,
   route,
   type RouteConfig,
 } from '@react-router/dev/routes';
@@ -17,6 +18,7 @@ export default [
         route('registration', './routes/auth/_/registration/index.tsx'),
       ]),
       route('callback', './routes/auth/callback/index.tsx'),
+      route('error', './routes/auth/error/index.tsx'),
     ]),
   ]),
   route('api/*', './routes/api/$.tsx')

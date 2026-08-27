@@ -3,11 +3,12 @@ import {
   getOidcSessionFromCookie,
   oidcSession,
 } from 'src/.server/session/oidc-session.server.ts';
-import { authorizationCodeGrant } from 'src/.server/oidc.ts';
+import { authorizationCodeGrant } from 'src/.server/helpers/oidc.ts';
 import {
   authSession,
   getAuthSessionFromCookie,
 } from 'src/.server/session/auth-session.server.ts';
+import { buildAuthErrorUrl } from 'src/.server/helpers/auth-error.ts';
 
 export const loader: LoaderFunction = async ({ request, url }) => {
   const oidc = await getOidcSessionFromCookie(request);
@@ -19,13 +20,13 @@ export const loader: LoaderFunction = async ({ request, url }) => {
   // validate authorization code from url and get access token
   const result = await authorizationCodeGrant(url, oidcState);
 
-  if (result['error'])
-    return redirect(
-      `/auth/error?error=${result['error']}&error_description=${result['error_description']}`,
-    );
-
-  if (!result.access_token || !result.refresh_token)
-    return redirect('/auth/error?error=access_denied');
+  if (result['error'] || !result.access_token || !result.refresh_token) {
+    const errorUrl = buildAuthErrorUrl({
+      error:
+        typeof result['error'] === 'string' ? result['error'] : 'access_denied',
+    });
+    return redirect(errorUrl);
+  }
 
   const returnTo = oidcState.returnTo ?? '/';
 

@@ -5,7 +5,7 @@ export default (): OIDCDefinedConfig<'renderError'> => (context, out , _error) =
 
   const error: typeof out = { ...out };
 
-  if (process.env['NODE_ENV'] !== 'production') {
+  if (process.env['NODE_ENV'] === 'production') {
     delete error.error_description;
   }
 

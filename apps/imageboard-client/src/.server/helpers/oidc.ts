@@ -26,7 +26,7 @@ const config: client.Configuration = await client.discovery(
  */
 const redirectUri = new URL(
   'auth/callback',
-  process.env['VITE_BASE_URL'],
+  process.env.VITE_BASE_URL,
 ).href;
 const scope = 'openid email profile';
 

@@ -3,7 +3,7 @@ import type {
   LoaderFunction,
 } from 'react-router';
 import { authSession, getAuthSessionFromCookie } from 'src/.server/session/auth-session.server.ts';
-import { refreshTokenGrant } from 'src/.server/oidc.ts';
+import { refreshTokenGrant } from 'src/.server/helpers/oidc.ts';
 
 const apiUrl = new URL(process.env['IMAGEBOARD_API_URL']);
 const includeResponseHeaderKeys: string[] = ['Content-Type', 'Cache-Control', 'ETag', 'Last-Modified'];

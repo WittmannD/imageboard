@@ -1,5 +1,5 @@
 import { type LoaderFunction, Outlet, redirectDocument } from 'react-router';
-import { buildAuthorizationUrl } from 'src/.server/oidc.ts';
+import { buildAuthorizationUrl } from 'src/.server/helpers/oidc.ts';
 import { getOidcSessionFromCookie, oidcSession } from 'src/.server/session/oidc-session.server.ts';
 
 export const loader: LoaderFunction = async ({ request, url }) => {
@@ -14,8 +14,6 @@ export const loader: LoaderFunction = async ({ request, url }) => {
   const { url: authUrl, ...state } = await buildAuthorizationUrl();
 
   session.set('state', { ...state, returnTo: searchParams.get('returnTo') });
-
-  console.log('auhUrl', authUrl.href);
 
   return redirectDocument(authUrl.href, {
     headers: {
