@@ -136,15 +136,36 @@ services:
     build:
       context: .
       dockerfile: apps/imageboard-client/Dockerfile
+      target: dev
     container_name: imageboard-client
     env_file:
       - './apps/imageboard-client/.env'
+    ports:
+      - "5734:5734"
     depends_on:
       imageboard-identity-provider:
         condition: service_healthy
     networks:
       - internal
       - public
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/imageboard-client/src
+          target: /usr/src/app/apps/imageboard-client/src
+        - action: sync
+          path: ./packages
+          target: /usr/src/app/packages
+        - action: sync+restart
+          path: ./apps/imageboard-client/vite.config.ts
+          target: /usr/src/app/apps/imageboard-client/vite.config.ts
+        - action: sync+restart
+          path: ./apps/imageboard-client/react-router.config.ts
+          target: /usr/src/app/apps/imageboard-client/react-router.config.ts
+        - action: rebuild
+          path: ./apps/imageboard-client/package.json
+        - action: rebuild
+          path: ./package.json
 
 volumes:
   pg-data:

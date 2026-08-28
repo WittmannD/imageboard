@@ -5,7 +5,9 @@ import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-
+  server: {
+    allowedHosts: ['.spottish.website', 'spottish.website']
+  },
   resolve: {
     alias: {
       'src': path.resolve(import.meta.dirname, './src'),

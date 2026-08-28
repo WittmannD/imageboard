@@ -1,6 +1,5 @@
-FROM node:22-alpine AS builder
+FROM node:22-alpine AS base
 
-ENV NODE_ENV=build
 ARG APP=imageboard-client
 
 WORKDIR /usr/src/app
@@ -9,13 +8,36 @@ COPY package*.json ./
 COPY --parents packages/*/package.json ./
 COPY apps/${APP}/package.json ./apps/${APP}/package.json
 
+
+FROM base AS dev
+
+ENV NODE_ENV=development
+ARG APP=imageboard-client
+
+RUN npm i
+
+COPY . .
+
+EXPOSE 5734
+ENV PORT=5734
+ENV HOST=0.0.0.0
+
+CMD ["npm", "-w", "imageboard-client", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5734"]
+
+
+FROM base AS builder
+
+ENV NODE_ENV=build
+ARG APP=imageboard-client
+
 RUN npm i
 
 COPY . .
 
 RUN npm -w ${APP} run build && npm prune --omit=dev
 
-FROM node:22-alpine
+
+FROM node:22-alpine AS production
 
 ENV NODE_ENV=production
 ARG APP=imageboard-client
