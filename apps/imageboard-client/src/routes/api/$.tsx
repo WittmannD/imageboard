@@ -53,21 +53,25 @@ async function proxy(request: Request, endpoint: string = '/') {
   const responseHeaders = filterHeaders(response.headers, includeResponseHeaderKeys, 'include');
 
   if (response.status === 401 && tokens) {
+    // todo: logout if fail to refresh token
     const result = await refreshTokenGrant(tokens.refreshToken);
+    const claims = result.claims();
 
-    response = await apiRequest(endpoint, request, result.access_token);
-
-    if (result.access_token && result.refresh_token) {
+    if (result.access_token && result.refresh_token && claims) {
       session.set('state', {
+        sub: claims.sub,
         accessToken: result.access_token,
         refreshToken: result.refresh_token,
       });
 
-      responseHeaders.set(
+      responseHeaders.append(
         'Set-Cookie',
         await authSession.commitSession(session),
       );
     }
+
+    // retry request with new access token
+    response = await apiRequest(endpoint, request, result.access_token);
   }
 
   return new Response(response.body, {

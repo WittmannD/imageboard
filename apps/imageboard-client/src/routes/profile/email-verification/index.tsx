@@ -29,13 +29,18 @@ import {
   FieldGroup,
   FieldLabel,
 } from 'src/components/ui/field/Field.tsx';
-import { Input } from 'src/components/ui/input/Input.tsx';
 import { getUserInfo } from 'src/.server/helpers/oidc.ts';
 import {
   completeEmailVerification,
   requestEmailVerification,
 } from 'src/.server/helpers/verification.ts';
 import { getAuthSessionFromCookie } from 'src/.server/session/auth-session.server.ts';
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from 'src/components/ui/input-otp/InputOTP.tsx';
+import { REGEXP_ONLY_DIGITS } from 'input-otp';
 
 const RETURN_TO = '/profile/email-verification';
 
@@ -57,7 +62,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     return redirect(`/auth/login?returnTo=${encodeURIComponent(RETURN_TO)}`);
   }
 
-  const userInfo = await getUserInfo(tokens.accessToken);
+  const userInfo = await getUserInfo(tokens.accessToken, tokens.sub);
 
   return data<EmailVerificationLoaderData>({
     email: userInfo.email,
@@ -77,7 +82,7 @@ export const action: ActionFunction = async ({ request }) => {
   const intent = formData.get('intent');
 
   if (intent === 'request') {
-    const userInfo = await getUserInfo(tokens.accessToken);
+    const userInfo = await getUserInfo(tokens.accessToken, tokens.sub);
     const { sessionId } = await requestEmailVerification(userInfo.sub);
 
     return data<EmailVerificationActionData>({ intent: 'request', sessionId });
@@ -154,16 +159,23 @@ function EmailVerificationPage({
                 <FieldGroup>
                   <Field>
                     <FieldLabel htmlFor="otp">Verification code</FieldLabel>
-                    <Input
+                    <InputOTP
                       id="otp"
                       name="otp"
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      maxLength={6}
-                      pattern="\d{6}"
-                      placeholder="123456"
                       required
-                    />
+                      inputMode="numeric"
+                      maxLength={6}
+                      pattern={REGEXP_ONLY_DIGITS}
+                    >
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
                     <FieldDescription>
                       Enter the 6-digit code we sent to your email.
                     </FieldDescription>
@@ -175,8 +187,13 @@ function EmailVerificationPage({
                     </Alert>
                   )}
                   <Field>
-                    <Button type="submit" disabled={isSubmittingIntent('verify')}>
-                      {isSubmittingIntent('verify') ? 'Verifying...' : 'Verify email'}
+                    <Button
+                      type="submit"
+                      disabled={isSubmittingIntent('verify')}
+                    >
+                      {isSubmittingIntent('verify')
+                        ? 'Verifying...'
+                        : 'Verify email'}
                     </Button>
                   </Field>
                 </FieldGroup>
@@ -186,7 +203,10 @@ function EmailVerificationPage({
                 <input type="hidden" name="intent" value="request" />
                 <FieldGroup>
                   <Field>
-                    <Button type="submit" disabled={isSubmittingIntent('request')}>
+                    <Button
+                      type="submit"
+                      disabled={isSubmittingIntent('request')}
+                    >
                       {isSubmittingIntent('request')
                         ? 'Sending...'
                         : 'Send verification code'}

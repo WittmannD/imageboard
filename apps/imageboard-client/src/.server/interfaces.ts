@@ -5,7 +5,8 @@ export interface OidcAuthState {
   returnTo?: string | null;
 }
 
-export interface ApiCredentials {
+export interface Credentials {
+  sub: string;
   accessToken: string;
   refreshToken: string;
 }

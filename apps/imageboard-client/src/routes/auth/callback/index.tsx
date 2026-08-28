@@ -3,7 +3,10 @@ import {
   getOidcSessionFromCookie,
   oidcSession,
 } from 'src/.server/session/oidc-session.server.ts';
-import { authorizationCodeGrant } from 'src/.server/helpers/oidc.ts';
+import {
+  authorizationCodeGrant,
+  getUserInfo,
+} from 'src/.server/helpers/oidc.ts';
 import {
   authSession,
   getAuthSessionFromCookie,
@@ -19,10 +22,16 @@ export const loader: LoaderFunction = async ({ request, url }) => {
   }
   // validate authorization code from url and get access token
   const result = await authorizationCodeGrant(url, oidcState);
+  const claims = result.claims();
 
-  console.log(result);
+  console.log('claims', claims);
 
-  if (result['error'] || !result.access_token || !result.refresh_token) {
+  if (
+    result['error'] ||
+    !result.access_token ||
+    !result.refresh_token ||
+    !claims
+  ) {
     const errorUrl = buildAuthErrorUrl({
       error:
         typeof result['error'] === 'string' ? result['error'] : 'access_denied',
@@ -32,6 +41,7 @@ export const loader: LoaderFunction = async ({ request, url }) => {
 
   const auth = await getAuthSessionFromCookie(request);
   auth.set('state', {
+    sub: claims.sub,
     accessToken: result.access_token,
     refreshToken: result.refresh_token,
   });
@@ -40,9 +50,12 @@ export const loader: LoaderFunction = async ({ request, url }) => {
   headers.append('Set-Cookie', await authSession.commitSession(auth));
   headers.append('Set-Cookie', await oidcSession.destroySession(oidc));
 
-  const returnTo = oidcState.returnTo ?? '/';
+  const userInfo = await getUserInfo(result.access_token, claims.sub);
+  const redirectTo = userInfo.email_verified
+    ? (oidcState.returnTo ?? '/')
+    : '/profile/email-verification';
 
-  return redirect(returnTo, {
+  return redirect(redirectTo, {
     headers,
   });
 };

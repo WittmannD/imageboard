@@ -94,9 +94,8 @@ async function refreshTokenGrant(refreshToken: string) {
   });
 }
 
-async function getUserInfo(accessToken: string) {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated -- sub is not known ahead of the userinfo call
-  return await client.fetchUserInfo(config, accessToken, client.skipSubjectCheck);
+async function getUserInfo(accessToken: string, sub: string) {
+  return await client.fetchUserInfo(config, accessToken, sub);
 }
 
 export {

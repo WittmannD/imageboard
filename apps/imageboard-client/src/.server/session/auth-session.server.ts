@@ -1,8 +1,8 @@
 import { createCookieSessionStorage } from 'react-router';
-import type { ApiCredentials } from 'src/.server/interfaces.ts';
+import type { Credentials } from 'src/.server/interfaces.ts';
 
 export interface AuthSessionData {
-  state: ApiCredentials;
+  state: Credentials;
 }
 
 export interface AuthSessionFlashData {
