@@ -3,23 +3,29 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_PIPE } from '@nestjs/core';
+import { APP_GUARD, APP_PIPE } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { AppConfig } from './app.config.js';
+import { AppConfig } from './config/app.config.js';
 import { CommonModule } from './common/common.module.js';
 import { CredentialsModule } from './credentials/credentials.module.js';
 import { InteractionModule } from './interaction/interaction.module.js';
 import { KeyvStoreModule } from './keyv-store/keyv-store.module.js';
 import { OidcModule } from './oidc/oidc.module.js';
+import throttlerConfig from './config/throttler.config.js';
 import { UserModule } from './user/user.module.js';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [AppConfig],
+      load: [AppConfig, throttlerConfig],
       envFilePath: './.env',
+    }),
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => config.getOrThrow('throttler'),
     }),
     // KeyvStoreModule is global module
     KeyvStoreModule,
@@ -53,6 +59,10 @@ import { UserModule } from './user/user.module.js';
     {
       provide: APP_PIPE,
       useClass: ValidationPipe,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
   controllers: []

@@ -9,6 +9,7 @@ import {
   Res,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import IdProvider from 'oidc-provider';
 
@@ -16,6 +17,12 @@ import { CredentialsService } from '../credentials/credentials.service.js';
 import { EmailService } from '../email/email.service.js';
 import { accountVerificationEmail } from '../email/email-templates.js';
 import { OIDC_PROVIDER } from '../oidc/oidc.provider.js';
+import {
+  EMAIL_VERIFICATION_THROTTLE,
+  LOGIN_THROTTLE,
+  REGISTRATION_THROTTLE,
+  VERIFICATION_COMPLETE_THROTTLE,
+} from '../config/throttler.config.js';
 import { UserService } from '../user/user.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import type { RegistrationDto } from './dto/registration.dto.js';
@@ -54,6 +61,7 @@ export class InteractionController {
     );
   }
 
+  @Throttle(LOGIN_THROTTLE)
   @Post(':uid/login')
   async login(
     @Req() req: Request,
@@ -92,6 +100,7 @@ export class InteractionController {
     });
   }
 
+  @Throttle(REGISTRATION_THROTTLE)
   @Post(':uid/registration')
   async registration(
     @Req() req: Request,
@@ -125,6 +134,7 @@ export class InteractionController {
     }
   }
 
+  @Throttle(EMAIL_VERIFICATION_THROTTLE)
   @Post('verification')
   async emailVerification(@Body() body: VerificationDto) {
     const user = await this.userService.findOneById(body.userId);
@@ -153,6 +163,7 @@ export class InteractionController {
     return { sessionId };
   }
 
+  @Throttle(VERIFICATION_COMPLETE_THROTTLE)
   @Post('verification/complete')
   async completeEmailVerification(@Body() body: VerificationCompleteDto) {
     const deletedSession =

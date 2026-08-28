@@ -1,22 +1,28 @@
 import { Module, ValidationPipe } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_PIPE } from '@nestjs/core';
+import { APP_GUARD, APP_PIPE } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { PublicationsModule } from './art/publications.module.js';
-import AppConfig from './config/app-config.js';
+import { AuthModule } from './auth/auth.module.js';
+import AppConfig from './config/app.config.js';
+import throttlerConfig from './config/throttler.config.js';
 import { FederatedCredentialsModule } from './federated-credentials/federated-credentials.module.js';
 import { UserModule } from './user/user.module.js';
-import { AuthModule } from './auth/auth.module.js';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [AppConfig],
+      load: [AppConfig, throttlerConfig],
       envFilePath: './.env',
+    }),
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => config.getOrThrow('throttler'),
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
@@ -48,6 +54,10 @@ import { AuthModule } from './auth/auth.module.js';
     {
       provide: APP_PIPE,
       useClass: ValidationPipe,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
     AppService,
   ]
