@@ -20,6 +20,8 @@ export const loader: LoaderFunction = async ({ request, url }) => {
   // validate authorization code from url and get access token
   const result = await authorizationCodeGrant(url, oidcState);
 
+  console.log(result);
+
   if (result['error'] || !result.access_token || !result.refresh_token) {
     const errorUrl = buildAuthErrorUrl({
       error:
@@ -27,8 +29,6 @@ export const loader: LoaderFunction = async ({ request, url }) => {
     });
     return redirect(errorUrl);
   }
-
-  const returnTo = oidcState.returnTo ?? '/';
 
   const auth = await getAuthSessionFromCookie(request);
   auth.set('state', {
@@ -39,6 +39,8 @@ export const loader: LoaderFunction = async ({ request, url }) => {
   const headers = new Headers();
   headers.append('Set-Cookie', await authSession.commitSession(auth));
   headers.append('Set-Cookie', await oidcSession.destroySession(oidc));
+
+  const returnTo = oidcState.returnTo ?? '/';
 
   return redirect(returnTo, {
     headers,

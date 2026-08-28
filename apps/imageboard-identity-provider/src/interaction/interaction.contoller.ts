@@ -43,10 +43,8 @@ export class InteractionController {
     const interaction = await this.oidc.interactionDetails(req, res);
     const queryString = req.url.split('?')[1] || '';
     const params = new URLSearchParams(queryString);
-    params.append('uid', interaction.uid);
 
-    console.log('interaction', req.headers);
-    console.log('interaction', interaction.uid, interaction.prompt, interaction.params);
+    params.append('uid', interaction.uid);
 
     res.redirect(
       new URL(

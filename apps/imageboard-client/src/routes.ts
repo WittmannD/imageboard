@@ -21,5 +21,8 @@ export default [
       route('error', './routes/auth/error/index.tsx'),
     ]),
   ]),
+  ...prefix('profile', [
+    route('email-verification', './routes/profile/email-verification/index.tsx'),
+  ]),
   route('api/*', './routes/api/$.tsx')
 ] satisfies RouteConfig;

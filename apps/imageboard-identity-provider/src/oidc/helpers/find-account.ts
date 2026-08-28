@@ -33,10 +33,7 @@ const getClaimsFromScopes = (
   user: UserEntity,
   scopes: string[],
 ): AccountClaims => {
-  const picked: Record<
-    keyof UserClaimsMap,
-    UserEntity[keyof UserEntity]
-  > = {};
+  const picked: Record<keyof UserClaimsMap, UserEntity[keyof UserEntity]> = {};
 
   for (const scope of scopes) {
     if (!(scope in config)) {
@@ -52,7 +49,8 @@ const getClaimsFromScopes = (
         continue;
       }
 
-      const userFieldKey = userClaimsMap[claimKey as keyof typeof userClaimsMap];
+      const userFieldKey =
+        userClaimsMap[claimKey as keyof typeof userClaimsMap];
       picked[claimKey] = user[userFieldKey];
     }
   }
@@ -61,10 +59,28 @@ const getClaimsFromScopes = (
 };
 
 export default (users: UserService): OIDCDefinedConfig<'findAccount'> =>
-  async (_context, accountId: string) => {
-    const user = await users.findOneById(accountId);
+  async (ctx, accountId: string) => {
+    const user = accountId.startsWith('untrusted')
+      ? null
+      : await users.findOneById(accountId);
 
     if (!user) {
+      // The session's accountId doesn't resolve to a real user - either a
+      // decoy id issued on duplicate registration (see InteractionController)
+      // or a session left over from a deleted/reset account. oidc-provider's
+      // login prompt only checks that an accountId is present, not that it
+      // resolves, so without invalidating it here the consent prompt would
+      // crash later trying to build a grant for a nonexistent account.
+      if (ctx.oidc.session) {
+        // destroy() so the stale session can't resurrect on a later request
+        // (this is the same call oidc-provider's own RP-initiated logout
+        // uses). It doesn't clear accountId from memory though, and directly
+        // assigning it (ctx.oidc.session.accountId = undefined) is rejected
+        // by oidc-provider's session Proxy, so `delete` it to make this
+        // request's login check re-prompt too.
+        await ctx.oidc.session.destroy();
+        delete ctx.oidc.session.accountId;
+      }
       return undefined;
     }
 

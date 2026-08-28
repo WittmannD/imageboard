@@ -16,6 +16,7 @@ import {
   EmailIsNotVerifiedError,
   MissingClaimsError,
 } from './errors/auth-service-error.js';
+import type { UserEntity } from '../user/entities/user.entity.js';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -60,7 +61,7 @@ export class AuthService implements OnModuleInit {
     this.jwks = createRemoteJWKSet(new URL(jwksUri));
   }
 
-  async validateAccessToken(token: string, em?: EntityManager) {
+  async validateAccessToken(token: string, em?: EntityManager): Promise<UserEntity | null> {
     const userInfo = await this.verifyAccessToken(token);
 
     const existingUser = await this.findUserByFederatedCredential(

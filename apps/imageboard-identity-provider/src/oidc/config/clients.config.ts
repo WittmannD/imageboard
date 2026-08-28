@@ -9,7 +9,7 @@ const imageboardClient = {
   redirect_uris:
     process.env['OIDC_CLIENT_REDIRECT_URIS']?.split(/\s*,\s*/) ?? [],
   response_types: ['code'],
-  grant_types: ['authorization_code'],
+  grant_types: ['authorization_code', 'refresh_token'],
   token_endpoint_auth_method: 'client_secret_post',
   // Give the client all grants
   [TRUSTED_METADATA_PROPERTY]: true,

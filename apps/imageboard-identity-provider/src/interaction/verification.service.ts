@@ -7,6 +7,8 @@ import bcrypt from 'bcrypt';
 import type { VerificationSession } from '../common/interfaces.js';
 import { KEYV_STORE } from '../keyv-store/keyv-store.provider.js';
 
+const OTP_LENGTH = 6;
+
 @Injectable()
 export class VerificationService {
   constructor(
@@ -27,10 +29,10 @@ export class VerificationService {
     const digits = '0123456789';
     let otp = '';
 
-    const randomValues = new Uint32Array(length);
+    const randomValues = new Uint32Array(OTP_LENGTH);
     crypto.getRandomValues(randomValues);
 
-    for (let i = 0; i < length; i++) {
+    for (let i = 0; i < OTP_LENGTH; i++) {
       otp += digits[randomValues[i] % 10];
     }
     return otp;
