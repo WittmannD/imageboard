@@ -42,8 +42,8 @@ export class PostController {
     @UploadedFiles() images: FileUpload[],
     @Body() body: CreatePostDto,
   ): Promise<PostDraftDto> {
-    console.log(user);
-    return (await this.postService.createPost(
+    return (await this.postService.createUserPost(
+      user,
       images,
       body,
     )) as PostDraftDto;

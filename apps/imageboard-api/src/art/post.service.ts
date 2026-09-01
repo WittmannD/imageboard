@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { defer, switchMap } from 'rxjs';
 import { EntityManager, In } from 'typeorm';
 
+import { TransactionService } from '@hdotu1/database-common';
+
 import type { KeySetCursor } from '../common/types/cursor.js';
 import { paginate, type PaginateOptions } from '../common/utils/paginate.js';
 import type { FileUpload } from '../multer/file-upload.js';
@@ -14,8 +16,7 @@ import {
   PostRepository,
 } from './repositories/post.repository.js';
 import { PhotoService } from './services/photo.service.js';
-import * as util from 'node:util';
-import { TransactionService } from '@hdotu1/database-common';
+import type { UserEntity } from '../user/entities/user.entity.js';
 
 @Injectable()
 export class PostService {
@@ -51,7 +52,8 @@ export class PostService {
     );
   }
 
-  async createPost(
+  async createUserPost(
+    user: UserEntity,
     files: FileUpload[],
     dto: CreatePostDto,
     em?: EntityManager,
@@ -64,6 +66,7 @@ export class PostService {
 
       let postEntity = postRepository.createDraft({
         caption: dto.caption,
+        user,
       });
 
       postEntity = await entityManager.save(postEntity);
@@ -76,16 +79,8 @@ export class PostService {
       photoEntities = await entityManager.save(photoEntities);
       postEntity.photos = photoEntities;
 
-      console.log(
-        'createPost photoEntities',
-        util.inspect(photoEntities, { depth: 5 }),
-      );
-
       return postEntity;
     });
-
-    console.log('createPost files', util.inspect(files, { depth: 5 }));
-    console.log('createPost post', util.inspect(postEntity, { depth: 5 }));
 
     // we don't need to pass entity manager here, let it run in its own transaction
     this.createPhotoGalleryForPost(postEntity, files).subscribe();
