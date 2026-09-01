@@ -1,5 +1,6 @@
 interface VerificationRequestResult {
   sessionId: string;
+  resendAvailableAt: number;
 }
 
 interface VerificationCompleteResult {

@@ -51,9 +51,10 @@ export const loader: LoaderFunction = async ({ request, url }) => {
   headers.append('Set-Cookie', await oidcSession.destroySession(oidc));
 
   const userInfo = await getUserInfo(result.access_token, claims.sub);
+  const returnTo = oidcState.returnTo ?? '/';
   const redirectTo = userInfo.email_verified
-    ? (oidcState.returnTo ?? '/')
-    : '/profile/email-verification';
+    ? returnTo
+    : `/profile/email-verification?returnTo=${encodeURIComponent(returnTo)}`;
 
   return redirect(redirectTo, {
     headers,

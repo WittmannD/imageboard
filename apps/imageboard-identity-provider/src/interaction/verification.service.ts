@@ -43,6 +43,9 @@ export class VerificationService {
     purpose: VerificationSession['purpose'],
   ) {
     const ttl = this.configService.getOrThrow<number>('verificationSessionTTL');
+    const resendCooldown = this.configService.getOrThrow<number>(
+      'verificationResendCooldown',
+    );
     const rounds = this.configService.getOrThrow<number>(
       'verificationOTPSaltRounds',
     );
@@ -50,6 +53,22 @@ export class VerificationService {
     const existingSession = sessionId
       ? await this.keyv.get<VerificationSession>(this.getSessionKey(sessionId))
       : undefined;
+
+    if (sessionId && existingSession?.purpose === purpose) {
+      const resendAvailableAt = existingSession.createdAt + resendCooldown;
+
+      // Resent too soon: keep the existing (already emailed) OTP session alive
+      // instead of burning a new one, so the client's countdown stays in sync.
+      if (Date.now() < resendAvailableAt) {
+        return {
+          otp: null,
+          session: existingSession,
+          sessionId,
+          resendAvailableAt,
+          resent: false,
+        };
+      }
+    }
 
     if (sessionId && existingSession) {
       // Delete old session if exists
@@ -73,7 +92,13 @@ export class VerificationService {
       ttl,
     );
     await this.keyv.set(this.getUserKey(userId), sessionId, ttl);
-    return { otp, session, sessionId };
+    return {
+      otp,
+      session,
+      sessionId,
+      resendAvailableAt: session.createdAt + resendCooldown,
+      resent: true,
+    };
   }
 
   private async getSessionById(sessionId: string) {
@@ -96,19 +121,20 @@ export class VerificationService {
     );
   }
 
-  async deleteSessionIfOtpMatch(sessionId: string, otp: string, purpose: VerificationSession['purpose']) {
+  async consumeOTPSession(sessionId: string, otp: string, purpose: VerificationSession['purpose']) {
     const session = await this.getSessionById(sessionId);
 
     if (session?.purpose !== purpose) {
-      return null;
+      throw new Error('Invalid OTP');
     }
 
     const otpMatch = await bcrypt.compare(otp, session.otpHash);
 
-    if (otpMatch) {
-      await this.deleteSession(sessionId);
+    if (!otpMatch) {
+      throw new Error('Invalid OTP');
     }
 
+    await this.deleteSession(sessionId);
     return session;
   }
 }
