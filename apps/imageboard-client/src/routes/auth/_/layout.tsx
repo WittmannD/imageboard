@@ -12,7 +12,6 @@ export const loader: LoaderFunction = async ({ request, url }) => {
   }
 
   const { url: authUrl, ...state } = await buildAuthorizationUrl();
-  console.log('authUrl', authUrl.href);
   session.set('state', { ...state, returnTo: searchParams.get('returnTo') });
 
   return redirectDocument(authUrl.href, {

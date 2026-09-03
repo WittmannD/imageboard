@@ -1,14 +1,10 @@
 import { Logo } from 'src/components/ui/logo/Logo.tsx';
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from 'src/components/ui/navigation-menu/NavigationMenu.tsx';
-import { Moon, Plus, Sun } from 'lucide-react';
-import { selectIsDarkTheme, toggleTheme } from 'src/services/store/theme-reducer.ts';
-import { useAppDispatch, useAppSelector } from 'src/hooks/useAppState.ts';
+import { Plus } from 'lucide-react';
 import { Link } from 'react-router';
+import { ThemeToggle } from 'src/components/features/theme/ThemeToggle.tsx';
 
 function Header() {
-  const isDarkTheme = useAppSelector(selectIsDarkTheme);
-  const dispatch = useAppDispatch();
-
   return (
     <header className="flex items-center justify-between container mx-auto px-4 h-[var(--header-height)]">
       <Link to="/">
@@ -31,9 +27,7 @@ function Header() {
             </NavigationMenuLink>
           </NavigationMenuItem>
           <NavigationMenuItem>
-            <NavigationMenuLink onClick={() => dispatch(toggleTheme())}>
-              {isDarkTheme ? <Sun /> : <Moon />}
-            </NavigationMenuLink>
+            <ThemeToggle variant="ghost" size="icon-lg" />
           </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>
