@@ -1,5 +1,3 @@
-import DialogHoc from 'src/lib/dialog/DialogHoc.tsx';
-import { useDialog } from 'src/lib/dialog/hooks/useDialog.ts';
 import {
   Dialog,
   DialogContent,
@@ -15,9 +13,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { createPostFormSchema } from 'src/components/features/forms/create-post-form/schema.ts';
 import { ScrollArea } from 'src/components/ui/scroll-area/ScrollArea.tsx';
 import { LoaderCircle } from 'lucide-react';
-import { baseUIDialog } from 'src/lib/dialog/factory.ts';
+import type { DialogComponentProps } from 'src/lib/dialog-manager/registry.tsx';
 
-const CreatePostDialog = DialogHoc(() => {
+function CreatePostDialog({
+  open,
+  onOpenChange,
+  onOpenChangeComplete,
+}: DialogComponentProps) {
   const form = useForm<z.infer<typeof createPostFormSchema>>({
     resolver: zodResolver(createPostFormSchema),
     defaultValues: {
@@ -25,18 +27,20 @@ const CreatePostDialog = DialogHoc(() => {
       files: [],
     },
   });
-  const dialog = useDialog();
 
   return (
-    <Dialog {...baseUIDialog(dialog)}>
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      onOpenChangeComplete={onOpenChangeComplete}
+    >
       <FormProvider {...form}>
-        {/*<DialogTrigger></DialogTrigger>*/}
         <DialogContent size="xl">
           <DialogHeader>
             <DialogTitle>Create Post</DialogTitle>
           </DialogHeader>
           <ScrollArea className="max-h-[calc(100dvh-300px)]">
-            <CreatePostForm />
+            <CreatePostForm onSuccess={() => onOpenChange(false)} />
           </ScrollArea>
           <DialogFooter showCloseButton={true}>
             <Button
@@ -59,6 +63,6 @@ const CreatePostDialog = DialogHoc(() => {
       </FormProvider>
     </Dialog>
   );
-});
+}
 
-export { CreatePostDialog };
+export default CreatePostDialog;

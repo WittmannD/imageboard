@@ -9,7 +9,22 @@ import {
 export default [
   layout('./routes/layout.tsx', [
     index('./routes/feed/index.tsx'),
-    ...prefix('post', [route(':id', './routes/post/$id.tsx')]),
+    ...prefix('posts', [
+      route(
+        'create',
+        './routes/post/create/index.tsx'
+      ),
+      route(
+        ':id',
+        './routes/post/$id.tsx'
+      )
+    ]),
+    ...prefix('profile', [
+      route(
+        'email-verification',
+        './routes/profile/email-verification/index.tsx',
+      ),
+    ]),
   ]),
   ...prefix('auth', [
     layout('./routes/auth/layout.tsx', [
@@ -21,8 +36,5 @@ export default [
       route('error', './routes/auth/error/index.tsx'),
     ]),
   ]),
-  ...prefix('profile', [
-    route('email-verification', './routes/profile/email-verification/index.tsx'),
-  ]),
-  route('api/*', './routes/api/$.tsx')
+  route('api/*', './routes/api/$.tsx'),
 ] satisfies RouteConfig;

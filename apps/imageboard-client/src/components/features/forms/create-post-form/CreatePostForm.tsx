@@ -9,10 +9,12 @@ import { UploadPreview } from 'src/components/ui/upload-preview/UploadPreview.ts
 import { createPostFormSchema } from 'src/components/features/forms/create-post-form/schema.ts';
 import { clsx } from 'clsx';
 import { useCreatePostMutation } from 'src/services/api/post.ts';
-import { useDialog } from 'src/lib/dialog/hooks/useDialog.ts';
 
-export default function CreatePostForm() {
-  const dialog = useDialog();
+export interface CreatePostFormProps {
+  onSuccess?: () => void;
+}
+
+export default function CreatePostForm({ onSuccess }: CreatePostFormProps) {
   const form = useFormContext<z.infer<typeof createPostFormSchema>>();
   const filesValue = form.watch('files');
 
@@ -26,9 +28,9 @@ export default function CreatePostForm() {
         caption: data.caption,
         files: data.files,
       }).unwrap();
-      dialog.hide();
+      onSuccess?.();
     },
-    [createPost],
+    [createPost, onSuccess],
   );
 
   const onImageRemove = useCallback(

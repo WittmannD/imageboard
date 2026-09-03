@@ -8,9 +8,8 @@ import {
   ScrollRestoration,
 } from 'react-router';
 import { store } from 'src/services/store/store.ts';
-import { ThemeProvider } from 'src/providers/ThemeProvider.tsx';
+import { ThemeProvider } from 'src/components/features/theme/ThemeProvider.tsx';
 import { Provider } from 'react-redux';
-import { DialogProvider } from 'src/lib/dialog/DialogProvider.tsx';
 import { authMiddleware } from 'src/.server/middlewares/auth-middleware.ts';
 
 export const middleware: MiddlewareFunction[] = [authMiddleware];
@@ -38,9 +37,7 @@ export default function Root() {
   return (
     <Provider store={store}>
       <ThemeProvider />
-      <DialogProvider>
-        <Outlet />
-      </DialogProvider>
+      <Outlet />
     </Provider>
   );
 }
