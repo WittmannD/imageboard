@@ -14,6 +14,7 @@ import { dialogRegistry, type DialogName } from './registry.tsx';
 import { encodeDialogParams } from './params.ts';
 
 export interface DialogManagerContextValue {
+  getDialogSearchParams: (name: DialogName, params?: object) => string;
   openDialog: (name: DialogName, params?: object) => void;
   closeDialog: () => void;
 }
@@ -42,17 +43,17 @@ function isDialogName(name: string | null): name is DialogName {
 }
 
 export function DialogManagerProvider({ children }: PropsWithChildren) {
-  const modal = useLoaderData<ModalData>() ?? {};
+  const modal = useLoaderData<ModalData | undefined>();
   const [, setSearchParams] = useSearchParams();
   const [mounted, setMounted] = useState<MountedDialog | null>(null);
 
   useEffect(() => {
-    if (isDialogName(modal.name)) {
+    if (modal && isDialogName(modal.name)) {
       setMounted({ name: modal.name, params: modal.params ?? {} });
     }
-  }, [modal.name, modal.params]);
+  }, [modal]);
 
-  const open = isDialogName(modal.name) && mounted?.name === modal.name;
+  const open = Boolean(modal && isDialogName(modal.name) && mounted?.name === modal.name);
 
   const openDialog = useCallback(
     (name: DialogName, params?: object) => {
@@ -68,6 +69,18 @@ export function DialogManagerProvider({ children }: PropsWithChildren) {
       });
     },
     [setSearchParams],
+  );
+
+  const getDialogSearchParams = useCallback(
+    (name: DialogName, params?: object) => {
+      const searchParams = new URLSearchParams();
+      searchParams.set('modal', name);
+      if (params) {
+        searchParams.set('params', encodeDialogParams(params));
+      }
+      return searchParams.toString();
+    },
+    []
   );
 
   const closeDialog = useCallback(() => {
@@ -94,7 +107,7 @@ export function DialogManagerProvider({ children }: PropsWithChildren) {
   }, []);
 
   const value = useMemo<DialogManagerContextValue>(
-    () => ({ openDialog, closeDialog }),
+    () => ({ openDialog, getDialogSearchParams, closeDialog }),
     [openDialog, closeDialog],
   );
 

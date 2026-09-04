@@ -1,7 +1,8 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { postsApi } from 'src/services/api/post.ts';
-import { listenerMiddleware } from 'src/services/store/listener-middleware.ts';
-import { rootReducer } from 'src/services/store/root-reducer.ts';
+import { listenerMiddleware } from 'src/services/store/middlewares/listener-middleware.ts';
+import { rootReducer } from 'src/services/store/reducers/root-reducer.ts';
+import 'src/services/store/listeners/redirect-on-unauthorized.ts';
 
 export const store = configureStore({
   reducer: rootReducer,

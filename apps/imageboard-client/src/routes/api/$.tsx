@@ -1,6 +1,6 @@
-import type {
-  ActionFunction,
-  LoaderFunction,
+import {
+  type ActionFunction,
+  type LoaderFunction,
 } from 'react-router';
 import { authSession, getAuthSessionFromCookie } from 'src/.server/session/auth-session.server.ts';
 import { refreshTokenGrant } from 'src/.server/helpers/oidc.ts';
@@ -91,7 +91,6 @@ async function proxy(request: Request, endpoint: string = '/') {
     headers: responseHeaders,
   });
 }
-
 
 export const loader: LoaderFunction = async ({ request, params }) => {
   return proxy(request, params['*']);

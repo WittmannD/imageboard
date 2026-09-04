@@ -9,10 +9,14 @@ export interface ModalData {
   params: object | null;
 }
 
-export const loader: LoaderFunction = async ({ request }): Promise<ModalData> => {
+export const loader: LoaderFunction = async ({ request }): Promise<ModalData | undefined> => {
   const searchParams = new URL(request.url).searchParams;
   const modal = searchParams.get('modal');
   const encodedParams = searchParams.get('params');
+
+  if (!modal) {
+    return;
+  }
 
   return {
     name: modal,
