@@ -36,7 +36,7 @@ function Post(props: { data: PostDto }) {
                 if (!image || image.metadata?.variant !== 'tile') return null;
                 return (
                   <Link
-                    to={{ search: `?post=${props.data.id}` }}
+                    to={`?post=${props.data.id}`}
                     className="block outline-none"
                     style={getImageCellStyle(image.metadata.tile)}
                   >

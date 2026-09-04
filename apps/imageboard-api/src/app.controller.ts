@@ -1,13 +1,10 @@
-import { Controller, Get } from '@nestjs/common';
-
-import { AppService } from './app.service.js';
+import { Controller, Get, Req } from '@nestjs/common';
+import type { Request } from 'express';
 
 @Controller()
 export class AppController {
-  constructor(private appService: AppService) {}
-
-  @Get('/hello')
-  public getHello(): string {
-    return this.appService.getHello();
+  @Get('/ip')
+  public getIP(@Req() request: Request) {
+    return { ip: request.ip };
   }
 }

@@ -1,4 +1,4 @@
-import { getStorageItem, setStorageItem, THEME, } from 'src/utils/local-storage.ts';
+import { getStorageItem, setStorageItem, THEME, } from 'src/lib/utils/local-storage.ts';
 
 export type ThemeName = 'light' | 'dark';
 

@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useState } from 'react';
-import { applyTheme, getCurrentTheme } from 'src/utils/theme';
+import { applyTheme, getCurrentTheme } from 'src/lib/utils/theme.ts';
 import { Moon, Sun } from 'lucide-react';
 import { Button } from 'src/components/ui/button/Button.tsx';
 

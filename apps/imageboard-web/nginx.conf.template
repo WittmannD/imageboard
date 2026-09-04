@@ -3,8 +3,21 @@ resolver 127.0.0.11 valid=10s;
 server {
     listen 80;
     server_name ${DOMAIN};
+    client_max_body_size 1m;
 
     location / {
+        set $internal_url ${CLIENT_INTERNAL_URL};
+        proxy_pass $internal_url;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /api {
+        client_max_body_size 50m;
+
         set $internal_url ${CLIENT_INTERNAL_URL};
         proxy_pass $internal_url;
 
@@ -18,8 +31,21 @@ server {
 server {
     listen 80;
     server_name api.${DOMAIN};
+    client_max_body_size 1m;
 
     location / {
+        set $internal_url ${API_INTERNAL_URL};
+        proxy_pass $internal_url;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /posts {
+        client_max_body_size 50m;
+
         set $internal_url ${API_INTERNAL_URL};
         proxy_pass $internal_url;
 
@@ -33,6 +59,7 @@ server {
 server {
     listen 80;
     server_name auth.${DOMAIN};
+    client_max_body_size 1m;
 
     location / {
         set $internal_url ${AUTH_SERVER_INTERNAL_URL};

@@ -14,8 +14,8 @@ import {
   getStorageItem,
   setStorageItem,
   THEME,
-} from 'src/utils/local-storage.ts';
-import { getSystemTheme } from 'src/utils/theme.ts';
+} from 'src/lib/utils/local-storage.ts';
+import { getSystemTheme } from 'src/lib/utils/theme.ts';
 
 export const middleware: MiddlewareFunction[] = [authMiddleware];
 
@@ -51,7 +51,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
              (function () {
               try {
                var theme = localStorage.getItem("${THEME}");
-               console.log('custom script: stored theme:', theme)
                if (!theme) {
                 theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
                }
