@@ -7,7 +7,7 @@ const UNAUTHORIZED_STATUS = 401;
 startAppListening({
   matcher: isRejectedWithValue,
   effect: (action) => {
-    if (isClient()) return;
+    if (!isClient()) return;
 
     const payload = action.payload as { status?: number | string } | undefined;
     if (payload?.status !== UNAUTHORIZED_STATUS) return;

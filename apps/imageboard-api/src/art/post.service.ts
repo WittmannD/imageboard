@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { defer, switchMap } from 'rxjs';
-import { EntityManager, In } from 'typeorm';
+import { EntityManager } from 'typeorm';
 
 import { TransactionService } from '@hdotu1/database-common';
 
@@ -12,7 +12,6 @@ import type { PostEntity } from './entities/post.entity.js';
 import { PostStatus } from './enums/post-status.enum.js';
 import { PhotoRepository } from './repositories/photo.repository.js';
 import {
-  type PostPage,
   PostRepository,
 } from './repositories/post.repository.js';
 import { PhotoService } from './services/photo.service.js';
@@ -88,38 +87,45 @@ export class PostService {
     return postEntity;
   }
 
-  async getPaginatedPosts(
+  async getPaginatedPublishedPostsWithUser(
     cursor?: KeySetCursor<PostEntity>,
     options: PaginateOptions = {},
-  ): Promise<PostPage> {
-    const query = this.postRepository
-      .createQueryBuilder('post')
-      .where('post.status = :status', { status: PostStatus.Published });
-    const page = await paginate(query, cursor, options);
+    em?: EntityManager,
+  ) {
+    return await this.tx.withManager(em, async (entityManager) => {
+      const postRepository = entityManager.withRepository(this.postRepository);
+      const query = postRepository
+        .createQueryBuilder('post')
+        .where('post.status = :status', { status: PostStatus.Published });
 
-    if (page.ids.length === 0) {
+      const page = await paginate(query, cursor, options);
+
+      if (page.ids.length === 0) {
+        return {
+          items: [],
+          nextCursor: null,
+          hasNextPage: false,
+        };
+      }
+
+      const posts = await postRepository
+        .createQueryBuilder('post')
+        .leftJoinAndSelect('post.photos', 'photo')
+        .leftJoinAndSelect('post.user', 'user')
+        .where('post.id IN (:...ids)', { ids: page.ids })
+        .getMany();
+
+      // preserve the same order as ids
+      const byId = new Map<number, PostEntity>(posts.map((p) => [p.id, p]));
+      const items = page.ids
+        .map((id) => byId.get(id))
+        .filter(Boolean) as PostEntity[];
+
       return {
-        items: [],
-        nextCursor: null,
-        hasNextPage: false,
+        items,
+        nextCursor: page.nextCursor,
+        hasNextPage: page.hasNextPage,
       };
-    }
-
-    const posts = await this.postRepository.find({
-      where: { id: In(page.ids) },
-      relations: { photos: true },
     });
-
-    // preserve the same order as ids
-    const byId = new Map<number, PostEntity>(posts.map((p) => [p.id, p]));
-    const items = page.ids
-      .map((id) => byId.get(id))
-      .filter(Boolean) as PostEntity[];
-
-    return {
-      items,
-      nextCursor: page.nextCursor,
-      hasNextPage: page.hasNextPage,
-    };
   }
 }
