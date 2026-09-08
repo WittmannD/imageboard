@@ -1,13 +1,13 @@
 import { createContext, type MiddlewareFunction } from 'react-router';
-import { getAuthSessionFromCookie } from 'src/.server/session/auth-session.server.ts';
+import { getUserSessionFromCookie } from 'src/.server/session/auth-session.server.ts';
 
-import type { Credentials } from '../interfaces';
+import type { UserSession } from '../interfaces';
 
-export const apiCredentialsContext = createContext<Credentials | null>(null);
+export const apiCredentialsContext = createContext<UserSession | null>(null);
 
 export const authMiddleware: MiddlewareFunction = async ({ request, context }) => {
-  const auth = await getAuthSessionFromCookie(request);
-  const tokens = auth.get('state');
+  const user = await getUserSessionFromCookie(request);
+  const tokens = user.get('state');
 
   if (!tokens) {
     // throw redirect('/login');

@@ -4,7 +4,6 @@ import { ConfigService } from '@nestjs/config';
 
 export const KEYV_STORE = Symbol('KEYV_STORE');
 export const KeyvStoreProvider = {
-  
   provide: KEYV_STORE,
   useFactory: (configService: ConfigService) => {
     return new Keyv({

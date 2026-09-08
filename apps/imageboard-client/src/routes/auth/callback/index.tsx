@@ -1,15 +1,14 @@
-import { type LoaderFunction, redirect, useSearchParams } from 'react-router';
+import { type LoaderFunction, redirect } from 'react-router';
 import {
   getOidcSessionFromCookie,
   oidcSession,
 } from 'src/.server/session/oidc-session.server.ts';
 import {
   authorizationCodeGrant,
-  getUserInfo,
 } from 'src/.server/helpers/oidc.ts';
 import {
-  authSession,
-  getAuthSessionFromCookie,
+  userSession,
+  getUserSessionFromCookie,
 } from 'src/.server/session/auth-session.server.ts';
 import { buildAuthErrorUrl } from 'src/.server/helpers/auth-error.ts';
 
@@ -24,13 +23,13 @@ export const loader: LoaderFunction = async ({ request, url }) => {
   const result = await authorizationCodeGrant(url, oidcState);
   const claims = result.claims();
 
-  console.log('claims', claims);
-
   if (
     result['error'] ||
     !result.access_token ||
     !result.refresh_token ||
-    !claims
+    !claims ||
+    typeof claims['email'] !== 'string' ||
+    typeof claims['email_verified'] !== 'boolean'
   ) {
     const errorUrl = buildAuthErrorUrl({
       error:
@@ -39,20 +38,21 @@ export const loader: LoaderFunction = async ({ request, url }) => {
     return redirect(errorUrl);
   }
 
-  const auth = await getAuthSessionFromCookie(request);
-  auth.set('state', {
+  const user = await getUserSessionFromCookie(request);
+  user.set('state', {
     sub: claims.sub,
     accessToken: result.access_token,
     refreshToken: result.refresh_token,
+    email: claims['email'],
+    emailVerified: claims['email_verified']
   });
 
   const headers = new Headers();
-  headers.append('Set-Cookie', await authSession.commitSession(auth));
+  headers.append('Set-Cookie', await userSession.commitSession(user));
   headers.append('Set-Cookie', await oidcSession.destroySession(oidc));
 
-  const userInfo = await getUserInfo(result.access_token, claims.sub);
   const returnTo = oidcState.returnTo ?? '/';
-  const redirectTo = userInfo.email_verified
+  const redirectTo = claims['email_verified']
     ? returnTo
     : `/profile/email-verification?returnTo=${encodeURIComponent(returnTo)}`;
 
@@ -62,17 +62,7 @@ export const loader: LoaderFunction = async ({ request, url }) => {
 };
 
 function AuthCallbackPage() {
-  const [searchParams] = useSearchParams();
-
-  return (
-    <div>
-      <code>
-        <pre>
-          {JSON.stringify(Object.fromEntries(searchParams.entries()), null, 2)}
-        </pre>
-      </code>
-    </div>
-  );
+  return null;
 }
 
 export default AuthCallbackPage;

@@ -5,8 +5,10 @@ export interface OidcAuthState {
   returnTo?: string | null;
 }
 
-export interface Credentials {
+export interface UserSession {
   sub: string;
   accessToken: string;
   refreshToken: string;
+  email?: string;
+  emailVerified?: boolean;
 }

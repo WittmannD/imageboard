@@ -5,6 +5,7 @@ import {
   Form,
   type LoaderFunction,
   redirect,
+  type ShouldRevalidateFunction,
   useActionData,
   useFetcher,
   useNavigation,
@@ -25,12 +26,11 @@ import {
   FieldDescription,
   FieldGroup,
 } from 'src/components/ui/field/Field.tsx';
-import { getUserInfo } from 'src/.server/helpers/oidc.ts';
 import {
   completeEmailVerification,
   requestEmailVerification,
 } from 'src/.server/helpers/verification.ts';
-import { getAuthSessionFromCookie } from 'src/.server/session/auth-session.server.ts';
+import { getUserSessionFromCookie } from 'src/.server/session/auth-session.server.ts';
 import {
   InputOTP,
   InputOTPGroup,
@@ -62,27 +62,25 @@ function buildLoginRedirect(returnTo: string) {
 }
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const auth = await getAuthSessionFromCookie(request);
-  const tokens = auth.get('state');
+  const user = await getUserSessionFromCookie(request);
+  const userState = user.get('state');
   const returnTo = getReturnTo(request.url);
 
-  if (!tokens) {
+  if (!userState) {
     return redirect(buildLoginRedirect(returnTo));
   }
 
-  const userInfo = await getUserInfo(tokens.accessToken, tokens.sub);
-
-  if (userInfo.email_verified) {
+  if (userState.emailVerified) {
     return redirect(returnTo);
   }
 
   // Fire off the first OTP email immediately.
   const { sessionId, resendAvailableAt } = await requestEmailVerification(
-    userInfo.sub,
+    userState.sub,
   );
 
   return data<EmailVerificationLoaderData>({
-    email: userInfo.email,
+    email: userState.email,
     sessionId,
     resendAvailableAt,
     returnTo,
@@ -90,11 +88,11 @@ export const loader: LoaderFunction = async ({ request }) => {
 };
 
 export const action: ActionFunction = async ({ request }) => {
-  const auth = await getAuthSessionFromCookie(request);
-  const tokens = auth.get('state');
+  const user = await getUserSessionFromCookie(request);
+  const userState = user.get('state');
   const returnTo = getReturnTo(request.url);
 
-  if (!tokens) {
+  if (!userState) {
     return redirect(buildLoginRedirect(returnTo));
   }
 
@@ -102,9 +100,8 @@ export const action: ActionFunction = async ({ request }) => {
   const intent = formData.get('intent');
 
   if (intent === 'request') {
-    const userInfo = await getUserInfo(tokens.accessToken, tokens.sub);
     const { sessionId, resendAvailableAt } = await requestEmailVerification(
-      userInfo.sub,
+      userState.sub,
     );
 
     return data<EmailVerificationActionData>({
@@ -132,6 +129,20 @@ export const action: ActionFunction = async ({ request }) => {
   }
 
   throw new Response('Bad Request', { status: 400 });
+};
+
+// The loader sends a fresh OTP every time it runs (see "Fire off the first
+// OTP email immediately" above). React Router revalidates loaders after any
+// action by default, so without this the verify/resend actions would each
+// trigger a second, silent resend that invalidates the session the user is
+// acting on. Only skip revalidation for our own POST submissions - other
+// triggers (e.g. a fresh navigation to this route) should still load normally.
+export const shouldRevalidate: ShouldRevalidateFunction = ({
+  formMethod,
+  defaultShouldRevalidate,
+}) => {
+  if (formMethod) return false;
+  return defaultShouldRevalidate;
 };
 
 function ResendButton({

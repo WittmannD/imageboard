@@ -11,16 +11,23 @@ import type {
   UnvalidatedOidcClaims,
 } from '../common/types/oidc.js';
 import { FederatedCredentialsService } from '../federated-credentials/federated-credentials.service.js';
+import type { UserEntity } from '../user/entities/user.entity.js';
 import { UserService } from '../user/service/user.service.js';
 import {
   EmailIsNotVerifiedError,
   MissingClaimsError,
 } from './errors/auth-service-error.js';
-import type { UserEntity } from '../user/entities/user.entity.js';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
-  private readonly requiredClaims = ['sub', 'email', 'email_verified'];
+  private readonly requiredClaims = [
+    'iss',
+    'aud',
+    'sub',
+    'email',
+    'email_verified',
+    'preferred_username',
+  ];
   private readonly issuer: string;
   private readonly issuerUrl: string;
   private readonly audience: string;
@@ -37,6 +44,28 @@ export class AuthService implements OnModuleInit {
     this.audience = this.configService.getOrThrow<string>('OIDC_CLIENT_ID');
   }
 
+  private getJwks(): RemoteJWKSet {
+    if (!this.jwks) {
+      throw new Error('Failed to create JWKS set');
+    }
+
+    return this.jwks;
+  }
+
+  private async verifyAccessToken(token: string): Promise<OidcUserInfo> {
+    const { payload } = await jwtVerify<UnvalidatedOidcClaims>(
+      token,
+      this.getJwks(),
+      {
+        issuer: this.issuer,
+        audience: this.audience,
+        requiredClaims: this.requiredClaims,
+      },
+    );
+
+    return this.validateClaims(payload);
+  }
+
   async onModuleInit() {
     const config = await oidcClient.discovery(
       new URL(this.issuerUrl),
@@ -46,6 +75,7 @@ export class AuthService implements OnModuleInit {
         /* empty */
       },
       {
+        // todo: remove in prod
         // eslint-disable-next-line @typescript-eslint/no-deprecated
         execute: [oidcClient.allowInsecureRequests],
       },
@@ -59,7 +89,10 @@ export class AuthService implements OnModuleInit {
     this.jwks = createRemoteJWKSet(new URL(jwksUri));
   }
 
-  async validateAccessToken(token: string, em?: EntityManager): Promise<UserEntity | null> {
+  async validateAccessToken(
+    token: string,
+    em?: EntityManager,
+  ): Promise<UserEntity | null> {
     const userInfo = await this.verifyAccessToken(token);
 
     const existingUser = await this.findUserByFederatedCredential(
@@ -137,22 +170,9 @@ export class AuthService implements OnModuleInit {
     });
   }
 
-  private async verifyAccessToken(token: string): Promise<OidcUserInfo> {
-    const { payload } = await jwtVerify<UnvalidatedOidcClaims>(
-      token,
-      this.getJwks(),
-      {
-        issuer: this.issuer,
-        audience: this.audience,
-      },
-    );
-
-    return this.validateUserInfo(payload);
-  }
-
-  private validateUserInfo(userInfo: UnvalidatedOidcClaims): OidcUserInfo {
+  private validateClaims(claims: UnvalidatedOidcClaims): OidcUserInfo {
     const missingClaims = this.requiredClaims.filter(
-      (claim) => !(claim in userInfo),
+      (claim) => !(claim in claims),
     );
 
     if (missingClaims.length > 0) {
@@ -161,35 +181,36 @@ export class AuthService implements OnModuleInit {
       );
     }
 
-    if (typeof userInfo.sub !== 'string' || userInfo.sub.trim().length === 0) {
+    if (typeof claims.sub !== 'string' || claims.sub.trim().length === 0) {
       throw new MissingClaimsError('sub is missing from the user info');
     }
 
     if (
-      typeof userInfo.email !== 'string' ||
-      userInfo.email.trim().length === 0
+      typeof claims.email !== 'string' ||
+      claims.email.trim().length === 0
     ) {
       throw new MissingClaimsError('email is missing from the user info');
     }
 
-    if (typeof userInfo.email_verified !== 'boolean') {
+    if (
+      typeof claims.preferred_username !== 'string' ||
+      claims.preferred_username.trim().length === 0
+    ) {
+      throw new MissingClaimsError(
+        'preferred_username is missing from the user info',
+      );
+    }
+
+    if (typeof claims.email_verified !== 'boolean') {
       throw new MissingClaimsError(
         'email_verified is missing from the user info',
       );
     }
 
-    if (!userInfo.email_verified) {
+    if (!claims.email_verified) {
       throw new EmailIsNotVerifiedError('User email is not verified');
     }
 
-    return userInfo as OidcUserInfo;
-  }
-
-  private getJwks(): RemoteJWKSet {
-    if (!this.jwks) {
-      throw new Error('Failed to create JWKS set');
-    }
-
-    return this.jwks;
+    return claims as OidcUserInfo;
   }
 }

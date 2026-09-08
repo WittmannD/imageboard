@@ -39,7 +39,7 @@ interface ConsumableValue {
   consumed?: number;
 }
 
-export const KeyvAdapterFactory =
+export const SessionStoreAdapterFactory =
   (keyv: Keyv) =>
     (name: string): Adapter => {
       /**

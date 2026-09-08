@@ -2,7 +2,7 @@ import {
   type ActionFunction,
   type LoaderFunction,
 } from 'react-router';
-import { authSession, getAuthSessionFromCookie } from 'src/.server/session/auth-session.server.ts';
+import { userSession, getUserSessionFromCookie } from 'src/.server/session/auth-session.server.ts';
 import { refreshTokenGrant } from 'src/.server/helpers/oidc.ts';
 
 const apiUrl = new URL(process.env['IMAGEBOARD_API_URL']);
@@ -42,7 +42,7 @@ async function apiRequest(endpoint: string, request: Request, body: BodyInit | u
 }
 
 async function proxy(request: Request, endpoint: string = '/') {
-  const session = await getAuthSessionFromCookie(request);
+  const session = await getUserSessionFromCookie(request);
   const tokens = session.get('state');
 
   // Request.body is a ReadableStream that can only be consumed once, but a
@@ -73,7 +73,7 @@ async function proxy(request: Request, endpoint: string = '/') {
         refreshToken: result.refresh_token,
       });
 
-      setCookie = await authSession.commitSession(session);
+      setCookie = await userSession.commitSession(session);
     }
 
     // retry request with new access token

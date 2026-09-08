@@ -1,12 +1,15 @@
+import resourceIndicatorsConfig from '../helpers/resource-indicators.js';
 import revocationFeaturePolicy from '../helpers/revocation-feature-policy.js';
 import type { OIDCDefinedConfig } from '../types/config.js';
 
 export default () => ({
   devInteractions: { enabled: false },
 
-  // We expect to use the authentication server with a single audience.
-  // So we disable the resource indicators feature.
-  resourceIndicators: { enabled: false },
+  // imageboard-api is the only resource server behind this issuer. Access
+  // tokens are signed JWTs scoped to it by default (see
+  // helpers/resource-indicators.ts), so it can verify them against this
+  // issuer's JWKS on its own - no introspection round-trip needed.
+  resourceIndicators: { enabled: true, ...resourceIndicatorsConfig() },
   // Disable the backchannel logout feature. No need for logout tokens for now
   backchannelLogout: { enabled: false },
   // No login approves

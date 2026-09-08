@@ -1,5 +1,6 @@
 import { TRUSTED_METADATA_PROPERTY } from '../config/extra-client-metadata.config.js';
 import type { OIDCDefinedConfig } from '../types/config.js';
+import { API_RESOURCE_IDENTIFIER } from './resource-indicators.js';
 
 export default (): OIDCDefinedConfig<'loadExistingGrant'> =>
   async (context) => {
@@ -17,8 +18,6 @@ export default (): OIDCDefinedConfig<'loadExistingGrant'> =>
         ? context.oidc.params['scope']
         : 'openid';
 
-    console.log('scope', scope);
-
     // If the client is trusted, grant with all scopes
     if (
       context.oidc.client?.metadata()[TRUSTED_METADATA_PROPERTY] &&
@@ -29,6 +28,9 @@ export default (): OIDCDefinedConfig<'loadExistingGrant'> =>
         clientId: context.oidc.client.clientId,
       });
       grant.addOIDCScope(scope);
+      // also grant the same scopes on the default resource so the JWT access
+      // token issued for it (see resource-indicators.ts) carries them
+      grant.addResourceScope(API_RESOURCE_IDENTIFIER, scope);
       await grant.save();
       return grant;
     }

@@ -13,6 +13,10 @@ import ttlConfig from './config/ttl.config.js';
 
 export default () =>
   ({
+    // add 'pairwise' to list to enable pairwise subject identifier
+    subjectTypes: ['public'],
+    // default is true, which limits the code-flow ID token to `sub` only
+    conformIdTokenClaims: false,
     features: featuresConfig(),
     scopes: scopesConfig(),
     claims: claimsConfig(),
@@ -23,5 +27,4 @@ export default () =>
     pkce: pkceConfig(),
     cookies: cookiesConfig(),
     ttl: ttlConfig(),
-    // jwks: [],
   }) satisfies Readonly<Configuration>;
