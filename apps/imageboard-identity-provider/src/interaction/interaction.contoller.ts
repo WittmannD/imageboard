@@ -29,7 +29,7 @@ import type { RegistrationDto } from './dto/registration.dto.js';
 import type { VerificationDto } from './dto/verification.dto.js';
 import { VerificationCompleteDto } from './dto/verification-complete.dto.js';
 import { InteractionService } from './interaction.service.js';
-import { VerificationService } from './verification.service.js';
+import { VerificationService } from '../common/services/verification.service.js';
 
 @Controller('interactions')
 export class InteractionController {

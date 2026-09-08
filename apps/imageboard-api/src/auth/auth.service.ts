@@ -41,7 +41,7 @@ export class AuthService implements OnModuleInit {
   ) {
     this.issuer = this.configService.getOrThrow<string>('OIDC_ISSUER');
     this.issuerUrl = this.configService.getOrThrow<string>('OIDC_ISSUER_URL');
-    this.audience = this.configService.getOrThrow<string>('OIDC_CLIENT_ID');
+    this.audience = this.configService.getOrThrow<string>('BASE_URL');
   }
 
   private getJwks(): RemoteJWKSet {

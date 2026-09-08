@@ -8,13 +8,13 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AppConfig } from './config/app.config.js';
-import { CommonModule } from './common/common.module.js';
+import throttlerConfig from './config/throttler.config.js';
 import { CredentialsModule } from './credentials/credentials.module.js';
 import { InteractionModule } from './interaction/interaction.module.js';
 import { KeyvStoreModule } from './keyv-store/keyv-store.module.js';
 import { OidcModule } from './oidc/oidc.module.js';
-import throttlerConfig from './config/throttler.config.js';
 import { UserModule } from './user/user.module.js';
+import { CommonModule } from './common/common.module.js';
 
 @Module({
   imports: [

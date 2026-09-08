@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import type { EntityManager } from 'typeorm';
 
-import { TransactionService } from '../common/services/transaction.service.js';
 import { CredentialsRepository } from './credentials.repository.js';
 import type { UserEntity } from '../user/user.entity.js';
 import bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
+import { TransactionService } from '@hdotu1/database-common';
 
 @Injectable()
 export class CredentialsService {

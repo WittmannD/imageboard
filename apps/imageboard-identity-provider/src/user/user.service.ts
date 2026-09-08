@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { type EntityManager } from 'typeorm';
 
-import { TransactionService } from '../common/services/transaction.service.js';
-import { UserRepository } from './user.repository.js';
+import { TransactionService } from '@hdotu1/database-common';
+
 import type { CreateUser } from '../common/interfaces.js';
 import type { UserEntity } from './user.entity.js';
+import { UserRepository } from './user.repository.js';
 
 @Injectable()
 export class UserService {

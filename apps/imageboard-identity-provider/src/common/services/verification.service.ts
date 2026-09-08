@@ -4,8 +4,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import bcrypt from 'bcrypt';
 
-import type { VerificationSession } from '../common/interfaces.js';
-import { KEYV_STORE } from '../keyv-store/keyv-store.provider.js';
+import { KEYV_STORE } from '../../keyv-store/keyv-store.provider.js';
+import type { VerificationSession } from '../interfaces.js';
 
 const OTP_LENGTH = 6;
 
@@ -102,12 +102,16 @@ export class VerificationService {
   }
 
   private async getSessionById(sessionId: string) {
-    const session = await this.keyv.get<VerificationSession>(this.getSessionKey(sessionId));
+    const session = await this.keyv.get<VerificationSession>(
+      this.getSessionKey(sessionId),
+    );
     return session ?? null;
   }
 
   private async deleteSession(sessionId: string) {
-    const session = await this.keyv.get<VerificationSession>(this.getSessionKey(sessionId));
+    const session = await this.keyv.get<VerificationSession>(
+      this.getSessionKey(sessionId),
+    );
     if (session) {
       await this.keyv.delete(this.getUserKey(session.userId));
       await this.keyv.delete(this.getSessionKey(sessionId));
@@ -115,13 +119,14 @@ export class VerificationService {
   }
 
   async createEmailVerificationSession(userId: string) {
-    return await this.createVerificationSession(
-      userId,
-      'email-verification',
-    );
+    return await this.createVerificationSession(userId, 'email-verification');
   }
 
-  async consumeOTPSession(sessionId: string, otp: string, purpose: VerificationSession['purpose']) {
+  async consumeOTPSession(
+    sessionId: string,
+    otp: string,
+    purpose: VerificationSession['purpose'],
+  ) {
     const session = await this.getSessionById(sessionId);
 
     if (session?.purpose !== purpose) {

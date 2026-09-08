@@ -1,12 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import type { EntityManager } from 'typeorm';
 
-import { isUniqueViolation } from '@hdotu1/database-common';
+import { isUniqueViolation, TransactionService } from '@hdotu1/database-common';
 
 import type {
   CreateUser,
 } from '../common/interfaces.js';
-import { TransactionService } from '../common/services/transaction.service.js';
 import { CredentialsService } from '../credentials/credentials.service.js';
 import { UserService } from '../user/user.service.js';
 
