@@ -1,6 +1,7 @@
 import {
   type CanActivate,
   type ExecutionContext,
+  HttpException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -37,7 +38,16 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('Invalid authorization header format. Expected "Bearer <token>"');
     }
 
-    const user = await this.authService.validateAccessToken(token);
+    let user;
+    try {
+      user = await this.authService.validateAccessToken(token);
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      }
+      throw new UnauthorizedException('Invalid access token');
+    }
+
     if (!user) {
       throw new UnauthorizedException('Invalid access token');
     }

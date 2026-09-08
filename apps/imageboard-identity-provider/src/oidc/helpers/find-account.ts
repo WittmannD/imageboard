@@ -13,8 +13,7 @@ const config = claimsConfig();
 const userClaimsMap = {
   email: 'email',
   email_verified: 'emailVerified',
-  given_name: 'firstName',
-  family_name: 'lastName',
+  preferred_username: 'username',
 } satisfies UserClaimsMap;
 
 /**
@@ -88,7 +87,8 @@ export default (users: UserService): OIDCDefinedConfig<'findAccount'> =>
       accountId: user.id,
 
       claims: (_use: string, scope: string) => {
-        // oidc-provider will exclude fields that are not associated with scope in claims config
+        // oidc-provider will mask claims depending on the scope automatically,
+        // but we need to map them manually to the user fields.
         return getClaimsFromScopes(user, scope.split(' '));
       },
     };

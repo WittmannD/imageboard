@@ -2,6 +2,8 @@ import * as process from 'node:process';
 import * as client from 'openid-client';
 import type { OidcAuthState } from 'src/.server/interfaces.ts';
 import { install } from 'undici';
+import { validateShape } from 'src/.server/helpers/validate.ts';
+import { TokenResponseModel } from 'src/.server/models/token-response.model.ts';
 
 const server = new URL(process.env.OIDC_ISSUER_URL);
 const clientId = process.env.OIDC_CLIENT_ID;
@@ -13,7 +15,9 @@ const config: client.Configuration = await client.discovery(
   server,
   clientId,
   clientSecret,
-  () => { /* empty */ },
+  () => {
+    /* empty */
+  },
   {
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     execute: [client.allowInsecureRequests],
@@ -24,10 +28,7 @@ const config: client.Configuration = await client.discovery(
  * Value used in the authorization request as the redirect_uri parameter, this
  * is typically pre-registered at the Authorization Server.
  */
-const redirectUri = new URL(
-  'auth/callback',
-  process.env.VITE_BASE_URL,
-).href;
+const redirectUri = new URL('auth/callback', process.env.VITE_BASE_URL).href;
 const scope = 'openid email profile offline_access';
 
 /**
@@ -72,7 +73,7 @@ async function buildAuthorizationUrl(): Promise<OidcAuthState & { url: URL }> {
 }
 
 async function authorizationCodeGrant(url: URL, state: OidcAuthState) {
-  return await client.authorizationCodeGrant(
+  const result = await client.authorizationCodeGrant(
     config,
     url,
     {
@@ -85,13 +86,37 @@ async function authorizationCodeGrant(url: URL, state: OidcAuthState) {
       client_secret: clientSecret,
     },
   );
+
+  return await validateShape(
+    TokenResponseModel,
+    {
+      ...result,
+      claims: result.claims(),
+    },
+    {
+      whitelist: false,
+      forbidNonWhitelisted: false,
+    },
+  );
 }
 
 async function refreshTokenGrant(refreshToken: string) {
-  return await client.refreshTokenGrant(config, refreshToken, {
+  const result = await client.refreshTokenGrant(config, refreshToken, {
     client_id: clientId,
     client_secret: clientSecret,
   });
+
+  return await validateShape(
+    TokenResponseModel,
+    {
+      ...result,
+      claims: result.claims(),
+    },
+    {
+      whitelist: false,
+      forbidNonWhitelisted: false,
+    },
+  );
 }
 
 async function getUserInfo(accessToken: string, sub: string) {

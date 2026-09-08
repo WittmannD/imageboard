@@ -1,5 +1,6 @@
 import { createCookieSessionStorage } from 'react-router';
 import type { UserSession } from 'src/.server/interfaces.ts';
+import type { TokenResponseModel } from 'src/.server/models/token-response.model.ts';
 
 export interface UserSessionData {
   state: UserSession;
@@ -11,7 +12,7 @@ export interface UserSessionFlashData {
 
 export const AUTH_SESSION_KEY = 'auth-session';
 
-export const userSession = createCookieSessionStorage<
+export const userSessionStorage = createCookieSessionStorage<
   UserSessionData,
   UserSessionFlashData
 >({
@@ -29,4 +30,13 @@ export const userSession = createCookieSessionStorage<
 });
 
 export const getUserSessionFromCookie = (request: Request) =>
-  userSession.getSession(request.headers.get('Cookie'));
+  userSessionStorage.getSession(request.headers.get('Cookie'));
+
+export const toUserSessionState = (data: TokenResponseModel): UserSession => ({
+  accessToken: data.access_token,
+  refreshToken: data.refresh_token,
+  sub: data.claims.sub,
+  email: data.claims.email,
+  emailVerified: data.claims.email_verified,
+});
+

@@ -2,7 +2,7 @@ import {
   type ActionFunction,
   type LoaderFunction,
 } from 'react-router';
-import { userSession, getUserSessionFromCookie } from 'src/.server/session/auth-session.server.ts';
+import { userSessionStorage, getUserSessionFromCookie, toUserSessionState } from 'src/.server/session/user-session.server.ts';
 import { refreshTokenGrant } from 'src/.server/helpers/oidc.ts';
 
 const apiUrl = new URL(process.env['IMAGEBOARD_API_URL']);
@@ -42,8 +42,8 @@ async function apiRequest(endpoint: string, request: Request, body: BodyInit | u
 }
 
 async function proxy(request: Request, endpoint: string = '/') {
-  const session = await getUserSessionFromCookie(request);
-  const tokens = session.get('state');
+  const userSession = await getUserSessionFromCookie(request);
+  const user = userSession.get('state');
 
   // Request.body is a ReadableStream that can only be consumed once, but a
   // 401 below needs to retry the same request with a refreshed token -
@@ -52,33 +52,33 @@ async function proxy(request: Request, endpoint: string = '/') {
     ? undefined
     : await request.arrayBuffer();
 
-  let response = await apiRequest(endpoint, request, body, tokens?.accessToken);
+  let response = await apiRequest(endpoint, request, body, user?.accessToken);
   let responseHeaders = filterHeaders(response.headers, includeResponseHeaderKeys, 'include');
 
-  if (response.status === 401 && tokens) {
+  if (response.status === 401 && user) {
     // drain the response body we're about to discard - an unread body can
     // leave the underlying keep-alive connection in a bad state, causing a
     // later unrelated request to be served leftover bytes from this one
     await response.body?.cancel();
 
     // todo: logout if fail to refresh token
-    const result = await refreshTokenGrant(tokens.refreshToken);
-    const claims = result.claims();
+    const result = await refreshTokenGrant(user.refreshToken);
     let setCookie: string | undefined;
 
-    if (result.access_token && result.refresh_token && claims) {
-      session.set('state', {
-        sub: claims.sub,
-        accessToken: result.access_token,
-        refreshToken: result.refresh_token,
-      });
+    if (result.valid) {
+      userSession.set('state', toUserSessionState(result.data));
 
-      setCookie = await userSession.commitSession(session);
+      setCookie = await userSessionStorage.commitSession(userSession);
+      // retry request with new access token
+      response = await apiRequest(endpoint, request, body, result.data.access_token);
+      responseHeaders = filterHeaders(
+        response.headers,
+        includeResponseHeaderKeys,
+        'include',
+      );
+    } else {
+      setCookie = await userSessionStorage.destroySession(userSession);
     }
-
-    // retry request with new access token
-    response = await apiRequest(endpoint, request, body, result.access_token);
-    responseHeaders = filterHeaders(response.headers, includeResponseHeaderKeys, 'include');
 
     if (setCookie) {
       responseHeaders.append('Set-Cookie', setCookie);

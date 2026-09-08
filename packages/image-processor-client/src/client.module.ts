@@ -20,7 +20,10 @@ import { IMAGE_PROCESSOR_CLIENT_TOKEN } from './constants.js';
       useFactory: (options: ImageProcessorClientOptions): ClientProxy => {
         return ClientProxyFactory.create({
           customClass: RedisTransportClient,
-          options: options.redis,
+          options: {
+            ...options.redis,
+            keyPrefix: 'improc:',
+          },
         });
       },
       inject: [MODULE_OPTIONS_TOKEN],

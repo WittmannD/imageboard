@@ -15,6 +15,7 @@ async function bootstrap() {
         strategy: new RedisTransportServer({
           host: configService.get<string>('REDIS_HOST'),
           port: configService.get<number>('REDIS_PORT'),
+          keyPrefix: 'improc:'
         }),
       }),
       inject: [ConfigService],

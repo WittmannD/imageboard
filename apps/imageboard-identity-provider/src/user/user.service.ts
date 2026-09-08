@@ -45,8 +45,7 @@ export class UserService {
 
       const user = userRepository.create({
         email: data.email,
-        firstName: data.firstName,
-        lastName: data.lastName,
+        username: data.username,
       });
       return await userRepository.save(user);
     });

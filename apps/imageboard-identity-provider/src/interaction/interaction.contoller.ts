@@ -25,8 +25,8 @@ import { accountVerificationEmail } from '../email/email-templates.js';
 import { OIDC_PROVIDER } from '../oidc/oidc.provider.js';
 import { UserService } from '../user/user.service.js';
 import { LoginDto } from './dto/login.dto.js';
-import type { RegistrationDto } from './dto/registration.dto.js';
-import type { VerificationDto } from './dto/verification.dto.js';
+import { RegistrationDto } from './dto/registration.dto.js';
+import { VerificationDto } from './dto/verification.dto.js';
 import { VerificationCompleteDto } from './dto/verification-complete.dto.js';
 import { InteractionService } from './interaction.service.js';
 import { VerificationService } from '../common/services/verification.service.js';
@@ -107,11 +107,11 @@ export class InteractionController {
     @Res() res: Response,
     @Body() body: RegistrationDto,
   ) {
+    console.log('body', body);
     const user = await this.interactionService.registration(body);
     // If creating a new user fails due to email uniqueness violation,
     // proceed with a fake user ID to disallow guessing existing emails.
-    // Later it will fail in the `findAccount` method, and the user will get a generic error
-
+    // The `findAccount` method will skip fake user ID, and the user will get a generic error.
     const userId = user?.id ?? 'untrusted-' + this.userService.generateId();
 
     if (req.header('Content-Type') === 'application/json') {

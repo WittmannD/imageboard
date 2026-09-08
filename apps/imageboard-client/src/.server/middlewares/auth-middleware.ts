@@ -1,5 +1,5 @@
 import { createContext, type MiddlewareFunction } from 'react-router';
-import { getUserSessionFromCookie } from 'src/.server/session/auth-session.server.ts';
+import { getUserSessionFromCookie } from 'src/.server/session/user-session.server.ts';
 
 import type { UserSession } from '../interfaces';
 

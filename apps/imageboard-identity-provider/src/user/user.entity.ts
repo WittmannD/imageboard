@@ -5,11 +5,8 @@ import { CredentialsEntity } from '../credentials/credentials.entity.js';
 
 @Entity()
 export class UserEntity extends BaseEntity {
-  @Column({ type: 'text', nullable: true })
-  firstName?: string;
-
-  @Column({ type: 'text', nullable: true })
-  lastName?: string;
+  @Column({ type: 'text', nullable: false })
+  username!: string;
 
   @Column({ type: 'text', nullable: false, unique: true })
   email!: string;

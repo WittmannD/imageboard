@@ -1,5 +1,6 @@
-import type { OIDCDefinedFeatureConfig } from '../types/config.js';
 import { errors } from 'oidc-provider';
+
+import type { OIDCDefinedFeatureConfig } from '../types/config.js';
 
 // imageboard-api is the only resource server behind this issuer, so every
 // access token is scoped to it by default - no client ever has to request it

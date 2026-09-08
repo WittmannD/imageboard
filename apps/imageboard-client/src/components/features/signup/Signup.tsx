@@ -13,6 +13,7 @@ import {
   FieldLabel,
 } from 'src/components/ui/field/Field.tsx';
 import { Input } from 'src/components/ui/input/Input.tsx';
+import React from 'react';
 
 export function SignupForm({ action, ...props }: React.ComponentProps<typeof Card> & {action: string}) {
   return (
@@ -27,12 +28,11 @@ export function SignupForm({ action, ...props }: React.ComponentProps<typeof Car
         <form action={action} method="POST">
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="name">Full Name</FieldLabel>
+              <FieldLabel htmlFor="name">Username</FieldLabel>
               <Input
                 id="name"
                 type="text"
-                name="firstName"
-                placeholder="John Doe"
+                name="username"
                 required
               />
             </Field>

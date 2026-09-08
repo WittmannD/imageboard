@@ -30,7 +30,12 @@ import {
   completeEmailVerification,
   requestEmailVerification,
 } from 'src/.server/helpers/verification.ts';
-import { getUserSessionFromCookie } from 'src/.server/session/auth-session.server.ts';
+import {
+  getUserSessionFromCookie,
+  userSessionStorage,
+  toUserSessionState,
+} from 'src/.server/session/user-session.server.ts';
+import { refreshTokenGrant } from 'src/.server/helpers/oidc.ts';
 import {
   InputOTP,
   InputOTPGroup,
@@ -125,17 +130,26 @@ export const action: ActionFunction = async ({ request }) => {
       });
     }
 
-    return redirect(returnTo);
+    // The access token already in session was minted before verification
+    // completed, so it still carries email_verified=false. Mint a fresh one
+    // now so the user isn't stuck with a stale token until it happens to be
+    // rejected and lazily refreshed elsewhere.
+    const headers = new Headers();
+    const refreshed = await refreshTokenGrant(userState.refreshToken);
+
+    if (refreshed.valid) {
+      user.set('state', toUserSessionState(refreshed.data));
+      headers.append('Set-Cookie', await userSessionStorage.commitSession(user));
+    }
+
+    return redirect(returnTo, { headers });
   }
 
   throw new Response('Bad Request', { status: 400 });
 };
 
 // The loader sends a fresh OTP every time it runs (see "Fire off the first
-// OTP email immediately" above). React Router revalidates loaders after any
-// action by default, so without this the verify/resend actions would each
-// trigger a second, silent resend that invalidates the session the user is
-// acting on. Only skip revalidation for our own POST submissions - other
+// OTP email immediately" above). Only skip revalidation for our own POST submissions - other
 // triggers (e.g. a fresh navigation to this route) should still load normally.
 export const shouldRevalidate: ShouldRevalidateFunction = ({
   formMethod,

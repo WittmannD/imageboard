@@ -3,13 +3,12 @@ import {
   getOidcSessionFromCookie,
   oidcSession,
 } from 'src/.server/session/oidc-session.server.ts';
+import { authorizationCodeGrant } from 'src/.server/helpers/oidc.ts';
 import {
-  authorizationCodeGrant,
-} from 'src/.server/helpers/oidc.ts';
-import {
-  userSession,
+  userSessionStorage,
   getUserSessionFromCookie,
-} from 'src/.server/session/auth-session.server.ts';
+  toUserSessionState,
+} from 'src/.server/session/user-session.server.ts';
 import { buildAuthErrorUrl } from 'src/.server/helpers/auth-error.ts';
 
 export const loader: LoaderFunction = async ({ request, url }) => {
@@ -21,38 +20,23 @@ export const loader: LoaderFunction = async ({ request, url }) => {
   }
   // validate authorization code from url and get access token
   const result = await authorizationCodeGrant(url, oidcState);
-  const claims = result.claims();
 
-  if (
-    result['error'] ||
-    !result.access_token ||
-    !result.refresh_token ||
-    !claims ||
-    typeof claims['email'] !== 'string' ||
-    typeof claims['email_verified'] !== 'boolean'
-  ) {
+  if (!result.valid) {
     const errorUrl = buildAuthErrorUrl({
-      error:
-        typeof result['error'] === 'string' ? result['error'] : 'access_denied',
+      error: 'access_denied',
     });
     return redirect(errorUrl);
   }
 
   const user = await getUserSessionFromCookie(request);
-  user.set('state', {
-    sub: claims.sub,
-    accessToken: result.access_token,
-    refreshToken: result.refresh_token,
-    email: claims['email'],
-    emailVerified: claims['email_verified']
-  });
+  user.set('state', toUserSessionState(result.data));
 
   const headers = new Headers();
-  headers.append('Set-Cookie', await userSession.commitSession(user));
+  headers.append('Set-Cookie', await userSessionStorage.commitSession(user));
   headers.append('Set-Cookie', await oidcSession.destroySession(oidc));
 
   const returnTo = oidcState.returnTo ?? '/';
-  const redirectTo = claims['email_verified']
+  const redirectTo = result.data.claims.email_verified
     ? returnTo
     : `/profile/email-verification?returnTo=${encodeURIComponent(returnTo)}`;
 
