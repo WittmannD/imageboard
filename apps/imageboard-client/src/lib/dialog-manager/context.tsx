@@ -11,11 +11,18 @@ import {
 import { useLoaderData, useSearchParams } from 'react-router';
 import type { ModalData } from 'src/routes/layout.tsx';
 import { dialogRegistry, type DialogName } from './registry.tsx';
-import { encodeDialogParams } from './params.ts';
+
+type DialogParams = Record<string, string | number>;
+
+function toParamEntries(params?: DialogParams): [string, string][] {
+  return params
+    ? Object.entries(params).map(([key, value]) => [key, String(value)])
+    : [];
+}
 
 export interface DialogManagerContextValue {
-  getDialogSearchParams: (name: DialogName, params?: object) => string;
-  openDialog: (name: DialogName, params?: object) => void;
+  getDialogSearchParams: (name: DialogName, params?: DialogParams) => string;
+  openDialog: (name: DialogName, params?: DialogParams) => void;
   closeDialog: () => void;
 }
 
@@ -35,7 +42,7 @@ export function useDialogManager(): DialogManagerContextValue {
 
 interface MountedDialog {
   name: DialogName;
-  params: object;
+  params: Record<string, string>;
 }
 
 function isDialogName(name: string | null): name is DialogName {
@@ -49,21 +56,19 @@ export function DialogManagerProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     if (modal && isDialogName(modal.name)) {
-      setMounted({ name: modal.name, params: modal.params ?? {} });
+      setMounted({ name: modal.name, params: modal.params });
     }
   }, [modal]);
 
   const open = Boolean(modal && isDialogName(modal.name) && mounted?.name === modal.name);
 
   const openDialog = useCallback(
-    (name: DialogName, params?: object) => {
+    (name: DialogName, params?: DialogParams) => {
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
         next.set('modal', name);
-        if (params) {
-          next.set('params', encodeDialogParams(params));
-        } else {
-          next.delete('params');
+        for (const [key, value] of toParamEntries(params)) {
+          next.set(key, value);
         }
         return next;
       });
@@ -72,15 +77,15 @@ export function DialogManagerProvider({ children }: PropsWithChildren) {
   );
 
   const getDialogSearchParams = useCallback(
-    (name: DialogName, params?: object) => {
+    (name: DialogName, params?: DialogParams) => {
       const searchParams = new URLSearchParams();
       searchParams.set('modal', name);
-      if (params) {
-        searchParams.set('params', encodeDialogParams(params));
+      for (const [key, value] of toParamEntries(params)) {
+        searchParams.set(key, value);
       }
       return searchParams.toString();
     },
-    []
+    [],
   );
 
   const closeDialog = useCallback(() => {
@@ -88,12 +93,16 @@ export function DialogManagerProvider({ children }: PropsWithChildren) {
       (prev) => {
         const next = new URLSearchParams(prev);
         next.delete('modal');
-        next.delete('params');
+        if (mounted) {
+          for (const key of Object.keys(mounted.params)) {
+            next.delete(key);
+          }
+        }
         return next;
       },
       { replace: true },
     );
-  }, [setSearchParams]);
+  }, [setSearchParams, mounted]);
 
   const handleOpenChange = useCallback(
     (next: boolean) => {

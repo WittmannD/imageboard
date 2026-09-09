@@ -4,8 +4,9 @@ import { XIcon } from 'lucide-react';
 
 import { Button } from 'src/components/ui/button/Button.tsx';
 import type { VariantProps } from 'class-variance-authority';
-import { dialogContentVariants } from 'src/components/ui/dialog/dialog-style.ts';
+import { dialogPopupVariants } from 'src/components/ui/dialog/dialog-style.ts';
 import { cn } from "src/lib/utils/cn.ts";
+import type { ComponentProps } from 'react';
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
@@ -39,27 +40,34 @@ function DialogOverlay({
   );
 }
 
-function DialogContent({
-  className,
-  children,
+function DialogPopup({
   size = 'md',
-  showCloseButton = true,
+  className,
   ...props
-}: DialogPrimitive.Popup.Props & {
+}: DialogPrimitive.Popup.Props & VariantProps<typeof dialogPopupVariants>) {
+  return (
+    <DialogPrimitive.Popup
+      data-slot="dialog-content"
+      className={cn(dialogPopupVariants({ size, className }))}
+      {...props}
+    />
+  );
+}
+
+function DialogContent({
+  showCloseButton = true,
+  children,
+  ...props
+}: ComponentProps<typeof DialogPopup> & {
   showCloseButton?: boolean;
-} & VariantProps<typeof dialogContentVariants>) {
+} & VariantProps<typeof dialogPopupVariants>) {
   return (
     <DialogPortal>
       <DialogOverlay />
-      <DialogPrimitive.Popup
-        data-slot="dialog-content"
-        className={cn(dialogContentVariants({ size, className }))}
-        {...props}
-      >
+      <DialogPopup {...props}>
         {children}
         {showCloseButton && (
-          <DialogPrimitive.Close
-            data-slot="dialog-close"
+          <DialogClose
             render={
               <Button
                 variant="ghost"
@@ -72,7 +80,7 @@ function DialogContent({
             }
           />
         )}
-      </DialogPrimitive.Popup>
+      </DialogPopup>
     </DialogPortal>
   );
 }
@@ -146,6 +154,7 @@ function DialogDescription({
 export {
   Dialog,
   DialogClose,
+  DialogPopup,
   DialogContent,
   DialogDescription,
   DialogFooter,

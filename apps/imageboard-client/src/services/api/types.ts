@@ -20,6 +20,14 @@ export interface LightboxPhotoMetadata {
   variant: 'lightbox';
 }
 
+export interface UserDto {
+  id: number;
+  username: string;
+  email: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface PhotoSource {
   key: string;
   mimetype: string;
@@ -47,15 +55,16 @@ export interface PostDraftDto {
   id: number;
   caption: string | null;
   status: PostStatus;
+  user: UserDto;
   photos: PhotoDraftDto[];
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
 }
 
-export type PostDto = {
+export interface PostDto extends PostDraftDto {
   photos: PhotoDto[];
-} & PostDraftDto;
+}
 
 export interface GetPostsQuery {
   cursor?: string;

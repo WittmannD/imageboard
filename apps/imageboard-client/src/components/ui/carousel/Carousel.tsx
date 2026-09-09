@@ -73,6 +73,8 @@ function Carousel({
     api?.scrollNext();
   }, [api]);
 
+  const rootRef = React.useRef<HTMLDivElement>(null);
+
   const handleKeyDown = React.useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
       if (event.key === 'ArrowLeft') {
@@ -90,6 +92,13 @@ function Carousel({
     if (!api || !setApi) return;
     setApi(api);
   }, [api, setApi]);
+
+  React.useEffect(() => {
+    // Grabs keyboard focus so arrow keys work without a prior click. When
+    // nested in something that manages its own focus (e.g. a modal), that
+    // owner is free to move focus elsewhere after this.
+    rootRef.current?.focus();
+  }, []);
 
   React.useEffect(() => {
     if (!api) return;
@@ -118,8 +127,10 @@ function Carousel({
       }}
     >
       <div
+        ref={rootRef}
+        tabIndex={-1}
         onKeyDownCapture={handleKeyDown}
-        className={cn('relative', className)}
+        className={cn('relative outline-none', className)}
         role="region"
         aria-roledescription="carousel"
         data-slot="carousel"
@@ -230,6 +241,40 @@ function CarouselNext({
   );
 }
 
+/**
+ * For consumers that render other focusable elements (e.g. a close button)
+ * alongside a <Carousel>: that element sitting outside the carousel's own DOM
+ * subtree means arrow keys pressed while it's focused never reach the
+ * carousel's own `onKeyDownCapture`. Attach `handleKeyDownCapture` to a
+ * shared ancestor of both to cover that case; it defers to the carousel's own
+ * handler whenever the event target is already inside it.
+ */
+function useCarouselKeydownFallback() {
+  const apiRef = React.useRef<CarouselApi | null>(null);
+
+  const setApi = React.useCallback((api: CarouselApi) => {
+    apiRef.current = api;
+  }, []);
+
+  const handleKeyDownCapture = React.useCallback(
+    (event: React.KeyboardEvent<HTMLElement>) => {
+      if ((event.target as HTMLElement).closest('[data-slot="carousel"]')) {
+        return;
+      }
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        apiRef.current?.scrollPrev();
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        apiRef.current?.scrollNext();
+      }
+    },
+    [],
+  );
+
+  return { setApi, handleKeyDownCapture };
+}
+
 export {
   type CarouselApi,
   Carousel,
@@ -238,4 +283,5 @@ export {
   CarouselPrevious,
   CarouselNext,
   useCarousel,
+  useCarouselKeydownFallback,
 };
