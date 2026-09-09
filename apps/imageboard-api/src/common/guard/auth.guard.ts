@@ -41,10 +41,11 @@ export class AuthGuard implements CanActivate {
     let user;
     try {
       user = await this.authService.validateAccessToken(token);
-    } catch (err) {
-      if (err instanceof HttpException) {
-        throw err;
+    } catch (error: unknown) {
+      if (error instanceof HttpException) {
+        throw error;
       }
+
       throw new UnauthorizedException('Invalid access token');
     }
 

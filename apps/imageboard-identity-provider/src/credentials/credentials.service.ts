@@ -26,7 +26,7 @@ export class CredentialsService {
     return await this.tx.withManager(em, async (entityManager) => {
       const credentials = await this.findOneUserId(userId, entityManager);
 
-      if (credentials?.compare(password)) {
+      if (await credentials?.compare(password)) {
         return null;
       }
 

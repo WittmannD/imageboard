@@ -1,5 +1,7 @@
-import { Injectable, type OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, type OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
 import { createRemoteJWKSet, jwtVerify, type RemoteJWKSet } from 'jose';
 import * as oidcClient from 'openid-client';
 import type { EntityManager } from 'typeorm';
@@ -7,15 +9,16 @@ import type { EntityManager } from 'typeorm';
 import { TransactionService } from '@hdotu1/database-common';
 
 import type {
-  OidcUserInfo,
   UnvalidatedOidcClaims,
 } from '../common/types/oidc.js';
 import { FederatedCredentialsService } from '../federated-credentials/federated-credentials.service.js';
 import type { UserEntity } from '../user/entities/user.entity.js';
 import { UserService } from '../user/service/user.service.js';
+import { AccessTokenPayloadModel } from './access-token-payload.model.js';
 import {
-  EmailIsNotVerifiedError,
-  MissingClaimsError,
+  AuthServiceJWKSError,
+  AuthServiceError,
+  InvalidAccessToken,
 } from './errors/auth-service-error.js';
 
 @Injectable()
@@ -46,13 +49,15 @@ export class AuthService implements OnModuleInit {
 
   private getJwks(): RemoteJWKSet {
     if (!this.jwks) {
-      throw new Error('Failed to create JWKS set');
+      throw new AuthServiceJWKSError('Failed to create JWKS set');
     }
 
     return this.jwks;
   }
 
-  private async verifyAccessToken(token: string): Promise<OidcUserInfo> {
+  private async verifyAccessToken(
+    token: string,
+  ): Promise<AccessTokenPayloadModel> {
     const { payload } = await jwtVerify<UnvalidatedOidcClaims>(
       token,
       this.getJwks(),
@@ -83,7 +88,9 @@ export class AuthService implements OnModuleInit {
     const jwksUri = config.serverMetadata().jwks_uri;
 
     if (!jwksUri) {
-      throw new Error('JWKS URI not found in OpenID configuration');
+      throw new AuthServiceJWKSError(
+        'JWKS URI not found in OpenID configuration',
+      );
     }
 
     this.jwks = createRemoteJWKSet(new URL(jwksUri));
@@ -93,26 +100,27 @@ export class AuthService implements OnModuleInit {
     token: string,
     em?: EntityManager,
   ): Promise<UserEntity | null> {
-    const userInfo = await this.verifyAccessToken(token);
+    const payload = await this.verifyAccessToken(token);
 
     const existingUser = await this.findUserByFederatedCredential(
-      userInfo.sub,
+      payload.sub,
       em,
     );
     if (existingUser) {
       return existingUser;
     }
 
-    return await this.createOrFindUserWithFederatedCredential(userInfo, em);
+    return await this.createWithFederatedCredentialOrFindUser(payload, em);
   }
 
-  private async createOrFindUserWithFederatedCredential(
-    userInfo: OidcUserInfo,
+  private async createWithFederatedCredentialOrFindUser(
+    payload: AccessTokenPayloadModel,
     em?: EntityManager,
   ) {
     return await this.tx.withManager(em, async (entityManager) => {
-      const user = await this.userService.createOrFindUserWithRandomUsername(
-        userInfo.email,
+      const user = await this.userService.createWithUsernameOrFindUser(
+        payload.preferred_username,
+        payload.email,
         entityManager,
       );
 
@@ -120,7 +128,7 @@ export class AuthService implements OnModuleInit {
         await this.federatedCredentialService.createOrFindForUser(
           user,
           this.issuer,
-          userInfo.sub,
+          payload.sub,
           entityManager,
         );
 
@@ -131,7 +139,9 @@ export class AuthService implements OnModuleInit {
         );
 
         if (!credentialUser) {
-          throw new Error('Federated credential points to a missing user');
+          throw new AuthServiceError(
+            'Federated credential points to a missing user',
+          );
         }
 
         return credentialUser;
@@ -163,54 +173,29 @@ export class AuthService implements OnModuleInit {
       );
 
       if (!user) {
-        throw new Error('Federated credential points to a missing user');
+        throw new AuthServiceError(
+          'Federated credential points to a missing user',
+        );
       }
 
       return user;
     });
   }
 
-  private validateClaims(claims: UnvalidatedOidcClaims): OidcUserInfo {
-    const missingClaims = this.requiredClaims.filter(
-      (claim) => !(claim in claims),
-    );
+  private async validateClaims(
+    unvalidated: unknown,
+  ): Promise<AccessTokenPayloadModel> {
+    const claims = plainToInstance(AccessTokenPayloadModel, unvalidated ?? {});
+    const errors = await validate(claims, {
+      whitelist: true,
+      forbidNonWhitelisted: false,
+    });
 
-    if (missingClaims.length > 0) {
-      throw new MissingClaimsError(
-        'Missing required claims: ' + missingClaims.join(','),
-      );
+    if (errors.length && errors[0]) {
+      Logger.warn('Invalid Access Token payload: ' + errors[0].toString());
+      throw new InvalidAccessToken();
     }
 
-    if (typeof claims.sub !== 'string' || claims.sub.trim().length === 0) {
-      throw new MissingClaimsError('sub is missing from the user info');
-    }
-
-    if (
-      typeof claims.email !== 'string' ||
-      claims.email.trim().length === 0
-    ) {
-      throw new MissingClaimsError('email is missing from the user info');
-    }
-
-    if (
-      typeof claims.preferred_username !== 'string' ||
-      claims.preferred_username.trim().length === 0
-    ) {
-      throw new MissingClaimsError(
-        'preferred_username is missing from the user info',
-      );
-    }
-
-    if (typeof claims.email_verified !== 'boolean') {
-      throw new MissingClaimsError(
-        'email_verified is missing from the user info',
-      );
-    }
-
-    if (!claims.email_verified) {
-      throw new EmailIsNotVerifiedError('User email is not verified');
-    }
-
-    return claims as OidcUserInfo;
+    return claims;
   }
 }

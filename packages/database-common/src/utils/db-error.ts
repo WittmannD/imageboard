@@ -19,6 +19,20 @@ export function isUniqueViolation(error: unknown): boolean {
   return isPostgresError(error, '23505');
 }
 
+/**
+ * Name of the constraint that caused a unique violation (e.g. the name
+ * passed to `@Index('name', { unique: true })`), or undefined if `error`
+ * isn't a unique violation.
+ */
+export function getUniqueViolationConstraint(
+  error: unknown,
+): string | undefined {
+  if (!isPostgresError(error, '23505')) {
+    return undefined;
+  }
+  return (error.driverError as { constraint?: string }).constraint;
+}
+
 /** 23503 - foreign_key_violation */
 export function isForeignKeyViolation(error: unknown): boolean {
   return isPostgresError(error, '23503');

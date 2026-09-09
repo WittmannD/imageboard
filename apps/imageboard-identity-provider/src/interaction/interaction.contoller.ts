@@ -13,6 +13,7 @@ import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import IdProvider from 'oidc-provider';
 
+import { VerificationService } from '../common/services/verification.service.js';
 import {
   EMAIL_VERIFICATION_THROTTLE,
   LOGIN_THROTTLE,
@@ -28,8 +29,8 @@ import { LoginDto } from './dto/login.dto.js';
 import { RegistrationDto } from './dto/registration.dto.js';
 import { VerificationDto } from './dto/verification.dto.js';
 import { VerificationCompleteDto } from './dto/verification-complete.dto.js';
+import { UsernameTakenError } from './errors/registration-error.js';
 import { InteractionService } from './interaction.service.js';
-import { VerificationService } from '../common/services/verification.service.js';
 
 @Controller('interactions')
 export class InteractionController {
@@ -107,8 +108,15 @@ export class InteractionController {
     @Res() res: Response,
     @Body() body: RegistrationDto,
   ) {
-    console.log('body', body);
-    const user = await this.interactionService.registration(body);
+    let user;
+    try {
+      user = await this.interactionService.registration(body);
+    } catch (error: unknown) {
+      if (error instanceof UsernameTakenError) {
+        throw new BadRequestException(error.message);
+      }
+      throw error;
+    }
     // If creating a new user fails due to email uniqueness violation,
     // proceed with a fake user ID to disallow guessing existing emails.
     // The `findAccount` method will skip fake user ID, and the user will get a generic error.

@@ -1,5 +1,5 @@
 export class AuthServiceError extends Error {
-  constructor(message: string) {
+  constructor(message?: string) {
     super(message);
 
     this.name = 'AuthServiceError';
@@ -7,5 +7,13 @@ export class AuthServiceError extends Error {
   }
 }
 
-export class EmailIsNotVerifiedError extends AuthServiceError {}
-export class MissingClaimsError extends AuthServiceError {}
+export class AuthServiceJWKSError extends AuthServiceError {
+  constructor(message?: string) {
+    super(message);
+
+    this.name = 'AuthServiceJWKSError';
+    Object.setPrototypeOf(this, AuthServiceJWKSError.prototype);
+  }
+}
+
+export class InvalidAccessToken extends AuthServiceError {}

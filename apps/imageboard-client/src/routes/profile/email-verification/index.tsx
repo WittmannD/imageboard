@@ -67,8 +67,8 @@ function buildLoginRedirect(returnTo: string) {
 }
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const user = await getUserSessionFromCookie(request);
-  const userState = user.get('state');
+  const userSession = await getUserSessionFromCookie(request);
+  const userState = userSession.get('state');
   const returnTo = getReturnTo(request.url);
 
   if (!userState) {
@@ -93,8 +93,8 @@ export const loader: LoaderFunction = async ({ request }) => {
 };
 
 export const action: ActionFunction = async ({ request }) => {
-  const user = await getUserSessionFromCookie(request);
-  const userState = user.get('state');
+  const userSession = await getUserSessionFromCookie(request);
+  const userState = userSession.get('state');
   const returnTo = getReturnTo(request.url);
 
   if (!userState) {
@@ -138,8 +138,8 @@ export const action: ActionFunction = async ({ request }) => {
     const refreshed = await refreshTokenGrant(userState.refreshToken);
 
     if (refreshed.valid) {
-      user.set('state', toUserSessionState(refreshed.data));
-      headers.append('Set-Cookie', await userSessionStorage.commitSession(user));
+      userSession.set('state', toUserSessionState(refreshed.data));
+      headers.append('Set-Cookie', await userSessionStorage.commitSession(userSession));
     }
 
     return redirect(returnTo, { headers });
