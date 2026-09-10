@@ -121,13 +121,96 @@
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
+    * {
+        @apply border-border outline-ring/50;
     }
-  body {
-    @apply bg-background text-foreground;
+
+    body {
+        @apply bg-background text-foreground;
     }
-  html {
-    @apply font-sans;
+
+    html {
+        @apply font-sans;
+    }
+}
+
+@layer components {
+    .spottish {
+        --goo-blur: 10cqmin;
+        --goo-contrast: 40;
+        --edge-blur: 10cqmin;
+        --blob-scale: 4.2;
+        --dot-size: 1.4cqmin;
+        --dot-angle: 45deg;
+        --dot-falloff: 56%;
+        --threshold: 1;
+        --sharpness: 32;
+        --invert: 1;
+
+        container-type: size;
+        position: relative;
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .dark .spottish {
+        --invert: 0;
+    }
+
+    .spottish .spottish__halftone {
+        position: absolute;
+        inset: 0;
+        isolation: isolate;
+        filter: grayscale(1) brightness(var(--threshold)) contrast(var(--sharpness))
+        invert(var(--invert));
+    }
+
+    .spottish .spottish__goo {
+        position: absolute;
+        inset: -14%;
+        background: #000;
+        filter: blur(var(--goo-blur)) contrast(var(--goo-contrast))
+        blur(var(--edge-blur));
+    }
+
+    .spottish .spottish__blob {
+        /* defaults */
+        /* diameter in cqmin */
+        --size: 25;
+
+        display: block;
+        border-radius: 50%;
+        background: #fff;
+        width: calc(var(--size) * var(--blob-scale) * 1cqmin);
+        height: calc(var(--size) * var(--blob-scale) * 1cqmin);
+    }
+
+    .spottish .spottish__screen {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        mix-blend-mode: multiply;
+    }
+
+    .spottish .spottish__screen::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 100cqmax;
+        height: 100cqmax;
+        transform: translate(50%, -50%) rotate(var(--dot-angle));
+        background-image: radial-gradient(
+                circle at 50% 50%,
+                #fff 0%,
+                #000 var(--dot-falloff)
+        );
+        background-size: var(--dot-size) var(--dot-size);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .spottish * {
+            animation-play-state: paused;
+        }
     }
 }
