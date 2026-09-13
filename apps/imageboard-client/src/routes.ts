@@ -18,10 +18,15 @@ export default [
         'email-verification',
         './routes/profile/email-verification/index.tsx',
       ),
-      route(
-        ':id',
-        './routes/profile/$id/index.tsx',
-      ),
+      ...prefix(':id', [
+        layout('./routes/profile/$id/layout.tsx', [
+          index('./routes/profile/$id/index.tsx'),
+          route(
+            'account-settings',
+            './routes/profile/$id/account-settings.tsx',
+          ),
+        ]),
+      ]),
     ]),
   ]),
   ...prefix('auth', [
