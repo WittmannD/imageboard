@@ -10,19 +10,17 @@ export default [
   layout('./routes/layout.tsx', [
     index('./routes/feed/index.tsx'),
     ...prefix('posts', [
-      route(
-        'create',
-        './routes/post/create/index.tsx'
-      ),
-      route(
-        ':id',
-        './routes/post/$id.tsx'
-      )
+      route('create', './routes/post/create/index.tsx'),
+      route(':id', './routes/post/$id.tsx'),
     ]),
     ...prefix('profile', [
       route(
         'email-verification',
         './routes/profile/email-verification/index.tsx',
+      ),
+      route(
+        ':id',
+        './routes/profile/$id/index.tsx',
       ),
     ]),
   ]),
