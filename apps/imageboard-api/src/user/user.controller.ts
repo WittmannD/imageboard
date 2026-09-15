@@ -1,6 +1,8 @@
 import {
   BadRequestException,
+  Body,
   ClassSerializerInterceptor,
+  ConflictException,
   Controller,
   Get,
   NotFoundException,
@@ -19,8 +21,10 @@ import { User } from '../common/decorators/user.decorator.js';
 import { AuthGuard } from '../common/guard/auth.guard.js';
 import type { FileUpload } from '../multer/file-upload.js';
 import { ProfileDto } from './dto/profile.dto.js';
+import { UpdateUsernameDto } from './dto/update-username.dto.js';
 import { UserDto } from './dto/user.dto.js';
 import type { UserEntity } from './entities/user.entity.js';
+import { UsernameTakenError } from './errors/user-service-error.js';
 import { AvatarService } from './service/avatar.service.js';
 import { UserService } from './service/user.service.js';
 
@@ -47,9 +51,23 @@ export class UserController {
 
   @UseGuards(AuthGuard)
   @Patch('me')
-  public async patchProfile(@User() user: UserEntity) {
-    // todo: let user to edit username or/and avatar
-    return user;
+  @SerializeOptions({ type: ProfileDto })
+  public async patchProfile(
+    @User() user: UserEntity,
+    @Body() body: UpdateUsernameDto,
+  ): Promise<ProfileDto> {
+    try {
+      return (await this.userService.updateUsername(
+        user,
+        body.username,
+      )) as ProfileDto;
+    } catch (error) {
+      if (error instanceof UsernameTakenError) {
+        throw new ConflictException(error.message);
+      }
+
+      throw error;
+    }
   }
 
   @UseGuards(AuthGuard)

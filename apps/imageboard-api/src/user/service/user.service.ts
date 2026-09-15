@@ -2,7 +2,7 @@ import * as crypto from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { type EntityManager } from 'typeorm';
 
-import { TransactionService } from '@hdotu1/database-common';
+import { isUniqueViolation, TransactionService } from '@hdotu1/database-common';
 
 import { UserEntity } from '../entities/user.entity.js';
 import { UsernameTakenError } from '../errors/user-service-error.js';
@@ -38,6 +38,23 @@ export class UserService {
       const userRepository = entityManager.withRepository(this.userRepository);
 
       return await userRepository.findOneBy({ id });
+    });
+  }
+
+  async updateUsername(user: UserEntity, username: string, em?: EntityManager) {
+    return await this.tx.withManager(em, async (entityManager) => {
+      const userRepository = entityManager.withRepository(this.userRepository);
+
+      try {
+        user.username = username;
+        return await userRepository.save(user);
+      } catch (error) {
+        if (isUniqueViolation(error)) {
+          throw new UsernameTakenError();
+        }
+
+        throw error;
+      }
     });
   }
 
