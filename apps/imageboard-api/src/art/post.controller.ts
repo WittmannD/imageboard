@@ -22,10 +22,10 @@ import type { FileUpload } from '../multer/file-upload.js';
 import type { UserEntity } from '../user/entities/user.entity.js';
 import type { CreatePostDto } from './dto/create-post.dto.js';
 import { PostDraftDto } from './dto/post-draft.dto.js';
+import { PostWithAuthorDto } from './dto/post-with-author.dto.js';
 import type { PostEntity } from './entities/post.entity.js';
 import { PostService } from './post.service.js';
 import type { PostPage } from './repositories/post.repository.js';
-import { PostWithAuthorDto } from './dto/post-with-author.dto.js';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('posts')

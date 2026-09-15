@@ -16,7 +16,7 @@ export class PhotoEntity extends BaseEntity {
 
   @Column({
     type: 'jsonb',
-    default: [],
+    default: () => "'[]'::jsonb",
   })
   sourceSet: ImageOutput[] = [];
 
