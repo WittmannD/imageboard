@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 
 import { TransactionModule } from '@hdotu1/database-common';
 
@@ -8,7 +8,7 @@ import { AuthService } from './auth.service.js';
 
 @Module({
   imports: [
-    UserModule,
+    forwardRef(() => UserModule),
     TransactionModule,
     FederatedCredentialsModule
   ],

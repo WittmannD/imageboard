@@ -12,6 +12,7 @@ export interface ImageOutput {
 
 export interface ImageProcessingMessage {
   key: string;
+  configKey?: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   variables?: Record<string, any>;
 }

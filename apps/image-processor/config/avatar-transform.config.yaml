@@ -1,0 +1,57 @@
+$schema: './schema/image-transform-config.schema.json'
+transform:
+  - - operation: resize
+      args:
+        width: 256
+        height: 256
+        fit: cover
+    - operation: jpeg
+      args:
+        quality: 85
+    - operation: save
+      args:
+        key: ${{file.name}}_avatar.jpeg
+        metadata:
+          variant: avatar
+
+  - - operation: resize
+      args:
+        width: 40
+        height: 40
+        fit: cover
+    - operation: jpeg
+      args:
+        quality: 85
+    - operation: save
+      args:
+        key: ${{file.name}}_icon_large.jpeg
+        metadata:
+          variant: icon_large
+
+  - - operation: resize
+      args:
+        width: 32
+        height: 32
+        fit: cover
+    - operation: jpeg
+      args:
+        quality: 85
+    - operation: save
+      args:
+        key: ${{file.name}}_icon_medium.jpeg
+        metadata:
+          variant: icon_medium
+
+  - - operation: resize
+      args:
+        width: 24
+        height: 24
+        fit: cover
+    - operation: jpeg
+      args:
+        quality: 85
+    - operation: save
+      args:
+        key: ${{file.name}}_icon_small.jpeg
+        metadata:
+          variant: icon_small

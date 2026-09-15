@@ -20,6 +20,11 @@
         "watchAssets": true
       },
       {
+        "include": "../config/avatar-transform.config.yaml",
+        "outDir": "dist",
+        "watchAssets": true
+      },
+      {
         "include": "./schema",
         "outDir": "dist",
         "watchAssets": true

@@ -7,6 +7,10 @@ export class ImageProcessingMessageDto implements ImageProcessingMessage {
   key!: string;
 
   @IsOptional()
+  @IsString()
+  configKey?: string;
+
+  @IsOptional()
   @IsObject()
   variables?: Record<string, unknown>;
 }
