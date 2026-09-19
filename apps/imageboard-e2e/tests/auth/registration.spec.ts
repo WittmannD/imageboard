@@ -65,19 +65,6 @@ test.describe('registration', () => {
   test('after signing up the visitor lands back on the page they asked for', async ({
     page,
   }) => {
-    // Known app bug, intermittent (~50% of runs): useAuth() in
-    // components/features/auth/context.tsx calls navigate(loginUrl.href) with
-    // an absolute URL, which React Router resolves relative to the current
-    // route (/users/me/http:/e2e.test/auth/login...). It races the 401 handler
-    // in redirect-on-unauthorized.ts, which derives `returnTo` from
-    // window.location - so when the bad navigation wins, `returnTo` is the
-    // mangled path and the visitor lands on it after verifying.
-    // Fix: navigate(`${loginUrl.pathname}${loginUrl.search}`). Then delete this line.
-    test.fixme(
-      true,
-      'useAuth() navigates to an absolute URL and corrupts returnTo',
-    );
-
     const user = createTestUser();
 
     // An anonymous visitor asking for a private page is bounced through the

@@ -1,4 +1,9 @@
-import { createContext, type PropsWithChildren, useContext, useEffect } from 'react';
+import {
+  createContext,
+  type PropsWithChildren,
+  useContext,
+  useEffect,
+} from 'react';
 import type { AuthData } from 'src/.server/helpers/auth.ts';
 import { useNavigate } from 'react-router';
 
@@ -8,7 +13,9 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function useAuth(guard: true): Required<AuthContextValue>;
 export function useAuth(guard: false): AuthContextValue;
-export function useAuth(guard: boolean = false): Required<AuthContextValue> | AuthContextValue {
+export function useAuth(
+  guard: boolean = false,
+): Required<AuthContextValue> | AuthContextValue {
   const navigate = useNavigate();
   const context = useContext(AuthContext);
 
@@ -25,13 +32,18 @@ export function useAuth(guard: boolean = false): Required<AuthContextValue> | Au
     const loginUrl = new URL('/auth/login', window.location.origin);
     loginUrl.searchParams.set('returnTo', returnTo);
 
-    navigate(loginUrl.href);
+    navigate(
+      { pathname: loginUrl.pathname, search: loginUrl.search },
+      { replace: true },
+    );
   }, [shouldRedirect, navigate]);
 
   return context;
 }
 
-
-export function AuthProvider({ children, auth }: PropsWithChildren & { auth: AuthData }) {
+export function AuthProvider({
+  children,
+  auth,
+}: PropsWithChildren & { auth: AuthData }) {
   return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 }
