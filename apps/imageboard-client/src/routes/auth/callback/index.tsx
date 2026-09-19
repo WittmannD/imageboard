@@ -38,7 +38,7 @@ export const loader: LoaderFunction = async ({ request, url }) => {
   const returnTo = oidcState.returnTo ?? '/';
   const redirectTo = result.data.claims.email_verified
     ? returnTo
-    : `/profile/email-verification?returnTo=${encodeURIComponent(returnTo)}`;
+    : `/users/email-verification?returnTo=${encodeURIComponent(returnTo)}`;
 
   return redirect(redirectTo, {
     headers,

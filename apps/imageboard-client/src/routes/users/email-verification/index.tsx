@@ -62,7 +62,7 @@ function getReturnTo(requestUrl: string) {
 
 /** Where to send the user to log in, preserving this page (and its returnTo) so the flow resumes here afterwards. */
 function buildLoginRedirect(returnTo: string) {
-  const self = `/profile/email-verification?returnTo=${encodeURIComponent(returnTo)}`;
+  const self = `/users/email-verification?returnTo=${encodeURIComponent(returnTo)}`;
   return `/auth/login?returnTo=${encodeURIComponent(self)}`;
 }
 

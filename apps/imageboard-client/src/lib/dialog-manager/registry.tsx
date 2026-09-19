@@ -12,6 +12,7 @@ export const dialogRegistry = {
     () => import('src/components/features/dialogs/CreatePostDialog.tsx'),
   ),
   'post': lazy(() => import('src/components/features/dialogs/PostDialog.tsx')),
+  'avatar-upload': lazy(() => import('src/components/features/dialogs/AvatarUploadDialog.tsx')),
 } satisfies Record<string, LazyExoticComponent<ComponentType<any>>>;
 
 export type DialogName = keyof typeof dialogRegistry;

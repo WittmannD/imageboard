@@ -6,6 +6,9 @@ export class UserDto extends UserEntity {
   override credentials!: never;
 
   @Exclude()
+  override email!: never;
+
+  @Exclude()
   override posts!: never;
 
   @Exclude()

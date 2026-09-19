@@ -1,13 +1,21 @@
 import { z } from 'zod';
-import { Controller, useFormContext, type SubmitHandler } from 'react-hook-form';
-import { Field, FieldError, FieldLabel } from 'src/components/ui/field/Field.tsx';
+import {
+  Controller,
+  useFormContext,
+  type SubmitHandler,
+} from 'react-hook-form';
+import {
+  Field,
+  FieldError,
+  FieldLabel,
+} from 'src/components/ui/field/Field.tsx';
 import { Textarea } from 'src/components/ui/textarea/Textarea.tsx';
 import { ImageUp } from 'lucide-react';
 import { useCallback } from 'react';
 import FileDropzoneController from 'src/components/features/forms/controllers/FileDropzoneController.tsx';
 import { createPostFormSchema } from 'src/components/features/forms/create-post-form/schema.ts';
 import { clsx } from 'clsx';
-import { useCreatePostMutation } from 'src/services/api/post.ts';
+import { useCreatePostMutation } from 'src/services/api/post/api.ts';
 
 export interface CreatePostFormProps {
   onSuccess?: () => void;

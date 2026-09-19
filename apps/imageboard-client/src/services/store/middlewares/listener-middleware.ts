@@ -1,6 +1,6 @@
 import { addListener,createListenerMiddleware } from '@reduxjs/toolkit';
 
-import type { AppDispatch,RootState } from './store.ts';
+import type { AppDispatch,RootState } from '../store.ts';
 
 declare type ExtraArgument = object;
 

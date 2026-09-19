@@ -1,5 +1,4 @@
 import { useCarouselKeydownFallback } from 'src/components/ui/carousel/Carousel.tsx';
-import { useGetPostQuery } from 'src/services/api/post.ts';
 import type { DialogComponentProps } from 'src/lib/dialog-manager/registry.tsx';
 import {
   Dialog,
@@ -11,6 +10,7 @@ import {
 import { Button } from 'src/components/ui/button/Button.tsx';
 import { XIcon } from 'lucide-react';
 import { PostLightboxView } from 'src/components/features/post/PostLightboxView.tsx';
+import { useGetPostQuery } from 'src/services/api/post/api.ts';
 
 function PostDialog({
   params,

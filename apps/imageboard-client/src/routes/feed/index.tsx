@@ -1,5 +1,5 @@
 import { Post } from 'src/components/features/post/Post.tsx';
-import { useGetPostsQuery } from 'src/services/api/post.ts';
+import { useGetPostsQuery } from 'src/services/api/post/api.ts';
 
 function FeedPage() {
   const { data } = useGetPostsQuery({

@@ -1,6 +1,5 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from 'src/services/api/base-query.ts';
-import { POST_LIST_TAG, POST_TAG_TYPE } from 'src/services/api/constants.ts';
 
 import type {
   CreatePostBody,
@@ -8,7 +7,8 @@ import type {
   GetPostsResponse,
   PostDraftDto,
   PostDto,
-} from './types.ts';
+} from '../types.ts';
+import { POST_LIST_TAG, POST_TAG_TYPE } from './constants.ts';
 
 export const postsApi = createApi({
   reducerPath: 'postsApi',

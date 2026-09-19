@@ -6,11 +6,17 @@ import {
   useEffect,
   useMemo,
   useState,
+  type ComponentType,
+  type LazyExoticComponent,
   type PropsWithChildren,
 } from 'react';
-import { useLoaderData, useSearchParams } from 'react-router';
-import type { ModalData } from 'src/routes/layout.tsx';
-import { dialogRegistry, type DialogName } from './registry.tsx';
+import { useSearchParams } from 'react-router';
+import {
+  dialogRegistry,
+  type DialogComponentProps,
+  type DialogName,
+} from './registry.tsx';
+import type { ModalData } from 'src/.server/helpers/modal.ts';
 
 type DialogParams = Record<string, string | number>;
 
@@ -49,8 +55,7 @@ function isDialogName(name: string | null): name is DialogName {
   return !!name && name in dialogRegistry;
 }
 
-export function DialogManagerProvider({ children }: PropsWithChildren) {
-  const modal = useLoaderData<ModalData | undefined>();
+export function DialogManagerProvider({ children, modal }: PropsWithChildren & { modal: ModalData | null }) {
   const [, setSearchParams] = useSearchParams();
   const [mounted, setMounted] = useState<MountedDialog | null>(null);
 
@@ -120,7 +125,11 @@ export function DialogManagerProvider({ children }: PropsWithChildren) {
     [openDialog, closeDialog],
   );
 
-  const ActiveDialog = mounted ? dialogRegistry[mounted.name] : null;
+  const ActiveDialog = mounted
+    ? (dialogRegistry[mounted.name] as LazyExoticComponent<
+        ComponentType<DialogComponentProps>
+      >)
+    : null;
 
   return (
     <DialogManagerContext.Provider value={value}>

@@ -1,39 +1,34 @@
-import { type LoaderFunction, Outlet } from 'react-router';
+import { type LoaderFunction, Outlet, useLoaderData } from 'react-router';
 import { Header } from 'src/components/features/header/Header.tsx';
 import { DialogManagerProvider } from 'src/lib/dialog-manager/context.tsx';
+import { getModal, type ModalData } from 'src/.server/helpers/modal.ts';
+import { type AuthData, getAuth } from 'src/.server/helpers/auth.ts';
+import { AuthProvider } from 'src/components/features/auth/context.tsx';
 
-export interface ModalData {
-  name: string | null;
-  params: Record<string, string>;
+interface RootLayoutData {
+  modal: ModalData | null;
+  auth: AuthData;
 }
 
-export const loader: LoaderFunction = async ({ request }): Promise<ModalData | undefined> => {
-  const searchParams = new URL(request.url).searchParams;
-  const modal = searchParams.get('modal');
-
-  if (!modal) {
-    return;
-  }
-
-  const params: Record<string, string> = {};
-  for (const [key, value] of searchParams) {
-    if (key !== 'modal') {
-      params[key] = value;
-    }
-  }
-
-  return { name: modal, params };
+export const loader: LoaderFunction = async ({
+  request,
+}): Promise<RootLayoutData> => {
+  return { modal: getModal(request), auth: await getAuth(request) };
 };
 
-function HomeLayout() {
+function RootLayout() {
+  const { modal, auth } = useLoaderData<RootLayoutData>();
+
   return (
-    <DialogManagerProvider>
-      <Header />
-      <main className="min-h-[calc(100svh-var(--header-height))]">
-        <Outlet />
-      </main>
-    </DialogManagerProvider>
+    <AuthProvider auth={auth}>
+      <DialogManagerProvider modal={modal}>
+        <Header />
+        <main className="min-h-[calc(100svh-var(--header-height))]">
+          <Outlet />
+        </main>
+      </DialogManagerProvider>
+    </AuthProvider>
   );
 }
 
-export default HomeLayout;
+export default RootLayout;

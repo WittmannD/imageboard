@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { postsApi } from 'src/services/api/post.ts';
+import { postsApi } from 'src/services/api/post/api.ts';
+import { userApi } from 'src/services/api/user/api.ts';
 import { listenerMiddleware } from 'src/services/store/middlewares/listener-middleware.ts';
 import { rootReducer } from 'src/services/store/reducers/root-reducer.ts';
 import 'src/services/store/listeners/redirect-on-unauthorized.ts';
@@ -9,7 +10,9 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .prepend(listenerMiddleware.middleware)
-      .concat(postsApi.middleware),
+      .concat(postsApi.middleware)
+      .concat(userApi.middleware)
+  
 });
 
 export type RootState = ReturnType<typeof store.getState>;

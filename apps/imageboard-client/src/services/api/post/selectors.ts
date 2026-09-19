@@ -1,5 +1,6 @@
 import { createSelector } from '@reduxjs/toolkit';
-import { postsApi } from 'src/services/api/post.ts';
+
+import { postsApi } from './api.ts';
 
 export const selectPostById = (id: number) =>
   createSelector(postsApi.endpoints.getPosts.select(undefined), (result) =>

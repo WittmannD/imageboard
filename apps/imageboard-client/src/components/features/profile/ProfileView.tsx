@@ -11,6 +11,22 @@ import {
 } from 'src/components/ui/avatar/Avatar.tsx';
 import { cn } from 'src/lib/utils/cn.ts';
 import { Post } from 'src/components/features/post/Post.tsx';
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+} from 'src/components/ui/item/Item.tsx';
+import { TriangleAlertIcon } from 'lucide-react';
+import { Button } from 'src/components/ui/button/Button.tsx';
+import { getImageByVariant, getImageUrl } from 'src/lib/utils/image-source.ts';
+import type {
+  AvatarSource,
+  ProfileDto,
+  UserDto,
+} from 'src/services/api/types.ts';
 
 const data = [
   {
@@ -51,8 +67,15 @@ function Stats() {
   );
 }
 
+export interface ProfileViewProps {
+  user: UserDto | ProfileDto;
+  /** Email to prompt verification for, shown instead of the stats row. Omit when there's nothing to verify. */
+  unverifiedEmail?: string;
+}
 
-function ProfilePage() {
+export function ProfileView({ user, unverifiedEmail }: ProfileViewProps) {
+  const avatar = getImageByVariant<AvatarSource>(user.avatars, 'icon_large');
+
   return (
     <div>
       <Card className="mx-auto w-full max-w-md">
@@ -60,17 +83,42 @@ function ProfilePage() {
           <CardTitle>
             <div className="flex items-center gap-2">
               <Avatar size="lg">
-                <AvatarImage
-                  src="https://github.com/shadcn.png"
-                  alt="@shadcn"
-                />
-                <AvatarFallback>CNN</AvatarFallback>
+                {avatar && (
+                  <AvatarImage
+                    src={getImageUrl(avatar.key)}
+                    alt={user.username}
+                  />
+                )}
+                <AvatarFallback>{user.username.slice(0, 2)}</AvatarFallback>
               </Avatar>
-              <span className="grow w-0 truncate text-ellipsis">@Akame</span>
+              <span className="grow w-0 truncate text-ellipsis">
+                @{user.username}
+              </span>
             </div>
           </CardTitle>
           <CardContent className="px-0 pt-4">
-            <Stats />
+            {unverifiedEmail ? (
+              <Item variant="outline" size="xs">
+                <ItemMedia>
+                  <TriangleAlertIcon className="size-5" />
+                </ItemMedia>
+                <ItemContent>
+                  <ItemTitle>
+                    <span>{unverifiedEmail}</span>
+                  </ItemTitle>
+                  <ItemDescription>
+                    To start posting, you need to verify your email address.
+                  </ItemDescription>
+                </ItemContent>
+                <ItemActions>
+                  <Button variant="outline" size="sm">
+                    Verify
+                  </Button>
+                </ItemActions>
+              </Item>
+            ) : (
+              <Stats />
+            )}
           </CardContent>
         </CardHeader>
       </Card>
@@ -131,7 +179,7 @@ function ProfilePage() {
               createdAt: '2026-09-13T13:14:23.318Z',
               updatedAt: '2026-09-13T13:14:23.318Z',
               username: '@Akame',
-              email: 'danjavitman@gmail.com',
+              avatars: [],
             },
           }}
         />
@@ -139,5 +187,3 @@ function ProfilePage() {
     </div>
   );
 }
-
-export default ProfilePage;

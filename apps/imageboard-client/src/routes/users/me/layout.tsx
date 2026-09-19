@@ -1,9 +1,11 @@
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from 'src/components/ui/navigation-menu/NavigationMenu.tsx';
 import { navigationMenuTriggerStyle } from 'src/components/ui/navigation-menu/navigation-menu-style.ts';
-import { Link, Outlet } from 'react-router';
-import { Plus } from 'lucide-react';
+import { Link, Outlet, useLocation } from 'react-router';
+import { SettingsIcon, UserIcon } from 'lucide-react';
 
-function ProfileLayout() {
+function MyProfileLayout() {
+  const location = useLocation();
+
   return (
     <div className="py-8">
       <NavigationMenu className="mx-auto w-full max-w-md mb-4">
@@ -13,10 +15,10 @@ function ProfileLayout() {
               className={navigationMenuTriggerStyle({
                 className: 'flex-row items-center gap-1',
               })}
-              active={true}
-              render={<Link to="/profile/1" />}
+              active={location.pathname === '/users/me'}
+              render={<Link to="/users/me" />}
             >
-              <Plus />
+              <UserIcon />
               Profile
             </NavigationMenuLink>
           </NavigationMenuItem>
@@ -25,10 +27,11 @@ function ProfileLayout() {
               className={navigationMenuTriggerStyle({
                 className: 'flex-row items-center gap-1',
               })}
-              render={<Link to="/profile/1/account-settings" />}
+              active={location.pathname === '/users/me/settings'}
+              render={<Link to="/users/me/settings" />}
             >
-              <Plus />
-              Account
+              <SettingsIcon />
+              Settings
             </NavigationMenuLink>
           </NavigationMenuItem>
           <NavigationMenuItem className="ml-auto">
@@ -37,7 +40,7 @@ function ProfileLayout() {
                 className: 'auto flex-row items-center gap-1',
                 variant: 'destructive',
               })}
-              render={<Link to="/profile/1/account-settings" />}
+              render={<Link to="/users/me/settings" />}
             >
               Log Out
             </NavigationMenuLink>
@@ -49,4 +52,4 @@ function ProfileLayout() {
   );
 }
 
-export default ProfileLayout;
+export default MyProfileLayout;

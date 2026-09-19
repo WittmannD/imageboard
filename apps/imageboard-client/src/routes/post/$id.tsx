@@ -3,7 +3,7 @@ import { XIcon } from 'lucide-react';
 import { Button } from 'src/components/ui/button/Button.tsx';
 import { PostLightboxView } from 'src/components/features/post/PostLightboxView.tsx';
 import { useCarouselKeydownFallback } from 'src/components/ui/carousel/Carousel.tsx';
-import { useGetPostQuery } from 'src/services/api/post.ts';
+import { useGetPostQuery } from 'src/services/api/post/api.ts';
 
 function PostPage({ params }: { params: { id: string } }) {
   const { data: post } = useGetPostQuery(Number(params.id));

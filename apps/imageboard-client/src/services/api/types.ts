@@ -11,29 +11,33 @@ export interface LayoutTile {
   rowSpan: number;
 }
 
-export interface GalleryPhotoMetadata {
+export interface VariantMetadata {
+  variant: string;
+}
+
+export interface AvatarMetadata extends VariantMetadata {
+  variant: 'avatar' | 'icon_small' | 'icon_medium' | 'icon_large';
+}
+
+export interface GalleryPhotoMetadata extends VariantMetadata {
   tile: LayoutTile;
   variant: 'tile';
 }
 
-export interface LightboxPhotoMetadata {
+export interface LightboxPhotoMetadata extends VariantMetadata {
   variant: 'lightbox';
 }
 
-export interface UserDto {
-  id: number;
-  username: string;
-  email: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface PhotoSource {
+export interface ImageSource {
   key: string;
   mimetype: string;
   size: number;
   width: number;
   height: number;
+  metadata?: VariantMetadata;
+}
+
+export interface PhotoSource extends ImageSource {
   metadata?: GalleryPhotoMetadata | LightboxPhotoMetadata;
 }
 
@@ -47,9 +51,9 @@ export interface PhotoDraftDto {
   deletedAt: string | null;
 }
 
-export type PhotoDto = PhotoDraftDto & {
+export interface PhotoDto extends PhotoDraftDto {
   sourceSet: PhotoSource[];
-};
+}
 
 export interface PostDraftDto {
   id: number;
@@ -81,5 +85,23 @@ export interface GetPostsResponse {
 export interface CreatePostBody {
   caption?: string;
   files: File[];
+}
+
+// users
+
+export interface AvatarSource extends ImageSource {
+  metadata?: AvatarMetadata;
+}
+
+export interface UserDto {
+  id: number;
+  username: string;
+  avatars: AvatarSource[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProfileDto extends UserDto {
+  email: string;
 }
 
