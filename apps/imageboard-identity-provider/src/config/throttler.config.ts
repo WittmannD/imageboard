@@ -9,6 +9,8 @@ export default (): { throttler: ThrottlerModuleOptions } => ({
       name: 'default',
       ttl: 60_000, // 1 minute
       limit: 100, // 100 requests/min per IP
+      // Escape hatch for e2e runs, where every request shares one client IP.
+      skipIf: () => process.env['THROTTLE_DISABLED'] === 'true',
     },
   ],
 });

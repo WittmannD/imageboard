@@ -34,6 +34,14 @@ RUN npm i
 
 COPY . .
 
+# Vite inlines VITE_* values at build time, so they must be present here (not only at runtime).
+ARG VITE_BASE_URL
+ARG VITE_API_BASE_URL
+ARG VITE_IMAGE_SERVER_URL
+ENV VITE_BASE_URL=$VITE_BASE_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_IMAGE_SERVER_URL=$VITE_IMAGE_SERVER_URL
+
 RUN npm -w ${APP} run build && npm prune --omit=dev
 
 

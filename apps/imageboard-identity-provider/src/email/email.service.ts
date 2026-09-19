@@ -13,7 +13,8 @@ export class EmailService {
     this.transporter = nodemailer.createTransport({
       host: configService.getOrThrow<string>('SMTP_HOST'),
       port: Number(configService.getOrThrow<string>('SMTP_PORT')),
-      secure: true,
+      // Implicit TLS by default; set SMTP_SECURE=false for plain-SMTP catchers (Mailpit).
+      secure: configService.get<string>('SMTP_SECURE') !== 'false',
       auth: {
         user: configService.getOrThrow<string>('SMTP_USER'),
         pass: configService.getOrThrow<string>('SMTP_PASS'),

@@ -4,3 +4,4 @@ node_modules
 .nx
 *.tsbuildinfo
 tests
+apps/imageboard-e2e

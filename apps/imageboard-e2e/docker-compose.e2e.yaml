@@ -1,0 +1,264 @@
+# Self-contained stack for the Playwright suite (`npm run stack:up -w imageboard-e2e`).
+#
+# It is isolated from the dev stack in ../../docker-compose.yaml: its own
+# project name, no fixed container names, no host port 80, and throwaway
+# state (nothing is persisted). Both can run side by side.
+#
+# What is real:  client, API, identity provider, image-processor, Postgres,
+#                Redis and nginx, wired together the way they are in production
+#                (same OIDC issuer, redirect URI and cookie domain for the
+#                browser and for the containers).
+# What is faked: SMTP    -> Mailpit (the tests read OTP emails from its API)
+#                S3      -> MinIO   (public-read bucket, replaces Filebase)
+#
+# Hostnames: everything is served from http://${E2E_DOMAIN}. Containers reach
+# it through the network aliases on `web`; the browser reaches it because
+# Playwright launches Chromium with --host-resolver-rules (see src/env.ts).
+#
+# All credentials below are test-only values.
+
+name: imageboard-e2e
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: e2e
+      POSTGRES_PASSWORD: e2e
+      POSTGRES_MULTIPLE_DATABASES: imageboard, imageboard_identity
+    volumes:
+      - ../../sh/multiple-databases.sh:/docker-entrypoint-initdb.d/multiple-databases.sh:ro
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      # -h forces TCP: the temporary init-time server only listens on the unix
+      # socket, so a socket check would report ready before the databases exist.
+      test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U e2e -d imageboard']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --save "" --appendonly no
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  mailpit:
+    image: axllent/mailpit:latest
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: '1'
+      MP_SMTP_AUTH_ALLOW_INSECURE: '1'
+    ports:
+      - '${E2E_MAILPIT_PORT:-8025}:8025'
+    healthcheck:
+      test: ['CMD', '/mailpit', 'readyz']
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  minio:
+    image: quay.io/minio/minio:latest
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: e2e-access-key
+      MINIO_ROOT_PASSWORD: e2e-secret-key
+    ports:
+      - '${E2E_S3_PORT:-9000}:9000'
+    tmpfs:
+      - /data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  # One-shot: creates the bucket and makes it publicly readable, the way the
+  # production bucket serves images to browsers.
+  minio-init:
+    image: quay.io/minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    restart: 'no'
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 e2e-access-key e2e-secret-key &&
+      mc mb --ignore-existing local/imageboard &&
+      mc anonymous set download local/imageboard
+      "
+
+  image-processor:
+    build:
+      context: ../..
+      dockerfile: apps/image-processor/Dockerfile
+    depends_on:
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: '6379'
+      SHARED_PATH: /shared
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: us-east-1
+      S3_FORCE_PATH_STYLE: 'true'
+      S3_BUCKET: imageboard
+      S3_ACCESS_KEY_ID: e2e-access-key
+      S3_SECRET_ACCESS_KEY: e2e-secret-key
+    volumes:
+      - shared-data:/shared
+
+  imageboard-identity-provider:
+    build:
+      context: ../..
+      dockerfile: apps/imageboard-identity-provider/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      PORT: '3001'
+      DB_HOST: postgres
+      DB_PORT: '5432'
+      DB_USER: e2e
+      DB_PASS: e2e
+      DB_NAME: imageboard_identity
+      REDIS_HOST: redis
+      REDIS_PORT: '6379'
+      SMTP_HOST: mailpit
+      SMTP_PORT: '1025'
+      SMTP_SECURE: 'false'
+      SMTP_USER: e2e
+      SMTP_PASS: e2e
+      SMTP_FROM: 'Imageboard <no-reply@${E2E_DOMAIN:-e2e.test}>'
+      ISSUER_URL: http://auth.${E2E_DOMAIN:-e2e.test}
+      # Trailing slash matters: the provider resolves `login` against it.
+      INTERACTIONS_BASE_URL: http://${E2E_DOMAIN:-e2e.test}/auth/
+      IMAGEBOARD_API_URL: http://api.${E2E_DOMAIN:-e2e.test}
+      OIDC_CLIENT_ID: imageboard-e2e-client
+      OIDC_CLIENT_SECRET: e2e-client-secret
+      OIDC_CLIENT_REDIRECT_URIS: http://${E2E_DOMAIN:-e2e.test}/auth/callback
+      # Test-only AES-256 key protecting the JWKS at rest.
+      JWKS_ENCRYPTION_KEY: UR/OoQVgg2pz7zV44QDIGmiCJWYawHI4Ju5yvw6RU3c=
+      # Every request reaches the IdP from the client container's one IP, so
+      # the per-IP rate limits cannot work for a test run.
+      THROTTLE_DISABLED: 'true'
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'wget -q -O /dev/null http://127.0.0.1:3001/.well-known/openid-configuration',
+        ]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  imageboard-api:
+    build:
+      context: ../..
+      dockerfile: apps/imageboard-api/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      # Discovers the issuer's JWKS at boot, via http://auth.${E2E_DOMAIN}.
+      imageboard-identity-provider:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    environment:
+      PORT: '3000'
+      # Doubles as the expected `aud` of access tokens (= IMAGEBOARD_API_URL).
+      BASE_URL: http://api.${E2E_DOMAIN:-e2e.test}
+      DB_HOST: postgres
+      DB_PORT: '5432'
+      DB_USER: e2e
+      DB_PASS: e2e
+      DB_NAME: imageboard
+      REDIS_HOST: redis
+      REDIS_PORT: '6379'
+      SHARED_PATH: /shared
+      OIDC_ISSUER: http://auth.${E2E_DOMAIN:-e2e.test}
+      OIDC_ISSUER_URL: http://auth.${E2E_DOMAIN:-e2e.test}
+      OIDC_CLIENT_ID: imageboard-e2e-client
+      THROTTLE_DISABLED: 'true'
+    volumes:
+      - shared-data:/shared
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:3000/ip']
+      interval: 3s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  imageboard-client:
+    build:
+      context: ../..
+      dockerfile: apps/imageboard-client/Dockerfile
+      target: production
+      args:
+        # Inlined into the bundle at build time.
+        VITE_BASE_URL: http://${E2E_DOMAIN:-e2e.test}
+        VITE_API_BASE_URL: http://${E2E_DOMAIN:-e2e.test}/api
+        VITE_IMAGE_SERVER_URL: http://s3.${E2E_DOMAIN:-e2e.test}:${E2E_S3_PORT:-9000}/imageboard
+    depends_on:
+      imageboard-identity-provider:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    environment:
+      PORT: '5734'
+      HOST: 0.0.0.0
+      VITE_BASE_URL: http://${E2E_DOMAIN:-e2e.test}
+      IMAGEBOARD_API_URL: http://api.${E2E_DOMAIN:-e2e.test}
+      OIDC_ISSUER_URL: http://auth.${E2E_DOMAIN:-e2e.test}
+      OIDC_CLIENT_ID: imageboard-e2e-client
+      OIDC_CLIENT_SECRET: e2e-client-secret
+      OIDC_SESSION_MAX_AGE: '86400'
+      SESSION_COOKIE_SECRET: e2e-only-cookie-secret
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:5734/']
+      interval: 3s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  # nginx front door: routes ${E2E_DOMAIN}, api.* and auth.* to the services.
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/imageboard-web/Dockerfile
+    environment:
+      DOMAIN: ${E2E_DOMAIN:-e2e.test}
+      CLIENT_INTERNAL_URL: http://imageboard-client:5734
+      API_INTERNAL_URL: http://imageboard-api:3000
+      AUTH_SERVER_INTERNAL_URL: http://imageboard-identity-provider:3001
+    ports:
+      - '${E2E_HTTP_PORT:-8088}:80'
+    networks:
+      default:
+        aliases:
+          - ${E2E_DOMAIN:-e2e.test}
+          - api.${E2E_DOMAIN:-e2e.test}
+          - auth.${E2E_DOMAIN:-e2e.test}
+    healthcheck:
+      # Any HTTP response (even a 502 while upstreams boot) means nginx is up.
+      test:
+        [
+          'CMD-SHELL',
+          'wget -S -O /dev/null http://127.0.0.1/ 2>&1 | grep -q "HTTP/"',
+        ]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  shared-data:

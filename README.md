@@ -116,10 +116,11 @@ user through a `FederatedCredentials` table, provisioning the user on first sigh
 | App | Description |
 | --- | --- |
 | `imageboard-api` | NestJS REST API — posts, photos, users, avatars, OIDC token verification, keyset pagination |
-| `imageboard-identity-provider` | OpenID Connect authorization server: registration, login, email OTP verification, JWKS management |
+| `imageboard-identity-provider` | OpenID Connect authorization server: registration, email OTP verification, JWKS management |
 | `imageboard-client` | React Router SSR app — feed, post lightbox, profiles, settings, auth screens; acts as the OIDC relying party |
 | `image-processor` | Headless microservice consuming Redis messages and running configurable `sharp` pipelines |
 | `imageboard-web` | nginx container that terminates traffic and routes `spottish.website`, `api.*` and `auth.*` to the right service |
+| `imageboard-e2e` | Playwright end-to-end tests that drive the full stack in a real browser — see [its README](./apps/imageboard-e2e/README.md) |
 
 ### Packages
 
@@ -143,7 +144,7 @@ user through a `FederatedCredentials` table, provisioning the user on first sigh
 **Authentication & accounts**
 
 - [x] Self-hosted OIDC provider: authorization code + PKCE, rotating refresh tokens, JWT access tokens with resource indicators
-- [x] Email / password registration and login with bcrypt hashing and enumeration-resistant responses
+- [x] Email / password registration with bcrypt hashing and enumeration-resistant responses (the `login` endpoint exists on the provider, but see "Sign-in for returning users" below)
 - [x] Email verification via OTP codes over SMTP, with resend cooldown and single-use sessions
 - [x] JWKS persisted in Postgres and encrypted at rest; OIDC sessions and grants in Redis
 - [x] Server-side OIDC flow in the SSR client with encrypted cookie sessions and transparent token refresh
@@ -197,6 +198,7 @@ user through a `FederatedCredentials` table, provisioning the user on first sigh
 
 **Identity provider hardening**
 
+- [ ] Sign-in for returning users — the client's login page renders the sign-up form and posts to the registration endpoint, so today a session can only be created by registering
 - [ ] Google / social login (configuration placeholders exist, no implementation)
 - [ ] Password reset flow
 - [ ] Pairwise subject identifiers
@@ -248,6 +250,14 @@ npm run lint          # nx run-many -t=lint
 npm run test          # nx run-many -t=test  (Vitest)
 npm run build         # nx run-many -t=build
 npx nx affected -t lint test build
+```
+
+End-to-end tests run against their own Docker stack and are not part of `npm run test`:
+
+```sh
+npm run stack:up -w imageboard-e2e   # build and start the stack
+npm run e2e -w imageboard-e2e        # run Playwright
+npm run stack:down -w imageboard-e2e
 ```
 
 ### Configuration
