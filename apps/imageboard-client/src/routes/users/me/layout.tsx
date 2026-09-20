@@ -6,7 +6,7 @@ import { useAuth } from 'src/components/features/auth/context.tsx';
 
 function MyProfileLayout() {
   const location = useLocation();
-  const { urls } = useAuth(true);
+  const { isLoggedIn } = useAuth(true);
 
   return (
     <div className="py-8">
@@ -37,17 +37,19 @@ function MyProfileLayout() {
             </NavigationMenuLink>
           </NavigationMenuItem>
           <NavigationMenuItem className="ml-auto">
-            <Form method="post" action={urls.logout}>
-              <NavigationMenuLink
-                className={navigationMenuTriggerStyle({
-                  className: 'auto flex-row items-center gap-1',
-                  variant: 'destructive',
-                })}
-                render={<button type="submit" />}
-              >
-                Log Out
-              </NavigationMenuLink>
-            </Form>
+            { isLoggedIn &&
+              <Form method="post" action="/auth/logout">
+                <NavigationMenuLink
+                  className={navigationMenuTriggerStyle({
+                    className: 'auto flex-row items-center gap-1',
+                    variant: 'destructive',
+                  })}
+                  render={<button type="submit" />}
+                >
+                  Log Out
+                </NavigationMenuLink>
+              </Form>
+            }
           </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>

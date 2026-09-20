@@ -4,8 +4,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import bcrypt from 'bcrypt';
 
-import { KEYV_STORE } from '../../keyv-store/keyv-store.provider.js';
-import type { VerificationSession } from '../interfaces.js';
+import type { VerificationSession } from '../common/interfaces.js';
+import { KEYV_STORE } from '../keyv-store/keyv-store.provider.js';
 
 const OTP_LENGTH = 6;
 

@@ -14,7 +14,8 @@ import { InteractionModule } from './interaction/interaction.module.js';
 import { KeyvStoreModule } from './keyv-store/keyv-store.module.js';
 import { OidcModule } from './oidc/oidc.module.js';
 import { UserModule } from './user/user.module.js';
-import { CommonModule } from './common/common.module.js';
+import { VerificationModule } from './verification/verification.module.js';
+import { AppController } from './app.controller.js';
 
 @Module({
   imports: [
@@ -29,12 +30,11 @@ import { CommonModule } from './common/common.module.js';
     }),
     // KeyvStoreModule is global module
     KeyvStoreModule,
-    // CommonModule is global module
-    CommonModule,
     OidcModule,
     CredentialsModule,
     UserModule,
     InteractionModule,
+    VerificationModule,
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
@@ -65,6 +65,8 @@ import { CommonModule } from './common/common.module.js';
       useClass: ThrottlerGuard,
     },
   ],
-  controllers: []
+  controllers: [
+    AppController
+  ]
 })
 export class AppModule {}

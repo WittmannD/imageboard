@@ -11,9 +11,11 @@ import { ThemeToggle } from 'src/components/features/theme/ThemeToggle.tsx';
 import { GooAnimation } from 'src/components/features/header/GooAnimation.tsx';
 import { navigationMenuTriggerStyle } from 'src/components/ui/navigation-menu/navigation-menu-style.ts';
 import { useAuth } from 'src/components/features/auth/context.tsx';
+import { useDialogManager } from 'src/lib/dialog-manager/context.tsx';
 
 function Header() {
-  const { isLoggedIn, urls } = useAuth(false);
+  const { isLoggedIn } = useAuth(false);
+  const { getDialogSearchParams } = useDialogManager();
 
   return (
     <header className="w-full h-[var(--header-height)] relative overflow-hidden">
@@ -27,7 +29,7 @@ function Header() {
           <NavigationMenuList className="gap-2">
             <NavigationMenuItem>
               {isLoggedIn ? (
-                <Form method="post" action={urls.logout}>
+                <Form method="post" action="/auth/logout">
                   <NavigationMenuLink
                     render={<button type="submit" />}
                     className={navigationMenuTriggerStyle({
@@ -54,7 +56,7 @@ function Header() {
                   className: 'flex-row items-center gap-1',
                   variant: 'secondary',
                 })}
-                render={<Link to="?modal=create-post" mask="posts/create" />}
+                render={<Link to={{ search: getDialogSearchParams('create-post') }} mask="posts/create" />}
               >
                 <Plus />
                 Post

@@ -9,7 +9,7 @@ interface VerificationCompleteResult {
 
 async function requestEmailVerification(userId: string) {
   const response = await fetch(
-    new URL('/interactions/verification', process.env.OIDC_ISSUER_URL),
+    new URL('/verification', process.env.OIDC_ISSUER_URL),
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -26,7 +26,7 @@ async function requestEmailVerification(userId: string) {
 
 async function completeEmailVerification(sessionId: string, otp: string) {
   const response = await fetch(
-    new URL('/interactions/verification/complete', process.env.OIDC_ISSUER_URL),
+    new URL('/verification/complete', process.env.OIDC_ISSUER_URL),
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -13,22 +13,15 @@ import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import IdProvider from 'oidc-provider';
 
-import { VerificationService } from '../common/services/verification.service.js';
 import {
-  EMAIL_VERIFICATION_THROTTLE,
   LOGIN_THROTTLE,
   REGISTRATION_THROTTLE,
-  VERIFICATION_COMPLETE_THROTTLE,
 } from '../config/throttler.config.js';
 import { CredentialsService } from '../credentials/credentials.service.js';
-import { EmailService } from '../email/email.service.js';
-import { accountVerificationEmail } from '../email/email-templates.js';
 import { OIDC_PROVIDER } from '../oidc/oidc.provider.js';
 import { UserService } from '../user/user.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegistrationDto } from './dto/registration.dto.js';
-import { VerificationDto } from './dto/verification.dto.js';
-import { VerificationCompleteDto } from './dto/verification-complete.dto.js';
 import { UsernameTakenError } from './errors/registration-error.js';
 import { InteractionService } from './interaction.service.js';
 
@@ -41,9 +34,7 @@ export class InteractionController {
     private readonly configService: ConfigService,
     private readonly credentialsService: CredentialsService,
 
-    private readonly interactionService: InteractionService,
-    private readonly verificationService: VerificationService,
-    private readonly emailService: EmailService,
+    private readonly interactionService: InteractionService
   ) {}
 
   @Get(':uid')
@@ -139,55 +130,6 @@ export class InteractionController {
         },
       });
       return;
-    }
-  }
-
-  @Throttle(EMAIL_VERIFICATION_THROTTLE)
-  @Post('verification')
-  async emailVerification(@Body() body: VerificationDto) {
-    const user = await this.userService.findOneById(body.userId);
-    const { otp, session, sessionId, resendAvailableAt, resent } =
-      await this.verificationService.createEmailVerificationSession(
-        // Continue with fake user ID to disallow guessing existing emails.
-        user?.id ?? 'untrusted-' + this.userService.generateId(),
-      );
-
-    if (user && !user.emailVerified && resent) {
-      void this.emailService
-        .sendFromTemplate(
-          accountVerificationEmail,
-          {
-            expiresIn: `${Math.round(session.ttl / 1000 / 60)} minutes`,
-            otp,
-          },
-          { subject: 'Verify your account', to: user.email },
-        )
-        .then();
-    } else {
-      // If the user exists and email is verified, or the resend cooldown is
-      // still active, silently proceed without sending another email.
-      // TODO: notify the user, that someone is trying to register with their email
-    }
-
-    return { sessionId, resendAvailableAt };
-  }
-
-  @Throttle(VERIFICATION_COMPLETE_THROTTLE)
-  @Post('verification/complete')
-  async completeEmailVerification(@Body() body: VerificationCompleteDto) {
-    try {
-      const deletedSession = await this.verificationService.consumeOTPSession(
-        body.sessionId,
-        body.otp,
-        'email-verification',
-      );
-
-      const verified = await this.userService.markEmailVerified(
-        deletedSession.userId,
-      );
-      return { verified };
-    } catch (_error: unknown) {
-      throw new BadRequestException('Invalid OTP or Session ID');
     }
   }
 }
