@@ -14,8 +14,14 @@ import {
 } from 'src/components/ui/field/Field.tsx';
 import { Input } from 'src/components/ui/input/Input.tsx';
 import React from 'react';
+import { Link, useLocation } from 'react-router';
 
-export function SignupForm({ action, ...props }: React.ComponentProps<typeof Card> & {action: string}) {
+export function SignUpForm({
+  action,
+  ...props
+}: React.ComponentProps<typeof Card> & { action: string }) {
+  const { search } = useLocation();
+
   return (
     <Card {...props}>
       <CardHeader>
@@ -29,12 +35,7 @@ export function SignupForm({ action, ...props }: React.ComponentProps<typeof Car
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="name">Username</FieldLabel>
-              <Input
-                id="name"
-                type="text"
-                name="username"
-                required
-              />
+              <Input id="name" type="text" name="username" required />
             </Field>
             <Field>
               <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -71,7 +72,7 @@ export function SignupForm({ action, ...props }: React.ComponentProps<typeof Car
                   Sign up with Google
                 </Button>
                 <FieldDescription className="px-6 text-center">
-                  Already have an account? <a href="#">Sign in</a>
+                  Already have an account? <Link to={{ pathname: '/auth/login', search }}>Sign in</Link>
                 </FieldDescription>
               </Field>
             </FieldGroup>

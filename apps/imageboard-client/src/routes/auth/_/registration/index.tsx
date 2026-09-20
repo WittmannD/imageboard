@@ -1,4 +1,4 @@
-import { SignupForm } from 'src/components/features/signup/Signup.tsx';
+import { SignUpForm } from 'src/components/features/forms/signup/SignUpForm.tsx';
 import  { type LoaderFunction } from 'react-router';
 
 interface LoginPageLoaderData {
@@ -26,7 +26,7 @@ function RegistrationPage({ loaderData }: { loaderData: LoginPageLoaderData }) {
   return (
     <div className="flex min-h-[calc(100svh-var(--header-height))] w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm">
-        <SignupForm action={action} />
+        <SignUpForm action={action} />
       </div>
     </div>
   );

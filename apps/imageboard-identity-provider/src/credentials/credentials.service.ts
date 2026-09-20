@@ -48,4 +48,11 @@ export class CredentialsService {
       return await credentialsRepository.save(credentials);
     })
   }
+
+  async deleteForUser(userId: string, em?: EntityManager) {
+    return await this.tx.withManager(em, async (entityManager) => {
+      const credentialsRepository = entityManager.withRepository(this.credentialsRepository);
+      await credentialsRepository.delete({ userId });
+    })
+  }
 }

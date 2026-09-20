@@ -51,6 +51,14 @@ export class UserService {
     });
   }
 
+  async deleteById(id: string, em?: EntityManager) {
+    return await this.tx.withManager(em, async (entityManager) => {
+      const userRepository = entityManager.withRepository(this.userRepository);
+      const result = await userRepository.delete({ id });
+      return Boolean(result.affected);
+    });
+  }
+
   generateId(): UserEntity['id'] {
     return crypto.randomUUID();
   }

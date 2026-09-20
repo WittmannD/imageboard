@@ -1,5 +1,5 @@
-import { SignupForm } from 'src/components/features/signup/Signup.tsx';
-import type {LoaderFunction} from "react-router";
+import { LogInForm } from 'src/components/features/forms/login/LogInForm.tsx';
+import { type LoaderFunction } from 'react-router';
 
 interface LoginPageLoaderData {
   action: string;
@@ -9,7 +9,7 @@ export const loader: LoaderFunction = async ({ url }): Promise<LoginPageLoaderDa
   const uid = url.searchParams.get('uid');
 
   const action = new URL(
-    `/interactions/${uid}/registration`,
+    `/interactions/${uid}/login`,
     process.env['OIDC_ISSUER_URL'],
   ).toString();
 
@@ -24,7 +24,7 @@ function LoginPage({ loaderData }: { loaderData: LoginPageLoaderData }) {
   return (
     <div className="flex min-h-[calc(100svh-var(--header-height))] w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm">
-        <SignupForm action={action} />
+        <LogInForm action={action} />
       </div>
     </div>
   );

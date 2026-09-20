@@ -55,4 +55,18 @@ export class InteractionService {
       }
     });
   }
+
+  /**
+   * Undoes `registration()` when the OIDC interaction that was meant to
+   * consume its result fails to complete (e.g. the interaction session
+   * store is unreachable) - otherwise the user (and their credentials)
+   * would be left in the database with no way to ever finish signing up
+   * with that email again.
+   */
+  async rollbackRegistration(userId: string) {
+    await this.tx.withManager(undefined, async (entityManager) => {
+      await this.credentialsService.deleteForUser(userId, entityManager);
+      await this.userService.deleteById(userId, entityManager);
+    });
+  }
 }

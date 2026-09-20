@@ -2,8 +2,7 @@ import { type LoaderFunction, Outlet, redirectDocument } from 'react-router';
 import { buildAuthorizationUrl } from 'src/.server/helpers/oidc.ts';
 import { getOidcSessionFromCookie, oidcSession } from 'src/.server/session/oidc-session.server.ts';
 
-export const loader: LoaderFunction = async ({ request, url }) => {
-  const searchParams = url.searchParams;
+export const loader: LoaderFunction = async ({ request, url: { searchParams } }) => {
   const session = await getOidcSessionFromCookie(request);
 
   if (searchParams.has('uid') && session.has('state')) {

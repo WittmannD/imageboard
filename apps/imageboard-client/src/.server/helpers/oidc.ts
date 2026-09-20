@@ -28,7 +28,7 @@ const config: client.Configuration = await client.discovery(
  * Value used in the authorization request as the redirect_uri parameter, this
  * is typically pre-registered at the Authorization Server.
  */
-const redirectUri = new URL('auth/callback', process.env.VITE_BASE_URL).href;
+const redirectUri = new URL('/auth/callback', process.env.VITE_BASE_URL).href;
 const scope = 'openid email profile offline_access';
 
 /**

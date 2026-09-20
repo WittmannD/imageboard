@@ -113,23 +113,35 @@ export class InteractionController {
     // The `findAccount` method will skip fake user ID, and the user will get a generic error.
     const userId = user?.id ?? 'untrusted-' + this.userService.generateId();
 
-    if (req.header('Content-Type') === 'application/json') {
-      const redirectTo = await this.oidc.interactionResult(req, res, {
-        login: {
-          accountId: userId,
-          remember: true,
-        },
-      });
-      return { redirectTo };
-    } else {
-      // Finish with redirect
-      await this.oidc.interactionFinished(req, res, {
-        login: {
-          accountId: userId,
-          remember: true,
-        },
-      });
-      return;
+    try {
+      if (req.header('Content-Type') === 'application/json') {
+        const redirectTo = await this.oidc.interactionResult(req, res, {
+          login: {
+            accountId: userId,
+            remember: true,
+          },
+        });
+        return { redirectTo };
+      } else {
+        // Finish with redirect
+        await this.oidc.interactionFinished(req, res, {
+          login: {
+            accountId: userId,
+            remember: true,
+          },
+        });
+        return;
+      }
+    } catch (error: unknown) {
+      // The user (and their credentials) already committed to the database
+      // in `interactionService.registration` above - a completely separate
+      // store from the OIDC interaction session this call just failed to
+      // resolve. Undo the account so the email isn't stuck unable to ever
+      // register again.
+      if (user) {
+        await this.interactionService.rollbackRegistration(user.id);
+      }
+      throw error;
     }
   }
 }
