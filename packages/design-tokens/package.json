@@ -1,0 +1,12 @@
+{
+  "name": "@hdotu1/design-tokens",
+  "version": "1.0.0",
+  "description": "Shared Tailwind CSS design tokens (colors, radii) for the image board apps",
+  "type": "module",
+  "files": [
+    "theme.css"
+  ],
+  "exports": {
+    "./theme.css": "./theme.css"
+  }
+}

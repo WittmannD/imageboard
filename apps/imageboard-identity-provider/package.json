@@ -17,6 +17,7 @@
     "debug": "nest start --debug --watch"
   },
   "dependencies": {
+    "@hdotu1/auth-pages": "file:../../packages/auth-pages",
     "@hdotu1/database-common": "file:../../packages/database-common",
     "@keyv/redis": "^5.1.6",
     "@keyv/serialize": "^1.1.1",

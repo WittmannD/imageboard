@@ -1,0 +1,26 @@
+{
+  "name": "@hdotu1/auth-pages",
+  "version": "1.0.0",
+  "description": "Design-system-matched HTML pages rendered directly by the identity provider, outside the client SPA",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "del-cli dist && tsc -p tsconfig.build.json && tailwindcss -i src/styles.css -o dist/styles.css --minify",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write ."
+  },
+  "dependencies": {
+    "@hdotu1/design-tokens": "file:../design-tokens"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.2",
+    "del-cli": "^6.0.0",
+    "tailwindcss": "^4.3.2"
+  }
+}

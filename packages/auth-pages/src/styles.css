@@ -1,0 +1,13 @@
+@import "tailwindcss";
+@import "@hdotu1/design-tokens/theme.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@source "./templates/**/*.ts";
+@source "./assets/**/*.ts";
+
+@layer base {
+    body {
+        @apply bg-background text-foreground font-sans;
+    }
+}
