@@ -1,23 +1,35 @@
-import { data, Link, type LoaderFunction } from 'react-router';
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from 'src/components/ui/alert/Alert.tsx';
 import { AlertCircleIcon } from 'lucide-react';
+import { data, Link, type LoaderFunction } from 'react-router';
+import { Button } from 'src/components/ui/button/Button.tsx';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from 'src/components/ui/card/Card.tsx';
+import {
+  type AuthError,
+  parseAuthError,
+} from 'src/.server/helpers/auth-error.ts';
 import {
   getOidcSessionFromCookie,
   oidcSession,
 } from 'src/.server/session/oidc-session.server.ts';
-import {
-  type AuthError,
-  base64UrlAuthErrorSchema,
-} from 'src/schemas/auth-error.schema.ts';
-import { Button } from 'src/components/ui/button/Button.tsx';
 
 export interface AuthErrorPageLoaderData {
   error?: AuthError;
 }
+
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+  access_denied:
+    'Your sign-in link expired or was already used. Please try signing in again.',
+  server_error: 'Something went wrong on our end. Please try again shortly.',
+};
+
+const DEFAULT_MESSAGE =
+  "We couldn't complete that request. Please try again.";
 
 export const loader: LoaderFunction = async ({ request, url }) => {
   const oidc = await getOidcSessionFromCookie(request);
@@ -28,30 +40,38 @@ export const loader: LoaderFunction = async ({ request, url }) => {
     headers.append('Set-Cookie', await oidcSession.destroySession(oidc));
   }
 
-  const errorParam = url.searchParams.get('error');
-  const parseResult = base64UrlAuthErrorSchema.safeParse(errorParam);
+  const error = parseAuthError(url.searchParams.get('error'));
 
-  return data<AuthErrorPageLoaderData>(
-    { error: parseResult.data },
-    {
-      headers,
-    },
-  );
+  return data<AuthErrorPageLoaderData>({ error }, { headers });
 };
 
-function AuthErrorPage({ loaderData }: { loaderData: AuthErrorPageLoaderData } ) {
+function AuthErrorPage({ loaderData }: { loaderData: AuthErrorPageLoaderData }) {
   const { error } = loaderData;
+  const message = error ? (AUTH_ERROR_MESSAGES[error.error] ?? DEFAULT_MESSAGE) : DEFAULT_MESSAGE;
 
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <Alert variant="destructive" className="max-w-md">
-        <AlertCircleIcon />
-        <AlertTitle>Authorization failed</AlertTitle>
-        <AlertDescription>
-          <code><pre>{error?.error}</pre></code>
-          <Link to={'/'}><Button>Return</Button></Link>
-        </AlertDescription>
-      </Alert>
+      <div className="w-full max-w-sm">
+        <Card>
+          <CardHeader className="items-center text-center">
+            <AlertCircleIcon className="text-destructive size-8" />
+            <CardTitle>Something went wrong</CardTitle>
+            <CardDescription>{message}</CardDescription>
+          </CardHeader>
+          {error?.error_description && (
+            <CardContent>
+              <p className="text-xs text-muted-foreground">
+                {error.error_description}
+              </p>
+            </CardContent>
+          )}
+          <CardFooter className="justify-center">
+            <Link to="/">
+              <Button className="w-full">Return home</Button>
+            </Link>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -1,13 +1,16 @@
 import { SignUpForm } from 'src/components/features/forms/signup/SignUpForm.tsx';
 import  { type LoaderFunction } from 'react-router';
 
-interface LoginPageLoaderData {
+interface RegistrationPageLoaderData {
   action: string;
+  error?: string;
+  email?: string;
+  username?: string;
 }
 
 export const loader: LoaderFunction = async ({
   url,
-}): Promise<LoginPageLoaderData> => {
+}): Promise<RegistrationPageLoaderData> => {
   const uid = url.searchParams.get('uid');
 
   const action = new URL(
@@ -17,16 +20,24 @@ export const loader: LoaderFunction = async ({
 
   return {
     action,
+    error: url.searchParams.get('error') ?? undefined,
+    email: url.searchParams.get('email') ?? undefined,
+    username: url.searchParams.get('username') ?? undefined,
   };
 };
 
-function RegistrationPage({ loaderData }: { loaderData: LoginPageLoaderData }) {
-  const { action } = loaderData;
+function RegistrationPage({ loaderData }: { loaderData: RegistrationPageLoaderData }) {
+  const { action, error, email, username } = loaderData;
 
   return (
     <div className="flex min-h-[calc(100svh-var(--header-height))] w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm">
-        <SignUpForm action={action} />
+        <SignUpForm
+          action={action}
+          error={error}
+          defaultEmail={email}
+          defaultUsername={username}
+        />
       </div>
     </div>
   );

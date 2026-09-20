@@ -3,6 +3,8 @@ import { type LoaderFunction } from 'react-router';
 
 interface LoginPageLoaderData {
   action: string;
+  error?: string;
+  email?: string;
 }
 
 export const loader: LoaderFunction = async ({ url }): Promise<LoginPageLoaderData> => {
@@ -15,16 +17,18 @@ export const loader: LoaderFunction = async ({ url }): Promise<LoginPageLoaderDa
 
   return {
     action,
+    error: url.searchParams.get('error') ?? undefined,
+    email: url.searchParams.get('email') ?? undefined,
   };
 };
 
 function LoginPage({ loaderData }: { loaderData: LoginPageLoaderData }) {
-  const { action } = loaderData;
+  const { action, error, email } = loaderData;
 
   return (
     <div className="flex min-h-[calc(100svh-var(--header-height))] w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm">
-        <LogInForm action={action} />
+        <LogInForm action={action} error={error} defaultEmail={email} />
       </div>
     </div>
   );

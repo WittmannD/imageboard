@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
@@ -7,6 +6,7 @@ import {
   Post,
   Req,
   Res,
+  UseFilters,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
@@ -22,10 +22,12 @@ import { OIDC_PROVIDER } from '../oidc/oidc.provider.js';
 import { UserService } from '../user/user.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegistrationDto } from './dto/registration.dto.js';
-import { UsernameTakenError } from './errors/registration-error.js';
+import { InvalidCredentialsError } from './errors/login-error.js';
+import { InteractionExceptionFilter } from './filters/interaction-exception.filter.js';
 import { InteractionService } from './interaction.service.js';
 
 @Controller('interactions')
+@UseFilters(InteractionExceptionFilter)
 export class InteractionController {
   constructor(
     @Inject(OIDC_PROVIDER)
@@ -63,11 +65,7 @@ export class InteractionController {
     const user = await this.userService.findOneByEmail(body.email);
 
     if (!user) {
-      await this.oidc.interactionFinished(req, res, {
-        error: 'access_denied',
-        error_description: 'Invalid credentials',
-      });
-      return;
+      throw new InvalidCredentialsError();
     }
 
     const credentials =
@@ -77,11 +75,7 @@ export class InteractionController {
       );
 
     if (!credentials) {
-      await this.oidc.interactionFinished(req, res, {
-        error: 'access_denied',
-        error_description: 'Invalid credentials',
-      });
-      return;
+      throw new InvalidCredentialsError();
     }
 
     await this.oidc.interactionFinished(req, res, {
@@ -99,15 +93,9 @@ export class InteractionController {
     @Res() res: Response,
     @Body() body: RegistrationDto,
   ) {
-    let user;
-    try {
-      user = await this.interactionService.registration(body);
-    } catch (error: unknown) {
-      if (error instanceof UsernameTakenError) {
-        throw new BadRequestException(error.message);
-      }
-      throw error;
-    }
+    // UsernameTakenError propagates to InteractionExceptionFilter, which
+    // redirects back to the registration form with error=username_taken.
+    const user = await this.interactionService.registration(body);
     // If creating a new user fails due to email uniqueness violation,
     // proceed with a fake user ID to disallow guessing existing emails.
     // The `findAccount` method will skip fake user ID, and the user will get a generic error.

@@ -1,3 +1,8 @@
+import { AlertCircleIcon } from 'lucide-react';
+import {
+  Alert,
+  AlertDescription,
+} from 'src/components/ui/alert/Alert.tsx';
 import {
   Card,
   CardContent,
@@ -16,10 +21,22 @@ import { Button } from 'src/components/ui/button/Button.tsx';
 import { Link, useLocation } from 'react-router';
 import React from 'react';
 
+const LOGIN_ERROR_MESSAGES: Record<string, string> = {
+  invalid_credentials: 'Incorrect email or password.',
+  invalid_input: 'Please check your email and password and try again.',
+  rate_limited: 'Too many attempts. Please wait a moment and try again.',
+};
+
 export function LogInForm({
   action,
+  error,
+  defaultEmail,
   ...props
-}: React.ComponentProps<typeof Card> & { action: string }) {
+}: React.ComponentProps<typeof Card> & {
+  action: string;
+  error?: string;
+  defaultEmail?: string;
+}) {
   const { search } = useLocation();
 
   return (
@@ -33,6 +50,15 @@ export function LogInForm({
       <CardContent>
         <form action={action} method="POST">
           <FieldGroup>
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircleIcon />
+                <AlertDescription>
+                  {LOGIN_ERROR_MESSAGES[error] ??
+                    'Something went wrong. Please try again.'}
+                </AlertDescription>
+              </Alert>
+            )}
             <Field>
               <FieldLabel htmlFor="email">Email</FieldLabel>
               <Input
@@ -40,6 +66,7 @@ export function LogInForm({
                 type="email"
                 name="email"
                 placeholder="m@example.com"
+                defaultValue={defaultEmail}
                 required
               />
             </Field>

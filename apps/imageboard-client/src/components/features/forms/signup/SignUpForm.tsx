@@ -1,3 +1,5 @@
+import { AlertCircleIcon } from 'lucide-react';
+import { Alert, AlertDescription } from 'src/components/ui/alert/Alert.tsx';
 import { Button } from 'src/components/ui/button/Button.tsx';
 import {
   Card,
@@ -16,10 +18,24 @@ import { Input } from 'src/components/ui/input/Input.tsx';
 import React from 'react';
 import { Link, useLocation } from 'react-router';
 
+const REGISTRATION_ERROR_MESSAGES: Record<string, string> = {
+  username_taken: 'That username is already taken.',
+  invalid_input: 'Please check your details and try again.',
+  rate_limited: 'Too many attempts. Please wait a moment and try again.',
+};
+
 export function SignUpForm({
   action,
+  error,
+  defaultEmail,
+  defaultUsername,
   ...props
-}: React.ComponentProps<typeof Card> & { action: string }) {
+}: React.ComponentProps<typeof Card> & {
+  action: string;
+  error?: string;
+  defaultEmail?: string;
+  defaultUsername?: string;
+}) {
   const { search } = useLocation();
 
   return (
@@ -33,9 +49,24 @@ export function SignUpForm({
       <CardContent>
         <form action={action} method="POST">
           <FieldGroup>
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircleIcon />
+                <AlertDescription>
+                  {REGISTRATION_ERROR_MESSAGES[error] ??
+                    'Something went wrong. Please try again.'}
+                </AlertDescription>
+              </Alert>
+            )}
             <Field>
               <FieldLabel htmlFor="name">Username</FieldLabel>
-              <Input id="name" type="text" name="username" required />
+              <Input
+                id="name"
+                type="text"
+                name="username"
+                defaultValue={defaultUsername}
+                required
+              />
             </Field>
             <Field>
               <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -44,6 +75,7 @@ export function SignUpForm({
                 type="email"
                 name="email"
                 placeholder="m@example.com"
+                defaultValue={defaultEmail}
                 required
               />
               <FieldDescription>
