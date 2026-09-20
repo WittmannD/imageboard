@@ -14,6 +14,9 @@ export class TokenResponseModel {
   @IsString()
   refresh_token!: string;
 
+  @IsString()
+  id_token!: string;
+
   @Type(() => TokenClaimsModel)
   @ValidateNested()
   claims!: TokenClaimsModel;

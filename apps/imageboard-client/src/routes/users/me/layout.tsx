@@ -1,10 +1,12 @@
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from 'src/components/ui/navigation-menu/NavigationMenu.tsx';
 import { navigationMenuTriggerStyle } from 'src/components/ui/navigation-menu/navigation-menu-style.ts';
-import { Link, Outlet, useLocation } from 'react-router';
+import { Form, Link, Outlet, useLocation } from 'react-router';
 import { SettingsIcon, UserIcon } from 'lucide-react';
+import { useAuth } from 'src/components/features/auth/context.tsx';
 
 function MyProfileLayout() {
   const location = useLocation();
+  const { urls } = useAuth(true);
 
   return (
     <div className="py-8">
@@ -35,15 +37,17 @@ function MyProfileLayout() {
             </NavigationMenuLink>
           </NavigationMenuItem>
           <NavigationMenuItem className="ml-auto">
-            <NavigationMenuLink
-              className={navigationMenuTriggerStyle({
-                className: 'auto flex-row items-center gap-1',
-                variant: 'destructive',
-              })}
-              render={<Link to="/users/me/settings" />}
-            >
-              Log Out
-            </NavigationMenuLink>
+            <Form method="post" action={urls.logout}>
+              <NavigationMenuLink
+                className={navigationMenuTriggerStyle({
+                  className: 'auto flex-row items-center gap-1',
+                  variant: 'destructive',
+                })}
+                render={<button type="submit" />}
+              >
+                Log Out
+              </NavigationMenuLink>
+            </Form>
           </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>

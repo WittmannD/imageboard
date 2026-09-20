@@ -1,5 +1,5 @@
-import { validate, type ValidatorOptions } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
+import { validate, type ValidatorOptions } from 'class-validator';
 
 export async function validateShape<T extends object>(
   cls: new () => T,

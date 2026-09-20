@@ -144,6 +144,7 @@ services:
       OIDC_CLIENT_ID: imageboard-e2e-client
       OIDC_CLIENT_SECRET: e2e-client-secret
       OIDC_CLIENT_REDIRECT_URIS: http://${E2E_DOMAIN:-e2e.test}/auth/callback
+      OIDC_CLIENT_POST_LOGOUT_REDIRECT_URIS: http://${E2E_DOMAIN:-e2e.test}/
       # Test-only AES-256 key protecting the JWKS at rest.
       JWKS_ENCRYPTION_KEY: UR/OoQVgg2pz7zV44QDIGmiCJWYawHI4Ju5yvw6RU3c=
       # Every request reaches the IdP from the client container's one IP, so

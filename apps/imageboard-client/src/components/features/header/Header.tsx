@@ -6,12 +6,15 @@ import {
   NavigationMenuList,
 } from 'src/components/ui/navigation-menu/NavigationMenu.tsx';
 import { Plus } from 'lucide-react';
-import { Link } from 'react-router';
+import { Form, Link } from 'react-router';
 import { ThemeToggle } from 'src/components/features/theme/ThemeToggle.tsx';
 import { GooAnimation } from 'src/components/features/header/GooAnimation.tsx';
 import { navigationMenuTriggerStyle } from 'src/components/ui/navigation-menu/navigation-menu-style.ts';
+import { useAuth } from 'src/components/features/auth/context.tsx';
 
 function Header() {
+  const { isLoggedIn, urls } = useAuth(false);
+
   return (
     <header className="w-full h-[var(--header-height)] relative overflow-hidden">
       <GooAnimation className="absolute -bottom-32 -top-32 -left-16 -right-16 w-[calc(100%+4rem)] pointer-events-none" />
@@ -23,14 +26,27 @@ function Header() {
         <NavigationMenu>
           <NavigationMenuList className="gap-2">
             <NavigationMenuItem>
-              <NavigationMenuLink
-                render={<Link to="auth/login" />}
-                className={navigationMenuTriggerStyle({
-                  variant: 'secondary',
-                })}
-              >
-                Log In
-              </NavigationMenuLink>
+              {isLoggedIn ? (
+                <Form method="post" action={urls.logout}>
+                  <NavigationMenuLink
+                    render={<button type="submit" />}
+                    className={navigationMenuTriggerStyle({
+                      variant: 'destructive',
+                    })}
+                  >
+                    Log Out
+                  </NavigationMenuLink>
+                </Form>
+              ) : (
+                <NavigationMenuLink
+                  render={<Link to="auth/login" />}
+                  className={navigationMenuTriggerStyle({
+                    variant: 'secondary',
+                  })}
+                >
+                  Log In
+                </NavigationMenuLink>
+              )}
             </NavigationMenuItem>
             <NavigationMenuItem>
               <NavigationMenuLink

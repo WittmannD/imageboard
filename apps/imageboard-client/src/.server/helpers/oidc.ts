@@ -1,9 +1,9 @@
 import * as process from 'node:process';
 import * as client from 'openid-client';
-import type { OidcAuthState } from 'src/.server/interfaces.ts';
-import { install } from 'undici';
 import { validateShape } from 'src/.server/helpers/validate.ts';
+import type { OidcAuthState } from 'src/.server/interfaces.ts';
 import { TokenResponseModel } from 'src/.server/models/token-response.model.ts';
+import { install } from 'undici';
 
 const server = new URL(process.env.OIDC_ISSUER_URL);
 const clientId = process.env.OIDC_CLIENT_ID;
@@ -123,9 +123,41 @@ async function getUserInfo(accessToken: string, sub: string) {
   return await client.fetchUserInfo(config, accessToken, sub);
 }
 
+function buildEndSessionUrl(params: {
+  idTokenHint: string;
+  postLogoutRedirectUri: string;
+}): URL {
+  return client.buildEndSessionUrl(config, {
+    id_token_hint: params.idTokenHint,
+    post_logout_redirect_uri: params.postLogoutRedirectUri,
+  });
+}
+
+/**
+ * Best-effort: kills the tokens themselves in case the browser never
+ * completes the RP-Initiated Logout redirect (e.g. JS disabled, tab closed,
+ * network drop). RP-Initiated Logout remains the source of truth for ending
+ * the identity provider's own session.
+ */
+async function revokeTokens(tokens: {
+  accessToken: string;
+  refreshToken: string;
+}): Promise<void> {
+  await Promise.allSettled([
+    client.tokenRevocation(config, tokens.accessToken, {
+      token_type_hint: 'access_token',
+    }),
+    client.tokenRevocation(config, tokens.refreshToken, {
+      token_type_hint: 'refresh_token',
+    }),
+  ]);
+}
+
 export {
   authorizationCodeGrant,
   buildAuthorizationUrl,
+  buildEndSessionUrl,
   getUserInfo,
   refreshTokenGrant,
+  revokeTokens,
 };

@@ -9,6 +9,7 @@ export interface UserSession {
   sub: string;
   accessToken: string;
   refreshToken: string;
+  idToken: string;
   email: string;
   emailVerified: boolean;
 }

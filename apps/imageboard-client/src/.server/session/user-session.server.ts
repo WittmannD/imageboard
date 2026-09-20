@@ -35,6 +35,7 @@ export const getUserSessionFromCookie = (request: Request) =>
 export const toUserSessionState = (data: TokenResponseModel): UserSession => ({
   accessToken: data.access_token,
   refreshToken: data.refresh_token,
+  idToken: data.id_token,
   sub: data.claims.sub,
   email: data.claims.email,
   emailVerified: data.claims.email_verified,

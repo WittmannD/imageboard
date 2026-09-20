@@ -35,6 +35,7 @@ export default [
       ]),
       route('callback', './routes/auth/callback/index.tsx'),
       route('error', './routes/auth/error/index.tsx'),
+      route('logout', './routes/auth/logout/index.tsx'),
     ]),
   ]),
   route('api/*', './routes/api/$.tsx'),
