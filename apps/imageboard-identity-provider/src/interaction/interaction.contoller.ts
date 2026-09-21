@@ -25,14 +25,14 @@ import { OIDC_PROVIDER } from '../oidc/oidc.provider.js';
 import { UserService } from '../user/user.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegistrationDto } from './dto/registration.dto.js';
-import { InteractionErrorCode } from './errors/interaction-error-code.js';
+import { ErrorCode } from '../common/errors/error-code.js';
 import { UsernameTakenError } from './errors/registration-error.js';
-import { InteractionErrorCodeFilter } from './filters/interaction-error-code.filter.js';
+import { ErrorCodeFilter } from '../common/filters/error-code.filter.js';
 import { InteractionRedirectFilter } from './filters/interaction-redirect.filter.js';
 import { InteractionService } from './interaction.service.js';
 
 @Controller('interactions')
-@UseFilters(InteractionErrorCodeFilter)
+@UseFilters(ErrorCodeFilter)
 export class InteractionController {
   constructor(
     @Inject(OIDC_PROVIDER)
@@ -80,7 +80,7 @@ export class InteractionController {
       throw new UnauthorizedException({
         statusCode: HttpStatus.UNAUTHORIZED,
         message: 'Invalid email or password',
-        errorCode: InteractionErrorCode.InvalidCredentials,
+        errorCode: ErrorCode.InvalidCredentials,
       });
     }
 
@@ -109,7 +109,7 @@ export class InteractionController {
         throw new ConflictException({
           statusCode: HttpStatus.CONFLICT,
           message: error.message,
-          errorCode: InteractionErrorCode.UsernameTaken,
+          errorCode: ErrorCode.UsernameTaken,
         });
       }
       throw error;

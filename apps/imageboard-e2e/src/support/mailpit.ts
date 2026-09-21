@@ -22,13 +22,20 @@ async function mailpit<T>(path: string): Promise<T> {
   return (await response.json()) as T;
 }
 
-/** The newest message addressed to `address`, or `null` if none arrived yet. */
+/**
+ * The newest message addressed to `address` (optionally with `subject`), or
+ * `null` if none arrived yet.
+ */
 export async function findLatestMessageTo(
   address: string,
+  subject?: string,
 ): Promise<Message | null> {
+  const query = subject
+    ? `to:${address} subject:"${subject}"`
+    : `to:${address}`;
   // Mailpit returns search results newest first.
   const { messages } = await mailpit<{ messages: MessageSummary[] }>(
-    `/search?query=${encodeURIComponent(`to:${address}`)}`,
+    `/search?query=${encodeURIComponent(query)}`,
   );
   const latest = messages.at(0);
 
@@ -62,4 +69,32 @@ export async function waitForOtp(
   );
 
   return extractOtp(message);
+}
+
+const RESET_EMAIL_SUBJECT = 'Reset your password';
+
+/** Pulls the reset link (token in its fragment) out of the identity provider's email. */
+export function extractResetLink(message: Message): string {
+  const match = /href="([^"]*reset-password#[^"]*)"/.exec(message.HTML);
+
+  if (!match?.[1]) {
+    throw new Error(
+      `No reset link found in email "${message.Subject}" (${message.ID})`,
+    );
+  }
+
+  return match[1];
+}
+
+export async function waitForResetLink(
+  address: string,
+  options?: PollOptions,
+): Promise<string> {
+  const message = await pollUntil(
+    `a password reset email for ${address}`,
+    () => findLatestMessageTo(address, RESET_EMAIL_SUBJECT),
+    options,
+  );
+
+  return extractResetLink(message);
 }

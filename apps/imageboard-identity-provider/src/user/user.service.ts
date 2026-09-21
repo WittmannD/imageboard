@@ -39,6 +39,21 @@ export class UserService {
     });
   }
 
+  /**
+   * A completed reset proves the person controls the mailbox, so it also
+   * verifies the email, and starts a new epoch for the account's logins.
+   */
+  async markPasswordReset(userId: string, em?: EntityManager) {
+    return await this.tx.withManager(em, async (entityManager) => {
+      const userRepository = entityManager.withRepository(this.userRepository);
+      const result = await userRepository.update(
+        { id: userId },
+        { emailVerified: true, passwordChangedAt: new Date() },
+      );
+      return Boolean(result.affected);
+    });
+  }
+
   async create(data: CreateUser, em?: EntityManager) {
     return await this.tx.withManager(em, async (entityManager) => {
       const userRepository = entityManager.withRepository(this.userRepository);

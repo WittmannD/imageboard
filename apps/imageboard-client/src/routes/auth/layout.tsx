@@ -6,6 +6,11 @@ import { Logo } from 'src/components/ui/logo/Logo.tsx';
 export const loader: LoaderFunction = ({ request }): Promise<AuthData> =>
   getAuth(request);
 
+/**
+ * The auth routes are used by the identity provider, so the layout should be as
+ * minimal as possible and avoid using any third-party components.
+ *
+ */
 function AuthLayout() {
   const auth = useLoaderData<AuthData>();
 

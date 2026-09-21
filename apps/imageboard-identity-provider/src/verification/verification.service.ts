@@ -1,20 +1,28 @@
 import crypto from 'node:crypto';
 import type { Keyv } from '@keyv/redis';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import bcrypt from 'bcrypt';
 
 import type { VerificationSession } from '../common/interfaces.js';
+import { EmailService } from '../email/email.service.js';
+import { accountVerificationEmail } from '../email/email-templates.js';
 import { KEYV_STORE } from '../keyv-store/keyv-store.provider.js';
+import { UserService } from '../user/user.service.js';
+import { InvalidOtpError } from './errors/invalid-otp-error.js';
 
 const OTP_LENGTH = 6;
 
 @Injectable()
 export class VerificationService {
+  private readonly logger = new Logger(VerificationService.name);
+
   constructor(
     private readonly configService: ConfigService,
     @Inject(KEYV_STORE)
     private readonly keyv: Keyv,
+    private readonly userService: UserService,
+    private readonly emailService: EmailService,
   ) {}
 
   private getUserKey(id: string) {
@@ -118,11 +126,7 @@ export class VerificationService {
     }
   }
 
-  async createEmailVerificationSession(userId: string) {
-    return await this.createVerificationSession(userId, 'email-verification');
-  }
-
-  async consumeOTPSession(
+  private async consumeOTPSession(
     sessionId: string,
     otp: string,
     purpose: VerificationSession['purpose'],
@@ -130,16 +134,67 @@ export class VerificationService {
     const session = await this.getSessionById(sessionId);
 
     if (session?.purpose !== purpose) {
-      throw new Error('Invalid OTP');
+      throw new InvalidOtpError();
     }
 
     const otpMatch = await bcrypt.compare(otp, session.otpHash);
 
     if (!otpMatch) {
-      throw new Error('Invalid OTP');
+      throw new InvalidOtpError();
     }
 
     await this.deleteSession(sessionId);
     return session;
+  }
+
+  async requestVerification(
+    userId: string,
+    purpose: VerificationSession['purpose'],
+  ) {
+    const user = await this.userService.findOneById(userId);
+    const { otp, session, sessionId, resendAvailableAt, resent } =
+      await this.createVerificationSession(
+        // Continue with fake user ID to disallow guessing existing emails.
+        user?.id ?? 'untrusted-' + this.userService.generateId(),
+        purpose,
+      );
+
+    if (user && !user.emailVerified && resent) {
+      void this.emailService
+        .sendFromTemplate(
+          accountVerificationEmail,
+          {
+            expiresIn: `${Math.round(session.ttl / 1000 / 60)} minutes`,
+            otp,
+          },
+          { subject: 'Verify your account', to: user.email },
+        )
+        .catch((error: unknown) => {
+          this.logger.error(
+            `Failed to send verification OTP email`,
+            error instanceof Error ? error.stack : String(error),
+          );
+        });
+    } else {
+      // If the user exists and email is verified, or the resend cooldown is
+      // still active, silently proceed without sending another email.
+      // TODO: notify the user, that someone is trying to register with their email
+    }
+
+    return { sessionId, resendAvailableAt };
+  }
+
+  async completeVerification(
+    sessionId: string,
+    otp: string,
+    purpose: VerificationSession['purpose'],
+  ) {
+    const deletedSession = await this.consumeOTPSession(
+      sessionId,
+      otp,
+      purpose,
+    );
+
+    return await this.userService.markEmailVerified(deletedSession.userId);
   }
 }

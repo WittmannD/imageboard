@@ -2,6 +2,8 @@ export const AppConfig = () => ({
   verificationSessionTTL: 1000 * 60 * 15, // 15 minutes
   verificationResendCooldown: 1000 * 60, // 1 minute
   verificationOTPSaltRounds: 8,
+  passwordResetTokenTTL: 1000 * 60 * 30, // 30 minutes
+  passwordResetRequestCooldown: 1000 * 60, // 1 minute
   pwHashSaltRounds: 10,
 
   //redis[s]://[[username][:password]@][host][:port][/db-number]

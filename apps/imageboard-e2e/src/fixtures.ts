@@ -21,6 +21,11 @@ interface Account {
  *   workers refreshing the same session would invalidate each other.
  * - Tests that need an anonymous visitor import `test` from
  *   '@playwright/test' instead.
+ * - Every test in the worker shares this one session, so a test that ends it
+ *   (log out, change or reset the password, ...) must not use it: revoking its
+ *   tokens would break whichever tests run next in the same worker. Such
+ *   tests clear `storageState` for their group and sign in again with `user`
+ *   (`signIn`), which gives them a session of their own - see logout.spec.ts.
  */
 export const test = base.extend<{ user: TestUser }, { account: Account }>({
   account: [

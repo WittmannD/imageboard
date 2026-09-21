@@ -5,7 +5,7 @@ export interface CreateUser {
 }
 
 export interface VerificationSession {
-  purpose: 'email-verification' | 'password-reset' | 'mfa';
+  purpose: 'email-verification';
   userId: string;
   otpHash: string;
   createdAt: number;

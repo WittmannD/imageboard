@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 import {
-  SIGNUP_HEADING,
+  startSignup,
   submitOtp,
   submitSignupForm,
   VERIFICATION_PATH,
@@ -21,8 +21,8 @@ test.describe('registration', () => {
   }) => {
     const user = createTestUser();
 
-    await page.goto('/auth/registration');
-    await expect(page.getByText(SIGNUP_HEADING)).toBeVisible();
+    // The identity flow opens on the login form; sign-up is one click away.
+    await startSignup(page);
     await submitSignupForm(page, user);
 
     // New accounts are unverified, so the callback diverts to verification.
@@ -48,7 +48,7 @@ test.describe('registration', () => {
   }) => {
     const user = createTestUser();
 
-    await page.goto('/auth/registration');
+    await startSignup(page);
     await submitSignupForm(page, user);
     await expect(page).toHaveURL(new RegExp(VERIFICATION_PATH));
 
@@ -68,9 +68,8 @@ test.describe('registration', () => {
     const user = createTestUser();
 
     // An anonymous visitor asking for a private page is bounced through the
-    // identity provider to the sign-up form...
-    await page.goto('/users/me');
-    await expect(page.getByText(SIGNUP_HEADING)).toBeVisible();
+    // identity provider to the login form, and signs up from there...
+    await startSignup(page, '/users/me');
     await submitSignupForm(page, user);
     await expect(page).toHaveURL(new RegExp(VERIFICATION_PATH));
     await verifyEmail(page, user);

@@ -36,6 +36,8 @@ export default [
       route('callback', './routes/auth/callback/index.tsx'),
       route('error', './routes/auth/error/index.tsx'),
       route('logout', './routes/auth/logout/index.tsx'),
+      route('forgot-password', './routes/auth/forgot-password/index.tsx'),
+      route('reset-password', './routes/auth/reset-password/index.tsx'),
     ]),
   ]),
   route('api/*', './routes/api/$.tsx'),

@@ -61,28 +61,35 @@ async function proxy(request: Request, endpoint: string = '/') {
     // later unrelated request to be served leftover bytes from this one
     await response.body?.cancel();
 
-    // todo: logout if fail to refresh token
-    const result = await refreshTokenGrant(user.refreshToken);
-    let setCookie: string | undefined;
+    // The grant throws when the identity provider no longer honors the
+    // refresh token (expired, revoked, or predating a password reset).
+    const result = await refreshTokenGrant(user.refreshToken).catch(
+      () => null,
+    );
 
-    if (result.valid) {
-      userSession.set('state', toUserSessionState(result.data));
-
-      setCookie = await userSessionStorage.commitSession(userSession);
-      // retry request with new access token
-      response = await apiRequest(endpoint, request, body, result.data.access_token);
-      responseHeaders = filterHeaders(
-        response.headers,
-        includeResponseHeaderKeys,
-        'include',
+    if (!result?.valid) {
+      // The session can't be renewed: drop it, and answer with a bare 401 the
+      // client's unauthorized handling turns into a trip back to login (the
+      // original body was cancelled above, so it can't be passed along).
+      responseHeaders.append(
+        'Set-Cookie',
+        await userSessionStorage.destroySession(userSession),
       );
-    } else {
-      setCookie = await userSessionStorage.destroySession(userSession);
+
+      return new Response(null, { status: 401, headers: responseHeaders });
     }
 
-    if (setCookie) {
-      responseHeaders.append('Set-Cookie', setCookie);
-    }
+    userSession.set('state', toUserSessionState(result.data));
+
+    const setCookie = await userSessionStorage.commitSession(userSession);
+    // retry request with new access token
+    response = await apiRequest(endpoint, request, body, result.data.access_token);
+    responseHeaders = filterHeaders(
+      response.headers,
+      includeResponseHeaderKeys,
+      'include',
+    );
+    responseHeaders.append('Set-Cookie', setCookie);
   }
 
   return new Response(response.body, {

@@ -19,6 +19,10 @@ export class UserEntity extends BaseEntity {
   @Column({ type: 'boolean', nullable: false, default: false })
   emailVerified = false;
 
+  /** Logins issued before this moment are no longer honored (see find-account.ts). */
+  @Column({ type: 'timestamptz', nullable: true })
+  passwordChangedAt: Date | null = null;
+
   @OneToMany(() => CredentialsEntity, (credentials) => credentials.user)
   credentials!: CredentialsEntity[];
 }

@@ -1,31 +1,10 @@
-import http from 'node:http';
-
 import { env } from './env.js';
+import { requestVia } from './support/nginx.js';
 import { pollUntil } from './support/poll.js';
 
 /** GET `path` on the nginx front door, presenting `host` as the virtual host. */
-function statusVia(host: string, path: string): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const request = http.request(
-      {
-        host: '127.0.0.1',
-        port: env.httpPort,
-        path,
-        headers: { Host: host },
-        timeout: 5_000,
-      },
-      (response) => {
-        response.resume();
-        resolve(response.statusCode ?? 0);
-      },
-    );
-
-    request.on('timeout', () => {
-      request.destroy(new Error('timed out'));
-    });
-    request.on('error', reject);
-    request.end();
-  });
+async function statusVia(host: string, path: string): Promise<number> {
+  return (await requestVia(host, path)).status;
 }
 
 const checks = [

@@ -31,6 +31,15 @@ export const env = {
   mailpitUrl: `http://127.0.0.1:${mailpitPort}`,
 
   /**
+   * The e2e client's credentials, mirroring docker-compose.e2e.yaml. Only
+   * needed to call the provider's token endpoint the way the client's server
+   * does, e.g. to check whether a refresh token still works.
+   */
+  oidcClientId: process.env['E2E_OIDC_CLIENT_ID'] ?? 'imageboard-e2e-client',
+  oidcClientSecret:
+    process.env['E2E_OIDC_CLIENT_SECRET'] ?? 'e2e-client-secret',
+
+  /**
    * Chromium applies the first matching rule. The image host keeps the port
    * from its URL (MinIO), everything else is redirected to nginx.
    */

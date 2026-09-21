@@ -34,18 +34,33 @@ export class CredentialsService {
     })
   }
 
+  private async hashPassword(password: string) {
+    const saltRounds = this.configService.getOrThrow<number>('pwHashSaltRounds');
+    return await bcrypt.hash(password, saltRounds)
+  }
+
   async createForUser(user: UserEntity, password: string, em?: EntityManager) {
     return await this.tx.withManager(em, async (entityManager) => {
       const credentialsRepository = entityManager.withRepository(this.credentialsRepository);
 
-      const saltRounds = this.configService.getOrThrow<number>('pwHashSaltRounds');
-      const passwordHash = await bcrypt.hash(password, saltRounds)
       const credentials = credentialsRepository.create({
         user,
-        passwordHash
+        passwordHash: await this.hashPassword(password)
       });
 
       return await credentialsRepository.save(credentials);
+    })
+  }
+
+  async updatePasswordForUser(userId: string, password: string, em?: EntityManager) {
+    return await this.tx.withManager(em, async (entityManager) => {
+      const credentialsRepository = entityManager.withRepository(this.credentialsRepository);
+      const result = await credentialsRepository.update(
+        { userId },
+        { passwordHash: await this.hashPassword(password) },
+      );
+
+      return Boolean(result.affected);
     })
   }
 

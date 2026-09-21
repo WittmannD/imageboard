@@ -1,4 +1,4 @@
-import type { AccountClaims } from 'oidc-provider';
+import type { AccountClaims, KoaContextWithOIDC } from 'oidc-provider';
 
 import type { UserEntity } from '../../user/user.entity.js';
 import type { UserService } from '../../user/user.service.js';
@@ -57,19 +57,43 @@ const getClaimsFromScopes = (
   return { ...picked, sub: user.id };
 };
 
+/**
+ * A password change ends every login that predates it. There's no
+ * account -> grant index to revoke by, so each credential is checked when it's
+ * used instead: the token being presented (refresh, userinfo, code exchange),
+ * or - on the authorization endpoint, where there's no token yet - the OP
+ * session's login time. Timestamps are epoch seconds, floored so a login made
+ * in the same second as the change isn't caught.
+ */
+const predatesPasswordChange = (
+  user: UserEntity,
+  ctx: KoaContextWithOIDC,
+  token?: { iat: number },
+): boolean => {
+  if (!user.passwordChangedAt) {
+    return false;
+  }
+
+  const changedAt = Math.floor(user.passwordChangedAt.getTime() / 1000);
+  const issuedAt = token?.iat ?? ctx.oidc.session?.loginTs;
+
+  return issuedAt !== undefined && issuedAt < changedAt;
+};
+
 export default (users: UserService): OIDCDefinedConfig<'findAccount'> =>
-  async (ctx, accountId: string) => {
+  async (ctx, accountId: string, token) => {
     const user = accountId.startsWith('untrusted')
       ? null
       : await users.findOneById(accountId);
 
-    if (!user) {
+    if (!user || predatesPasswordChange(user, ctx, token)) {
       // The session's accountId doesn't resolve to a real user - either a
       // decoy id issued on duplicate registration (see InteractionController)
-      // or a session left over from a deleted/reset account. oidc-provider's
-      // login prompt only checks that an accountId is present, not that it
-      // resolves, so without invalidating it here the consent prompt would
-      // crash later trying to build a grant for a nonexistent account.
+      // or a session left over from a deleted account - or the login predates
+      // a password reset. oidc-provider's login prompt only checks that an
+      // accountId is present, not that it resolves, so without invalidating
+      // it here the consent prompt would crash later trying to build a grant
+      // for a nonexistent account (and a stale login would be silently reused).
       if (ctx.oidc.session) {
         // destroy() so the stale session can't resurrect on a later request
         // (this is the same call oidc-provider's own RP-initiated logout

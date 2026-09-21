@@ -18,6 +18,15 @@ interface InteractionResponse {
   redirectTo: string;
 }
 
+interface RequestPasswordResetRequest {
+  email: string;
+}
+
+interface ResetPasswordRequest {
+  token: string;
+  password: string;
+}
+
 // The identity provider is a different origin from the app's own API - the
 // interaction endpoints rely on the cookie oidc-provider set for this
 // browser during the authorization redirect, so credentials must ride along.
@@ -42,7 +51,28 @@ export const authApi = createApi({
         data,
       }),
     }),
+    // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
+    requestPasswordReset: builder.mutation<void, RequestPasswordResetRequest>({
+      query: (data) => ({
+        url: '/password-reset',
+        method: 'POST',
+        data,
+      }),
+    }),
+    // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
+    resetPassword: builder.mutation<void, ResetPasswordRequest>({
+      query: (data) => ({
+        url: '/password-reset/complete',
+        method: 'POST',
+        data,
+      }),
+    }),
   }),
 });
 
-export const { useLoginMutation, useRegisterMutation } = authApi;
+export const {
+  useLoginMutation,
+  useRegisterMutation,
+  useRequestPasswordResetMutation,
+  useResetPasswordMutation,
+} = authApi;

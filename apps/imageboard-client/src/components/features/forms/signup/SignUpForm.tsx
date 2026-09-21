@@ -22,6 +22,7 @@ import {
   FieldLabel,
 } from 'src/components/ui/field/Field.tsx';
 import { Input } from 'src/components/ui/input/Input.tsx';
+import { getApiErrorCode } from 'src/lib/utils/api-error.ts';
 import { signUpFormSchema } from 'src/components/features/forms/signup/schema.ts';
 import { useRegisterMutation } from 'src/services/api/auth/api.ts';
 
@@ -32,8 +33,7 @@ const REGISTRATION_ERROR_MESSAGES: Record<string, string> = {
 };
 
 function getErrorMessage(error: unknown): string {
-  const code = (error as { data?: { errorCode?: string } } | undefined)?.data
-    ?.errorCode;
+  const code = getApiErrorCode(error);
 
   return (
     (code && REGISTRATION_ERROR_MESSAGES[code]) ??
