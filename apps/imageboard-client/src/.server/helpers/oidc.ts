@@ -143,14 +143,45 @@ async function revokeTokens(tokens: {
   accessToken: string;
   refreshToken: string;
 }): Promise<void> {
-  await Promise.allSettled([
-    client.tokenRevocation(config, tokens.accessToken, {
-      token_type_hint: 'access_token',
-    }),
-    client.tokenRevocation(config, tokens.refreshToken, {
-      token_type_hint: 'refresh_token',
-    }),
-  ]);
+  const revocations = [
+    // Access JWT can't be revoked keep in case of migration to opaque tokens
+    ['access_token', tokens.accessToken],
+    ['refresh_token', tokens.refreshToken],
+  ] as const;
+
+  const results = await Promise.allSettled(
+    revocations.map(([tokenTypeHint, token]) =>
+      // Discovery installs a no-op client authentication (see above), so the
+      // credentials have to go in the body, exactly as with the grants -
+      // without them the provider answers 400 "no client authentication
+      // mechanism provided" and nothing is revoked.
+      client.tokenRevocation(config, token, {
+        token_type_hint: tokenTypeHint,
+        client_id: clientId,
+        client_secret: clientSecret,
+      }),
+    ),
+  );
+
+  results.forEach((result, index) => {
+    if (result.status !== 'rejected') {
+      return;
+    }
+
+    // Access tokens are stateless JWTs the provider can't revoke, and it says
+    // so (RFC 7009 allows that): they just expire. Not worth an error.
+    if (
+      (result.reason as { error?: string } | undefined)?.error ===
+      'unsupported_token_type'
+    ) {
+      return;
+    }
+
+    console.error(
+      `Revoking the ${revocations[index]?.[0]} failed`,
+      result.reason,
+    );
+  });
 }
 
 export {

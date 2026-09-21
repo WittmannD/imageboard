@@ -1,5 +1,6 @@
 import { isRejectedWithValue } from '@reduxjs/toolkit';
 import { isClient } from 'src/lib/utils/is-client.ts';
+import { redirectToLogin } from 'src/lib/utils/login-redirect.ts';
 import { startAppListening } from 'src/services/store/middlewares/listener-middleware.ts';
 
 const UNAUTHORIZED_STATUS = 401;
@@ -15,10 +16,6 @@ startAppListening({
     // already on an auth route - avoid looping back into itself
     if (window.location.pathname.startsWith('/auth')) return;
 
-    const returnTo = `${window.location.pathname}${window.location.search}`;
-    const loginUrl = new URL('/auth/login', window.location.origin);
-    loginUrl.searchParams.set('returnTo', returnTo);
-
-    window.location.assign(loginUrl.href);
+    redirectToLogin(`${window.location.pathname}${window.location.search}`);
   },
 });

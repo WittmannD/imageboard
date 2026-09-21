@@ -5,7 +5,7 @@ import {
   useEffect,
 } from 'react';
 import type { AuthData } from 'src/.server/helpers/auth.ts';
-import { useNavigate } from 'react-router';
+import { redirectToLogin } from 'src/lib/utils/login-redirect.ts';
 
 export interface AuthContextValue extends AuthData {}
 
@@ -16,7 +16,6 @@ export function useAuth(guard: false): AuthContextValue;
 export function useAuth(
   guard: boolean = false,
 ): Required<AuthContextValue> | AuthContextValue {
-  const navigate = useNavigate();
   const context = useContext(AuthContext);
 
   if (!context) {
@@ -28,15 +27,8 @@ export function useAuth(
   useEffect(() => {
     if (!shouldRedirect) return;
 
-    const returnTo = `${window.location.pathname}${window.location.search}`;
-    const loginUrl = new URL('/auth/login', window.location.origin);
-    loginUrl.searchParams.set('returnTo', returnTo);
-
-    navigate(
-      { pathname: loginUrl.pathname, search: loginUrl.search },
-      { replace: true },
-    );
-  }, [shouldRedirect, navigate]);
+    redirectToLogin(`${window.location.pathname}${window.location.search}`);
+  }, [shouldRedirect]);
 
   return context;
 }

@@ -24,7 +24,10 @@ test.describe('password reset', () => {
     await page.goto('/auth/login');
     await waitForHydration(page);
     await page.getByRole('link', { name: 'Forgot your password?' }).click();
-    await waitForHydration(page);
+    await expect(page).toHaveURL(/\/auth\/forgot-password$/);
+    await expect(
+      page.getByRole('button', { name: 'Send reset link' }),
+    ).toBeVisible();
     await page.getByLabel('Email').fill(user.email);
     await page.getByRole('button', { name: 'Send reset link' }).click();
     await expect(page.getByText('Check your email')).toBeVisible();
