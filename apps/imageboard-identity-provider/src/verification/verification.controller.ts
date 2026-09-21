@@ -33,7 +33,13 @@ export class VerificationController {
   @Post('complete')
   async completeEmailVerification(@Body() body: VerificationCompleteDto) {
     try {
-      return await this.verificationService.completeVerification(body.sessionId, body.otp, 'email-verification',)
+      const verified = await this.verificationService.completeVerification(
+        body.sessionId,
+        body.otp,
+        'email-verification',
+      );
+
+      return { verified };
     } catch (error: unknown) {
       if (error instanceof InvalidOtpError) {
         throw new GoneException({
