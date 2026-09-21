@@ -5,6 +5,7 @@ import {
   signUpAndVerify,
   submitLoginForm,
 } from '../../src/support/auth-flow.js';
+import { allowAccess } from '../../src/support/consent.js';
 import { createTestUser } from '../../src/support/user.js';
 
 const LOGIN_URL = /\/auth\/login\?.*\buid=/;
@@ -21,6 +22,7 @@ test.describe('login', () => {
     await page.goto('/auth/login');
     await expect(loginHeading(page)).toBeVisible();
     await submitLoginForm(page, user);
+    await allowAccess(page);
     await expect(page).toHaveURL('/');
 
     await page.goto('/users/me');
@@ -47,6 +49,7 @@ test.describe('login', () => {
     // The pending authorization request survived the failed attempt, so the
     // same form can simply be resubmitted.
     await submitLoginForm(page, user);
+    await allowAccess(page);
     await expect(page).toHaveURL('/');
   });
 

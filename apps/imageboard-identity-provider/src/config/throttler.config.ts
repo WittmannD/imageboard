@@ -39,3 +39,6 @@ export const PASSWORD_RESET_COMPLETE_THROTTLE = { default: { ttl: 60_000, limit:
 
 // oidc-provider's own routes (authorize, token, jwks, etc), mounted behind a single catch-all controller.
 export const OIDC_THROTTLE = { default: { ttl: 60_000, limit: 60 } }; // 60 requests/min per IP
+
+// Answering the consent screen: only ever a human click, so this is generous - it just bounds noise.
+export const CONSENT_THROTTLE = { default: { ttl: 60_000, limit: 20 } }; // 20 attempts/min per IP

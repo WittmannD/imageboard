@@ -51,9 +51,8 @@ async function buildAuthorizationUrl(): Promise<OidcAuthState & { url: URL }> {
     code_challenge_method: 'S256',
     // oidc-provider strips the offline_access scope (and thus never issues a
     // refresh_token) unless prompt=consent is present on the authorization
-    // request - see check_scope.js. The identity-provider trusts this client
-    // (TRUSTED_METADATA_PROPERTY) so this does not show a real consent screen,
-    // it just lets loadExistingGrant auto-approve the requested scopes.
+    // request - see check_scope.js. The flip side is that the user is asked
+    // for consent on every sign-in (/auth/consent).
     prompt: 'consent',
   };
 

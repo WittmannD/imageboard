@@ -18,6 +18,23 @@ interface InteractionResponse {
   redirectTo: string;
 }
 
+export interface ConsentDetails {
+  client: {
+    id: string;
+    name: string;
+    uri?: string;
+    logoUri?: string;
+    policyUri?: string;
+    tosUri?: string;
+  };
+  account: { username: string; email: string };
+  scopes: string[];
+}
+
+interface ConsentRequest {
+  uid: string;
+}
+
 interface RequestPasswordResetRequest {
   email: string;
 }
@@ -51,6 +68,21 @@ export const authApi = createApi({
         data,
       }),
     }),
+    getConsent: builder.query<ConsentDetails, ConsentRequest>({
+      query: ({ uid }) => ({ url: `/interactions/${uid}/consent` }),
+    }),
+    grantConsent: builder.mutation<InteractionResponse, ConsentRequest>({
+      query: ({ uid }) => ({
+        url: `/interactions/${uid}/consent`,
+        method: 'POST',
+      }),
+    }),
+    denyConsent: builder.mutation<InteractionResponse, ConsentRequest>({
+      query: ({ uid }) => ({
+        url: `/interactions/${uid}/consent/deny`,
+        method: 'POST',
+      }),
+    }),
     // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
     requestPasswordReset: builder.mutation<void, RequestPasswordResetRequest>({
       query: (data) => ({
@@ -71,6 +103,9 @@ export const authApi = createApi({
 });
 
 export const {
+  useDenyConsentMutation,
+  useGetConsentQuery,
+  useGrantConsentMutation,
   useLoginMutation,
   useRegisterMutation,
   useRequestPasswordResetMutation,

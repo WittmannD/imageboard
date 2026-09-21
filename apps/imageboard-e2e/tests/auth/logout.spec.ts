@@ -5,6 +5,7 @@ import {
   registerUser,
   signIn,
 } from '../../src/support/auth-flow.js';
+import { allowAccess } from '../../src/support/consent.js';
 import {
   confirmSignOut,
   declineSignOut,
@@ -138,22 +139,16 @@ test.describe('log out', () => {
       });
 
       test('the visitor can sign in again', async ({ page }) => {
-        // Known bug, so this is expected to fail. Declining leaves the
-        // provider's session but revokes the client's grant, so the next
-        // authorization needs a consent prompt - and the client has no page
-        // for it (it would be /auth/consent). Remove this line once fixed.
-        test.fail(
-          true,
-          'declining the provider prompt leaves a session with no grant, and the client has no consent page',
-        );
-
         await startLogOut(page);
         await declineSignOut(page);
 
-        // Either silently signed back in, or shown the login form - never an
-        // error page.
+        // The provider still knows who this is, but the client's grant went
+        // with the logout: no login form, just a fresh request for consent.
         await page.goto('/auth/login');
-        await expect(loginHeading(page).or(headerLogOut(page))).toBeVisible();
+        await allowAccess(page);
+
+        await expect(page).toHaveURL('/');
+        await expect(headerLogOut(page)).toBeVisible();
       });
     });
   });

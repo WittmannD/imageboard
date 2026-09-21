@@ -24,7 +24,7 @@ export interface AuthErrorPageLoaderData {
 
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
   access_denied:
-    'Your sign-in link expired or was already used. Please try signing in again.',
+    'Access was not granted, so you have not been signed in. You can try again whenever you like.',
   server_error: 'Something went wrong on our end. Please try again shortly.',
 };
 

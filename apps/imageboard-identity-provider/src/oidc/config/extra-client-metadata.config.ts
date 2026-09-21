@@ -3,8 +3,6 @@ import { errors } from 'oidc-provider';
 import type { OIDCDefinedConfig } from '../types/config.js';
 
 export const CORS_METADATA_PROPERTY = 'urn:custom:client:allowed-cors-origins';
-// Metadata to mark client as trusted and skip consent interaction
-export const TRUSTED_METADATA_PROPERTY = 'urn:custom:client:trust-with-grants';
 
 const isOrigin = (value: unknown) => {
   return typeof value === 'string' && URL.parse(value)?.origin === value;
@@ -33,6 +31,6 @@ const validator: OIDCDefinedConfig<'extraClientMetadata'>['validator'] = (
 
 export default () =>
   ({
-    properties: [CORS_METADATA_PROPERTY, TRUSTED_METADATA_PROPERTY],
+    properties: [CORS_METADATA_PROPERTY],
     validator,
   }) satisfies OIDCDefinedConfig<'extraClientMetadata'>;

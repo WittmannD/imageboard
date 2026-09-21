@@ -9,7 +9,7 @@
 #                (same OIDC issuer, redirect URI and cookie domain for the
 #                browser and for the containers).
 # What is faked: SMTP    -> Mailpit (the tests read OTP emails from its API)
-#                S3      -> MinIO   (public-read bucket, replaces Filebase)
+#                S3      -> MinIO   (public-read bucket, replaces S3)
 #
 # Hostnames: everything is served from http://${E2E_DOMAIN}. Containers reach
 # it through the network aliases on `web`; the browser reaches it because

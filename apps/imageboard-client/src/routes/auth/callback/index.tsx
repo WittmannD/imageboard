@@ -18,12 +18,28 @@ export const loader: LoaderFunction = async ({ request, url }) => {
   if (!oidcState) {
     return redirect('/');
   }
+  // The provider sends the user back with an error instead of a code when
+  // the authorization was refused, e.g. they declined on the consent screen.
+  const error = url.searchParams.get('error');
+
+  if (error) {
+    return redirect(
+      buildAuthErrorUrl({
+        error,
+        error_description:
+          url.searchParams.get('error_description') ?? undefined,
+      }),
+      { headers: { 'Set-Cookie': await oidcSession.destroySession(oidc) } },
+    );
+  }
+
   // validate authorization code from url and get access token
   const result = await authorizationCodeGrant(url, oidcState);
 
   if (!result.valid) {
     const errorUrl = buildAuthErrorUrl({
-      error: 'access_denied',
+      error: 'server_error',
+      error_description: 'The identity provider returned an invalid response',
     });
     return redirect(errorUrl);
   }

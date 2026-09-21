@@ -1,5 +1,5 @@
 /**
- * Pulls the identity provider's machine-readable `errorCode` out of a failed
+ * Pulls the HTTP exception's machine-readable `errorCode` out of a failed
  * RTK Query mutation (see axiosBaseQuery: the response body ends up in `data`).
  */
 export function getApiErrorCode(error: unknown): string | undefined {

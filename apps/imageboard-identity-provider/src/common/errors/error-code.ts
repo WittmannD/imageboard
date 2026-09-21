@@ -10,4 +10,5 @@ export const ErrorCode = {
   RateLimited: 'rate_limited',
   InvalidResetToken: 'invalid_reset_token',
   InvalidVerificationOTP: 'invalid_verification_otp',
+  InvalidInteraction: 'invalid_interaction',
 } as const;

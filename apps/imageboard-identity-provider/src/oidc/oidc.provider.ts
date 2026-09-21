@@ -6,7 +6,6 @@ import { UserService } from '../user/user.service.js';
 import clientBasedCors from './helpers/client-based-cors.js';
 import extraTokenClaims from './helpers/extra-token-claims.js';
 import createFindAccount from './helpers/find-account.js';
-import loadExistingGrant from './helpers/load-existing-grant.js';
 import pairwiseIdentifier from './helpers/pairwise-identifier.js';
 import renderError from './helpers/render-error.js';
 import rotateRefreshToken from './helpers/rotate-refresh-token.js';
@@ -33,7 +32,6 @@ export const OidcProvider = {
       adapter,
       findAccount,
       extraTokenClaims: extraTokenClaims(findAccount),
-      loadExistingGrant: loadExistingGrant(),
       clientBasedCORS: clientBasedCors(),
       pairwiseIdentifier: pairwiseIdentifier(),
       renderError: renderError(),

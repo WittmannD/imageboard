@@ -4,6 +4,7 @@ import {
   signUpAndVerify,
   submitLoginForm,
 } from '../../src/support/auth-flow.js';
+import { allowAccess } from '../../src/support/consent.js';
 import { waitForResetLink } from '../../src/support/mailpit.js';
 import { waitForHydration } from '../../src/support/page.js';
 import { createTestUser } from '../../src/support/user.js';
@@ -50,6 +51,7 @@ test.describe('password reset', () => {
 
     // ...and the new one works.
     await submitLoginForm(page, { email: user.email, password: newPassword });
+    await allowAccess(page);
     await expect(page).toHaveURL('/');
   });
 

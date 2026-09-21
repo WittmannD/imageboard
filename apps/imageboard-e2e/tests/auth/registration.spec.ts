@@ -7,6 +7,7 @@ import {
   VERIFICATION_PATH,
   verifyEmail,
 } from '../../src/support/auth-flow.js';
+import { allowAccess } from '../../src/support/consent.js';
 import { waitForOtp } from '../../src/support/mailpit.js';
 import { createTestUser } from '../../src/support/user.js';
 
@@ -24,6 +25,7 @@ test.describe('registration', () => {
     // The identity flow opens on the login form; sign-up is one click away.
     await startSignup(page);
     await submitSignupForm(page, user);
+    await allowAccess(page);
 
     // New accounts are unverified, so the callback diverts to verification.
     await expect(page).toHaveURL(new RegExp(VERIFICATION_PATH));
@@ -50,6 +52,7 @@ test.describe('registration', () => {
 
     await startSignup(page);
     await submitSignupForm(page, user);
+    await allowAccess(page);
     await expect(page).toHaveURL(new RegExp(VERIFICATION_PATH));
 
     // Wait for the real code so the wrong one is guaranteed to differ from it.
@@ -71,6 +74,7 @@ test.describe('registration', () => {
     // identity provider to the login form, and signs up from there...
     await startSignup(page, '/users/me');
     await submitSignupForm(page, user);
+    await allowAccess(page);
     await expect(page).toHaveURL(new RegExp(VERIFICATION_PATH));
     await verifyEmail(page, user);
 

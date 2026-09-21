@@ -1,16 +1,18 @@
 import { type Browser, expect, type Page } from '@playwright/test';
 
 import { env } from '../env.js';
+import { allowAccess } from './consent.js';
 import { waitForOtp } from './mailpit.js';
 import { waitForHydration } from './page.js';
 import { createTestUser, type TestUser } from './user.js';
 
 /**
- * Whatever page starts the identity flow, the visitor lands on the login form:
- * the provider's only interactive prompt is `login`, and the sign-up form is
- * reached from there through the "Sign up" link (which carries the pending
- * request's `uid` along). A fresh account is therefore always created by
- * signing up, then optionally returned to through the login form.
+ * Whatever page starts the identity flow, an anonymous visitor lands on the
+ * login form, and the sign-up form is reached from there through the "Sign up"
+ * link (which carries the pending request's `uid` along). A fresh account is
+ * therefore always created by signing up, then optionally returned to through
+ * the login form. Either way the provider then asks the visitor to allow the
+ * app access (see consent.ts) before sending them back.
  * The steps are exported separately so specs can assert between them.
  */
 
@@ -74,8 +76,8 @@ export async function submitLoginForm(
 }
 
 /**
- * Sign in the way a returning user does: open the login form, submit it, and
- * land on the home page. Each call is a new login, so it gets its own
+ * Sign in the way a returning user does: open the login form, submit it,
+ * allow the app access, and land on the home page. Each call is a new login, so it gets its own
  * provider session and grant - unlike the shared, storage-state session
  * (see fixtures.ts).
  */
@@ -86,6 +88,7 @@ export async function signIn(
   await page.goto('/auth/login');
   await expect(loginHeading(page)).toBeVisible();
   await submitLoginForm(page, credentials);
+  await allowAccess(page);
   await expect(page).toHaveURL('/');
 }
 
@@ -115,6 +118,7 @@ export async function signUpAndVerify(
   await startSignup(page, entryPath);
 
   await submitSignupForm(page, user);
+  await allowAccess(page);
   await expect(page).toHaveURL(new RegExp(VERIFICATION_PATH));
 
   await verifyEmail(page, user);

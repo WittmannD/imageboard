@@ -32,6 +32,7 @@ export default [
       layout('./routes/auth/_/layout.tsx', [
         route('login', './routes/auth/_/login/index.tsx'),
         route('registration', './routes/auth/_/registration/index.tsx'),
+        route('consent', './routes/auth/_/consent/index.tsx'),
       ]),
       route('callback', './routes/auth/callback/index.tsx'),
       route('error', './routes/auth/error/index.tsx'),

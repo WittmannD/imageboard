@@ -24,6 +24,8 @@ export class InteractionRedirectFilter implements ExceptionFilter {
       return;
     }
 
+    console.log(exception);
+
     res.redirect(
       buildErrorRedirect(
         this.configService.getOrThrow<string>('INTERACTIONS_BASE_URL'),

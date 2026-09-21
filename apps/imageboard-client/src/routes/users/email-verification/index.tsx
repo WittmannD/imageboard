@@ -253,7 +253,7 @@ function EmailVerificationPage({
                     </InputOTPGroup>
                   </InputOTP>
                   <FieldDescription>
-                    <div className="flex items-center justify-center gap-2">
+                    <div className="inline-flex items-center justify-center gap-2">
                       <span>Didn't receive the code?</span>
                       <ResendButton
                         resendAvailableAt={resendAvailableAt}
