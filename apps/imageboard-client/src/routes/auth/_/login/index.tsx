@@ -1,34 +1,27 @@
 import { LogInForm } from 'src/components/features/forms/login/LogInForm.tsx';
-import { type LoaderFunction } from 'react-router';
+import { redirect, type LoaderFunction } from 'react-router';
 
 interface LoginPageLoaderData {
-  action: string;
-  error?: string;
-  email?: string;
+  uid: string;
 }
 
-export const loader: LoaderFunction = async ({ url }): Promise<LoginPageLoaderData> => {
-  const uid = url.searchParams.get('uid');
+export const loader: LoaderFunction = ({ request }): LoginPageLoaderData | Response => {
+  const uid = new URL(request.url).searchParams.get('uid');
 
-  const action = new URL(
-    `/interactions/${uid}/login`,
-    process.env['OIDC_ISSUER_URL'],
-  ).toString();
+  if (!uid) {
+    return redirect('/');
+  }
 
-  return {
-    action,
-    error: url.searchParams.get('error') ?? undefined,
-    email: url.searchParams.get('email') ?? undefined,
-  };
+  return { uid };
 };
 
 function LoginPage({ loaderData }: { loaderData: LoginPageLoaderData }) {
-  const { action, error, email } = loaderData;
+  const { uid } = loaderData;
 
   return (
     <div className="flex min-h-[calc(100svh-var(--header-height))] w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm">
-        <LogInForm action={action} error={error} defaultEmail={email} />
+        <LogInForm uid={uid} />
       </div>
     </div>
   );

@@ -209,6 +209,7 @@ services:
         # Inlined into the bundle at build time.
         VITE_BASE_URL: http://${E2E_DOMAIN:-e2e.test}
         VITE_API_BASE_URL: http://${E2E_DOMAIN:-e2e.test}/api
+        VITE_OIDC_ISSUER_URL: http://auth.${E2E_DOMAIN:-e2e.test}
         VITE_IMAGE_SERVER_URL: http://s3.${E2E_DOMAIN:-e2e.test}:${E2E_S3_PORT:-9000}/imageboard
     depends_on:
       imageboard-identity-provider:

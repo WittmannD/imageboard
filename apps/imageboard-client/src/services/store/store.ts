@@ -1,4 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
+import { authApi } from 'src/services/api/auth/api.ts';
 import { postsApi } from 'src/services/api/post/api.ts';
 import { userApi } from 'src/services/api/user/api.ts';
 import { listenerMiddleware } from 'src/services/store/middlewares/listener-middleware.ts';
@@ -10,9 +11,10 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .prepend(listenerMiddleware.middleware)
+      .concat(authApi.middleware)
       .concat(postsApi.middleware)
       .concat(userApi.middleware)
-  
+
 });
 
 export type RootState = ReturnType<typeof store.getState>;

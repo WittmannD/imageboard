@@ -1,4 +1,10 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircleIcon } from 'lucide-react';
+import { Controller, useForm, type SubmitHandler } from 'react-hook-form';
+import { Link, useLocation } from 'react-router';
+import React, { useCallback } from 'react';
+import { z } from 'zod';
+
 import { Alert, AlertDescription } from 'src/components/ui/alert/Alert.tsx';
 import { Button } from 'src/components/ui/button/Button.tsx';
 import {
@@ -11,12 +17,13 @@ import {
 import {
   Field,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
 } from 'src/components/ui/field/Field.tsx';
 import { Input } from 'src/components/ui/input/Input.tsx';
-import React from 'react';
-import { Link, useLocation } from 'react-router';
+import { signUpFormSchema } from 'src/components/features/forms/signup/schema.ts';
+import { useRegisterMutation } from 'src/services/api/auth/api.ts';
 
 const REGISTRATION_ERROR_MESSAGES: Record<string, string> = {
   username_taken: 'That username is already taken.',
@@ -24,19 +31,46 @@ const REGISTRATION_ERROR_MESSAGES: Record<string, string> = {
   rate_limited: 'Too many attempts. Please wait a moment and try again.',
 };
 
+function getErrorMessage(error: unknown): string {
+  const code = (error as { data?: { errorCode?: string } } | undefined)?.data
+    ?.errorCode;
+
+  return (
+    (code && REGISTRATION_ERROR_MESSAGES[code]) ??
+    'Something went wrong. Please try again.'
+  );
+}
+
 export function SignUpForm({
-  action,
-  error,
-  defaultEmail,
-  defaultUsername,
+  uid,
   ...props
-}: React.ComponentProps<typeof Card> & {
-  action: string;
-  error?: string;
-  defaultEmail?: string;
-  defaultUsername?: string;
-}) {
+}: React.ComponentProps<typeof Card> & { uid: string }) {
   const { search } = useLocation();
+  const [register] = useRegisterMutation();
+
+  const form = useForm<z.infer<typeof signUpFormSchema>>({
+    resolver: zodResolver(signUpFormSchema),
+    defaultValues: {
+      username: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+  });
+
+  const onSubmit = useCallback<
+    SubmitHandler<z.output<typeof signUpFormSchema>>
+  >(
+    async (data) => {
+      try {
+        const { redirectTo } = await register({ uid, ...data }).unwrap();
+        window.location.href = redirectTo;
+      } catch (error) {
+        form.setError('root', { message: getErrorMessage(error) });
+      }
+    },
+    [register, uid, form],
+  );
 
   return (
     <Card {...props}>
@@ -47,64 +81,115 @@ export function SignUpForm({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={action} method="POST">
+        <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
           <FieldGroup>
-            {error && (
+            {form.formState.errors.root && (
               <Alert variant="destructive">
                 <AlertCircleIcon />
                 <AlertDescription>
-                  {REGISTRATION_ERROR_MESSAGES[error] ??
-                    'Something went wrong. Please try again.'}
+                  {form.formState.errors.root.message}
                 </AlertDescription>
               </Alert>
             )}
-            <Field>
-              <FieldLabel htmlFor="name">Username</FieldLabel>
-              <Input
-                id="name"
-                type="text"
-                name="username"
-                defaultValue={defaultUsername}
-                required
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="email">Email</FieldLabel>
-              <Input
-                id="email"
-                type="email"
-                name="email"
-                placeholder="m@example.com"
-                defaultValue={defaultEmail}
-                required
-              />
-              <FieldDescription>
-                We&apos;ll use this to contact you. We will not share your email
-                with anyone else.
-              </FieldDescription>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="password">Password</FieldLabel>
-              <Input id="password" type="password" name="password" required />
-              <FieldDescription>
-                Must be at least 8 characters long.
-              </FieldDescription>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="confirm-password">
-                Confirm Password
-              </FieldLabel>
-              <Input id="confirm-password" type="password" required />
-              <FieldDescription>Please confirm your password.</FieldDescription>
-            </Field>
+            <Controller
+              name="username"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="username">Username</FieldLabel>
+                  <Input
+                    {...field}
+                    id="username"
+                    type="text"
+                    aria-invalid={fieldState.invalid}
+                  />
+                  <FieldError errors={[fieldState.error]} />
+                </Field>
+              )}
+            />
+            <Controller
+              name="email"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="email">Email</FieldLabel>
+                  <Input
+                    {...field}
+                    id="email"
+                    type="email"
+                    placeholder="m@example.com"
+                    aria-invalid={fieldState.invalid}
+                  />
+                  {fieldState.invalid ? (
+                    <FieldError errors={[fieldState.error]} />
+                  ) : (
+                    <FieldDescription>
+                      We&apos;ll use this to contact you. We will not share
+                      your email with anyone else.
+                    </FieldDescription>
+                  )}
+                </Field>
+              )}
+            />
+            <Controller
+              name="password"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="password">Password</FieldLabel>
+                  <Input
+                    {...field}
+                    id="password"
+                    type="password"
+                    aria-invalid={fieldState.invalid}
+                  />
+                  {fieldState.invalid ? (
+                    <FieldError errors={[fieldState.error]} />
+                  ) : (
+                    <FieldDescription>
+                      Must be at least 8 characters long.
+                    </FieldDescription>
+                  )}
+                </Field>
+              )}
+            />
+            <Controller
+              name="confirmPassword"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="confirm-password">
+                    Confirm Password
+                  </FieldLabel>
+                  <Input
+                    {...field}
+                    id="confirm-password"
+                    type="password"
+                    aria-invalid={fieldState.invalid}
+                  />
+                  {fieldState.invalid ? (
+                    <FieldError errors={[fieldState.error]} />
+                  ) : (
+                    <FieldDescription>
+                      Please confirm your password.
+                    </FieldDescription>
+                  )}
+                </Field>
+              )}
+            />
             <FieldGroup>
               <Field>
-                <Button type="submit">Create Account</Button>
+                <Button type="submit" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting
+                    ? 'Creating account...'
+                    : 'Create Account'}
+                </Button>
                 <Button variant="outline" type="button">
                   Sign up with Google
                 </Button>
                 <FieldDescription className="px-6 text-center">
-                  Already have an account? <Link to={{ pathname: '/auth/login', search }}>Sign in</Link>
+                  Already have an account?{' '}
+                  <Link to={{ pathname: '/auth/login', search }}>Sign in</Link>
                 </FieldDescription>
               </Field>
             </FieldGroup>

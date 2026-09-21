@@ -3,6 +3,7 @@ import axios, { AxiosError,type AxiosRequestConfig } from 'axios';
 
 interface AxiosBaseQueryOptions {
   baseUrl?: string;
+  withCredentials?: boolean;
 }
 
 // Define the arguments that your endpoints will pass
@@ -18,6 +19,7 @@ export const axiosBaseQuery =
   (options?: AxiosBaseQueryOptions): BaseQueryFn<AxiosBaseQueryArgs> => {
     const axiosInstance = axios.create({
       baseURL: options?.baseUrl,
+      withCredentials: options?.withCredentials,
     });
 
     return async ({ url, method = 'GET', data, params, headers }, api) => {

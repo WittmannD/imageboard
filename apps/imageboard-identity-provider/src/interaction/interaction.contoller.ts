@@ -1,11 +1,14 @@
 import {
   Body,
+  ConflictException,
   Controller,
   Get,
+  HttpStatus,
   Inject,
   Post,
   Req,
   Res,
+  UnauthorizedException,
   UseFilters,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -22,12 +25,14 @@ import { OIDC_PROVIDER } from '../oidc/oidc.provider.js';
 import { UserService } from '../user/user.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegistrationDto } from './dto/registration.dto.js';
-import { InvalidCredentialsError } from './errors/login-error.js';
-import { InteractionExceptionFilter } from './filters/interaction-exception.filter.js';
+import { InteractionErrorCode } from './errors/interaction-error-code.js';
+import { UsernameTakenError } from './errors/registration-error.js';
+import { InteractionErrorCodeFilter } from './filters/interaction-error-code.filter.js';
+import { InteractionRedirectFilter } from './filters/interaction-redirect.filter.js';
 import { InteractionService } from './interaction.service.js';
 
 @Controller('interactions')
-@UseFilters(InteractionExceptionFilter)
+@UseFilters(InteractionErrorCodeFilter)
 export class InteractionController {
   constructor(
     @Inject(OIDC_PROVIDER)
@@ -40,6 +45,7 @@ export class InteractionController {
   ) {}
 
   @Get(':uid')
+  @UseFilters(InteractionRedirectFilter)
   async getInteractionDetails(@Req() req: Request, @Res() res: Response) {
     const interaction = await this.oidc.interactionDetails(req, res);
     const queryString = req.url.split('?')[1] || '';
@@ -59,67 +65,69 @@ export class InteractionController {
   @Post(':uid/login')
   async login(
     @Req() req: Request,
-    @Res() res: Response,
+    @Res({ passthrough: true }) res: Response,
     @Body() body: LoginDto,
-  ): Promise<void> {
+  ): Promise<{ redirectTo: string }> {
     const user = await this.userService.findOneByEmail(body.email);
-
-    if (!user) {
-      throw new InvalidCredentialsError();
-    }
-
     const credentials =
-      await this.credentialsService.getUserCredentialsByPassword(
+      user &&
+      (await this.credentialsService.getUserCredentialsByPassword(
         user.id,
         body.password,
-      );
+      ));
 
-    if (!credentials) {
-      throw new InvalidCredentialsError();
+    if (!user || !credentials) {
+      throw new UnauthorizedException({
+        statusCode: HttpStatus.UNAUTHORIZED,
+        message: 'Invalid email or password',
+        errorCode: InteractionErrorCode.InvalidCredentials,
+      });
     }
 
-    await this.oidc.interactionFinished(req, res, {
+    const redirectTo = await this.oidc.interactionResult(req, res, {
       login: {
         accountId: user.id,
         remember: true,
       },
     });
+
+    return { redirectTo };
   }
 
   @Throttle(REGISTRATION_THROTTLE)
   @Post(':uid/registration')
   async registration(
     @Req() req: Request,
-    @Res() res: Response,
+    @Res({ passthrough: true }) res: Response,
     @Body() body: RegistrationDto,
-  ) {
-    // UsernameTakenError propagates to InteractionExceptionFilter, which
-    // redirects back to the registration form with error=username_taken.
-    const user = await this.interactionService.registration(body);
+  ): Promise<{ redirectTo: string }> {
+    let user;
+    try {
+      user = await this.interactionService.registration(body);
+    } catch (error: unknown) {
+      if (error instanceof UsernameTakenError) {
+        throw new ConflictException({
+          statusCode: HttpStatus.CONFLICT,
+          message: error.message,
+          errorCode: InteractionErrorCode.UsernameTaken,
+        });
+      }
+      throw error;
+    }
     // If creating a new user fails due to email uniqueness violation,
     // proceed with a fake user ID to disallow guessing existing emails.
     // The `findAccount` method will skip fake user ID, and the user will get a generic error.
     const userId = user?.id ?? 'untrusted-' + this.userService.generateId();
 
     try {
-      if (req.header('Content-Type') === 'application/json') {
-        const redirectTo = await this.oidc.interactionResult(req, res, {
-          login: {
-            accountId: userId,
-            remember: true,
-          },
-        });
-        return { redirectTo };
-      } else {
-        // Finish with redirect
-        await this.oidc.interactionFinished(req, res, {
-          login: {
-            accountId: userId,
-            remember: true,
-          },
-        });
-        return;
-      }
+      const redirectTo = await this.oidc.interactionResult(req, res, {
+        login: {
+          accountId: userId,
+          remember: true,
+        },
+      });
+
+      return { redirectTo };
     } catch (error: unknown) {
       // The user (and their credentials) already committed to the database
       // in `interactionService.registration` above - a completely separate

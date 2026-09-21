@@ -5,7 +5,6 @@ import { TransactionModule } from '@hdotu1/database-common';
 import { CredentialsModule } from '../credentials/credentials.module.js';
 import { OidcModule } from '../oidc/oidc.module.js';
 import { UserModule } from '../user/user.module.js';
-import { InteractionExceptionFilter } from './filters/interaction-exception.filter.js';
 import { InteractionController } from './interaction.contoller.js';
 import { InteractionService } from './interaction.service.js';
 
@@ -17,6 +16,6 @@ import { InteractionService } from './interaction.service.js';
     TransactionModule,
   ],
   controllers: [InteractionController],
-  providers: [InteractionService, InteractionExceptionFilter],
+  providers: [InteractionService],
 })
 export class InteractionModule {}

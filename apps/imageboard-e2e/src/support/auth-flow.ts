@@ -15,6 +15,10 @@ export const VERIFICATION_PATH = '/users/email-verification';
 
 /** Fill and submit the sign-up form the identity flow lands on. */
 export async function submitSignupForm(page: Page, user: TestUser) {
+  // The form submits via fetch (react-hook-form), not a native POST - filling
+  // and clicking before hydration finishes lands on a page with no submit
+  // handler attached yet.
+  await waitForHydration(page);
   await page.getByLabel('Username').fill(user.username);
   await page.getByLabel('Email').fill(user.email);
   await page.getByLabel('Password', { exact: true }).fill(user.password);

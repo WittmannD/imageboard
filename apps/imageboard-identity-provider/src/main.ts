@@ -3,11 +3,12 @@ import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 
 import { AppModule } from './app.module.js';
+import { getCors } from './common/helpers/cors.js';
 
 async function bootstrap(): Promise<string> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  // TODO: proper cors
-  app.enableCors();
+
+  app.enableCors(getCors());
 
   // trust nginx
   app.set('trust proxy', 1);
