@@ -27,6 +27,7 @@ import type { UserEntity } from './entities/user.entity.js';
 import { UsernameTakenError } from './errors/user-service-error.js';
 import { AvatarService } from './service/avatar.service.js';
 import { UserService } from './service/user.service.js';
+import { SkipEmailVerification } from '../common/decorators/skip-email-verification.decorator.js';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('user')
@@ -37,10 +38,11 @@ export class UserController {
   ) {}
 
   @UseGuards(AuthGuard)
+  @SkipEmailVerification()
   @Get('me')
   @SerializeOptions({ type: ProfileDto })
-  public async getProfile(@User() user: UserEntity) {
-    const profile = await this.userService.findOneById(user.id);
+  public async getProfile(@User() unverifiedUser: UserEntity) {
+    const profile = await this.userService.findOneById(unverifiedUser.id);
 
     if (!profile) {
       throw new NotFoundException();
@@ -50,15 +52,16 @@ export class UserController {
   }
 
   @UseGuards(AuthGuard)
+  @SkipEmailVerification()
   @Patch('me')
   @SerializeOptions({ type: ProfileDto })
   public async patchProfile(
-    @User() user: UserEntity,
+    @User() unverifiedUser: UserEntity,
     @Body() body: UpdateUsernameDto,
   ): Promise<ProfileDto> {
     try {
       return (await this.userService.updateUsername(
-        user,
+        unverifiedUser,
         body.username,
       )) as ProfileDto;
     } catch (error) {
@@ -71,18 +74,22 @@ export class UserController {
   }
 
   @UseGuards(AuthGuard)
+  @SkipEmailVerification()
   @Post('me/avatar')
   @UseInterceptors(FileInterceptor('avatar'))
   @SerializeOptions({ type: ProfileDto })
   public async uploadAvatar(
-    @User() user: UserEntity,
+    @User() unverifiedUser: UserEntity,
     @UploadedFile() avatar: FileUpload | undefined,
   ): Promise<ProfileDto> {
     if (!avatar) {
       throw new BadRequestException('Avatar file is required');
     }
 
-    return (await this.avatarService.setAvatar(user, avatar)) as ProfileDto;
+    return (await this.avatarService.setAvatar(
+      unverifiedUser,
+      avatar,
+    )) as ProfileDto;
   }
 
   @Get(':id')

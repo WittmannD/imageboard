@@ -1,11 +1,10 @@
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from 'src/components/ui/navigation-menu/NavigationMenu.tsx';
 import { navigationMenuTriggerStyle } from 'src/components/ui/navigation-menu/navigation-menu-style.ts';
-import { Form, Link, Outlet, useLocation } from 'react-router';
+import { Form, NavLink, Outlet } from 'react-router';
 import { SettingsIcon, UserIcon } from 'lucide-react';
 import { useAuth } from 'src/components/features/auth/context.tsx';
 
 function MyProfileLayout() {
-  const location = useLocation();
   const { isLoggedIn } = useAuth(true);
 
   return (
@@ -17,8 +16,7 @@ function MyProfileLayout() {
               className={navigationMenuTriggerStyle({
                 className: 'flex-row items-center gap-1',
               })}
-              active={location.pathname === '/users/me'}
-              render={<Link to="/users/me" />}
+              render={<NavLink to="/users/me" end />}
             >
               <UserIcon />
               Profile
@@ -29,8 +27,7 @@ function MyProfileLayout() {
               className={navigationMenuTriggerStyle({
                 className: 'flex-row items-center gap-1',
               })}
-              active={location.pathname === '/users/me/settings'}
-              render={<Link to="/users/me/settings" />}
+              render={<NavLink to="/users/me/settings" end />}
             >
               <SettingsIcon />
               Settings

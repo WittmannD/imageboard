@@ -5,8 +5,10 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 
 import { AuthService } from '../../auth/auth.service.js';
+import { SKIP_EMAIL_VERIFICATION } from '../decorators/skip-email-verification.decorator.js';
 import type { AuthorizedRequest } from '../types/request.js';
 
 function parseAuthorizationHeader(header: string): { type?: string, token?: string } {
@@ -20,12 +22,16 @@ function parseAuthorizationHeader(header: string): { type?: string, token?: stri
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
-    private readonly authService: AuthService
+    private readonly reflector: Reflector,
+    private readonly authService: AuthService,
   ) {}
 
-  async canActivate(
-    context: ExecutionContext,
-  ): Promise<boolean> {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    // Check route metadata
+    const skipEmailVerification = this.reflector.getAllAndOverride<boolean>(
+      SKIP_EMAIL_VERIFICATION,
+      [context.getHandler(), context.getClass()],
+    );
     const request = context.switchToHttp().getRequest<AuthorizedRequest>();
 
     const authorizationHeader = request.header('Authorization');
@@ -35,12 +41,17 @@ export class AuthGuard implements CanActivate {
 
     const { token, type } = parseAuthorizationHeader(authorizationHeader);
     if (!token || type !== 'Bearer') {
-      throw new UnauthorizedException('Invalid authorization header format. Expected "Bearer <token>"');
+      throw new UnauthorizedException(
+        'Invalid authorization header format. Expected "Bearer <token>"',
+      );
     }
 
     let user;
     try {
-      user = await this.authService.validateAccessToken(token);
+      user = await this.authService.validateAccessToken(
+        token,
+        skipEmailVerification,
+      );
     } catch (error: unknown) {
       if (error instanceof HttpException) {
         throw error;

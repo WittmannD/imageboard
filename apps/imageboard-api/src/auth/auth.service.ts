@@ -16,8 +16,8 @@ import type { UserEntity } from '../user/entities/user.entity.js';
 import { UserService } from '../user/service/user.service.js';
 import { AccessTokenPayloadModel } from './access-token-payload.model.js';
 import {
-  AuthServiceJWKSError,
   AuthServiceError,
+  AuthServiceJWKSError,
   InvalidAccessToken,
 } from './errors/auth-service-error.js';
 
@@ -57,6 +57,7 @@ export class AuthService implements OnModuleInit {
 
   private async verifyAccessToken(
     token: string,
+    skipEmailVerification: boolean,
   ): Promise<AccessTokenPayloadModel> {
     const { payload } = await jwtVerify<UnvalidatedOidcClaims>(
       token,
@@ -68,7 +69,7 @@ export class AuthService implements OnModuleInit {
       },
     );
 
-    return this.validateClaims(payload);
+    return this.validateClaims(payload, skipEmailVerification);
   }
 
   async onModuleInit() {
@@ -98,9 +99,10 @@ export class AuthService implements OnModuleInit {
 
   async validateAccessToken(
     token: string,
+    skipEmailVerification: boolean,
     em?: EntityManager,
   ): Promise<UserEntity | null> {
-    const payload = await this.verifyAccessToken(token);
+    const payload = await this.verifyAccessToken(token, skipEmailVerification);
 
     const existingUser = await this.findUserByFederatedCredential(
       payload.sub,
@@ -184,11 +186,16 @@ export class AuthService implements OnModuleInit {
 
   private async validateClaims(
     unvalidated: unknown,
+    skipEmailVerification: boolean,
   ): Promise<AccessTokenPayloadModel> {
     const claims = plainToInstance(AccessTokenPayloadModel, unvalidated ?? {});
     const errors = await validate(claims, {
       whitelist: true,
       forbidNonWhitelisted: false,
+      // VERIFIED_EMAIL_GROUP tags only the "email must be verified" rule.
+      // strictGroups + no groups excludes just that tagged constraint when
+      // skipping is requested, and leaves every other field validated as usual.
+      strictGroups: skipEmailVerification,
     });
 
     if (errors.length && errors[0]) {

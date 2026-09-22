@@ -6,11 +6,12 @@ import {
   NavigationMenuList,
 } from 'src/components/ui/navigation-menu/NavigationMenu.tsx';
 import { Plus } from 'lucide-react';
-import { Form, Link } from 'react-router';
+import { Link } from 'react-router';
 import { ThemeToggle } from 'src/components/features/theme/ThemeToggle.tsx';
 import { navigationMenuTriggerStyle } from 'src/components/ui/navigation-menu/navigation-menu-style.ts';
 import { useAuth } from 'src/components/features/auth/context.tsx';
 import { useDialogManager } from 'src/lib/dialog-manager/context.tsx';
+import { UserMenu } from 'src/components/features/user/UserMenu.tsx';
 
 function Header() {
   const { isLoggedIn } = useAuth(false);
@@ -26,16 +27,7 @@ function Header() {
           <NavigationMenuList className="gap-2">
             <NavigationMenuItem>
               {isLoggedIn ? (
-                <Form method="post" action="/auth/logout">
-                  <NavigationMenuLink
-                    render={<button type="submit" />}
-                    className={navigationMenuTriggerStyle({
-                      variant: 'destructive',
-                    })}
-                  >
-                    Log Out
-                  </NavigationMenuLink>
-                </Form>
+                <UserMenu />
               ) : (
                 <NavigationMenuLink
                   render={<Link to="auth/login" />}
