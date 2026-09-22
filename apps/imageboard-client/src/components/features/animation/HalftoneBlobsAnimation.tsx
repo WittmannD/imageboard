@@ -355,19 +355,43 @@ export function Blobs({
   );
 }
 
-export function GooAnimation({ className }: { className?: string }) {
+export function HalftoneBlobsAnimation({ className }: { className?: string }) {
+  const vars = {
+    '--size': '25',
+    '--goo-blur': '10cqmin',
+    '--goo-contrast': '40',
+    '--edge-blur': '10cqmin',
+    '--blob-scale': '2.8',
+    '--dot-size': '0.64cqmin',
+    '--dot-angle': '0deg',
+    '--dot-falloff': '56%',
+    '--threshold': '1',
+    '--sharpness': '32',
+    '--invert': '1',
+  } as CSSProperties;
+
   return (
-    <div className={cn('spottish', className)}>
-      <div className="spottish__halftone">
+    <div
+      style={vars}
+      className={cn(
+        'spottish @container-size relative overflow-hidden bg-white dark:[--invert:0]!',
+        className,
+      )}
+    >
+      <div
+        className="spottish__halftone absolute inset-0 isolate filter-[grayscale(1)_brightness(var(--threshold))_contrast(var(--sharpness))_invert(var(--invert))]"
+      >
         <Blobs
-          className="spottish__goo absolute"
+          className="absolute inset-[-14%] bg-black filter-[blur(var(--goo-blur))_contrast(var(--goo-contrast))_blur(var(--edge-blur))]"
           count={10}
           spacing={30}
           speed={20}
           directionChanges={8}
-          renderItem={() => <span className="spottish__blob"></span>}
+          renderItem={() => (
+            <span className="spottish__blob block rounded-full bg-white size-[calc(var(--size)*var(--blob-scale)*1cqmin)]" />
+          )}
         />
-        <div className="spottish__screen"></div>
+        <div className="spottish__screen absolute inset-0 overflow-hidden mix-blend-multiply before:content-[''] before:absolute before:inset-0 before:transform before:rotate-[var(--dot-angle)] before:bg-[radial-gradient(circle_at_50%_50%,#fff_0%,#000_var(--dot-falloff))] before:bg-size-[var(--dot-size)_var(--dot-size)]" />
       </div>
     </div>
   );

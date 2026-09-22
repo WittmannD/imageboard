@@ -184,9 +184,6 @@ export function SignUpForm({
                     ? 'Creating account...'
                     : 'Create Account'}
                 </Button>
-                <Button variant="outline" type="button">
-                  Sign up with Google
-                </Button>
                 <FieldDescription className="px-6 text-center">
                   Already have an account?{' '}
                   <Link to={{ pathname: '/auth/login', search }}>Sign in</Link>

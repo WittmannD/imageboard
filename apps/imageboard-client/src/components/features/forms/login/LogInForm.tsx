@@ -129,9 +129,6 @@ export function LogInForm({
               <Button type="submit" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? 'Logging in...' : 'Login'}
               </Button>
-              <Button variant="outline" type="button">
-                Login with Google
-              </Button>
               <FieldDescription className="text-center">
                 Don&apos;t have an account?{' '}
                 <Link to={{ pathname: '/auth/registration', search }}>Sign up</Link>
