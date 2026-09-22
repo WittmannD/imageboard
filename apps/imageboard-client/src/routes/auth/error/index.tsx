@@ -67,7 +67,9 @@ function AuthErrorPage({ loaderData }: { loaderData: AuthErrorPageLoaderData }) 
           )}
           <CardFooter className="justify-center">
             <Link to="/">
-              <Button className="w-full">Return home</Button>
+              <Button className="w-full" data-testid="auth-error-return-home">
+                Return home
+              </Button>
             </Link>
           </CardFooter>
         </Card>

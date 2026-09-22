@@ -23,13 +23,13 @@ export function signOutConfirmPage(params: {
     body: `
 <div class="w-full rounded-xl bg-card text-card-foreground ring-1 ring-foreground/10 p-6 flex flex-col gap-4">
   <div class="flex flex-col gap-1">
-    <h1 class="text-base font-medium leading-snug">Sign out of ${escapeHtml(params.host)}?</h1>
+    <h1 data-testid="sign-out-heading" class="text-base font-medium leading-snug">Sign out of ${escapeHtml(params.host)}?</h1>
     <p class="text-sm text-muted-foreground">You'll need to sign in again to continue.</p>
   </div>
   ${params.form}
   <div class="flex flex-col gap-2">
-    <button autofocus type="submit" form="op.logoutForm" name="logout" value="yes" class="${BUTTON_BASE} ${BUTTON_DESTRUCTIVE}">Yes, sign me out</button>
-    <button type="submit" form="op.logoutForm" class="${BUTTON_BASE} ${BUTTON_OUTLINE}">No, stay signed in</button>
+    <button data-testid="sign-out-confirm" autofocus type="submit" form="op.logoutForm" name="logout" value="yes" class="${BUTTON_BASE} ${BUTTON_DESTRUCTIVE}">Yes, sign me out</button>
+    <button data-testid="sign-out-decline" type="submit" form="op.logoutForm" class="${BUTTON_BASE} ${BUTTON_OUTLINE}">No, stay signed in</button>
   </div>
 </div>`,
   });

@@ -39,9 +39,9 @@ test.describe('registration', () => {
     // The session now carries a verified account: the profile shows the user
     // without the "verify your email" prompt.
     await page.goto('/users/me');
-    await expect(
-      page.getByText(`@${user.username}`, { exact: true }),
-    ).toBeVisible();
+    await expect(page.getByTestId('profile-username')).toHaveText(
+      `@${user.username}`,
+    );
     await expect(page.getByText(UNVERIFIED_NOTICE)).toBeHidden();
   });
 
@@ -80,8 +80,8 @@ test.describe('registration', () => {
 
     // ...and once verified, resumes where they were going.
     await expect(page).toHaveURL('/users/me');
-    await expect(
-      page.getByText(`@${user.username}`, { exact: true }),
-    ).toBeVisible();
+    await expect(page.getByTestId('profile-username')).toHaveText(
+      `@${user.username}`,
+    );
   });
 });

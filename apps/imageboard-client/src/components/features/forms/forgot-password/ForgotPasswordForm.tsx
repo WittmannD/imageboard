@@ -115,13 +115,18 @@ export function ForgotPasswordForm(props: React.ComponentProps<typeof Card>) {
                     type="email"
                     placeholder="m@example.com"
                     aria-invalid={fieldState.invalid}
+                    data-testid="forgot-password-email-input"
                   />
                   <FieldError errors={[fieldState.error]} />
                 </Field>
               )}
             />
             <Field>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
+              <Button
+                type="submit"
+                disabled={form.formState.isSubmitting}
+                data-testid="forgot-password-submit"
+              >
                 {form.formState.isSubmitting ? 'Sending...' : 'Send reset link'}
               </Button>
               <FieldDescription className="text-center">

@@ -28,7 +28,7 @@ export function UserMenu() {
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger
         render={
-          <Button variant="ghost" size="lg">
+          <Button variant="ghost" size="lg" data-testid="header-user-menu-trigger">
             <UserAvatar user={user} size="sm" />
             <span>@{user.username}</span>
           </Button>
@@ -49,7 +49,14 @@ export function UserMenu() {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           variant="destructive"
-          render={<button type="submit" form="logout" className="w-full" />}
+          render={
+            <button
+              type="submit"
+              form="logout"
+              className="w-full"
+              data-testid="header-menu-logout"
+            />
+          }
         >
           <LogOutIcon />
           Log Out

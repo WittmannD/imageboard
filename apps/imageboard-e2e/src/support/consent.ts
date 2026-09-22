@@ -8,9 +8,7 @@ export const CLIENT_NAME = 'Imageboard';
 
 /** The consent screen's title: it names the client asking for access. */
 export function consentHeading(page: Page) {
-  return page.getByText(`Allow ${CLIENT_NAME} to access your account?`, {
-    exact: true,
-  });
+  return page.getByTestId('consent-heading');
 }
 
 /**
@@ -18,11 +16,9 @@ export function consentHeading(page: Page) {
  * once React has hydrated and the request came back - no separate wait for
  * hydration is needed before clicking them.
  */
-export const allowButton = (page: Page) =>
-  page.getByRole('button', { name: 'Allow', exact: true });
+export const allowButton = (page: Page) => page.getByTestId('consent-allow');
 
-export const denyButton = (page: Page) =>
-  page.getByRole('button', { name: 'Deny', exact: true });
+export const denyButton = (page: Page) => page.getByTestId('consent-deny');
 
 /** Answer the consent screen the login (or sign-up) leads to with "Allow". */
 export async function allowAccess(page: Page) {

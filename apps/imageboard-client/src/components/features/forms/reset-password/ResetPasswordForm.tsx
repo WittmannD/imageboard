@@ -106,6 +106,7 @@ export function ResetPasswordForm(props: React.ComponentProps<typeof Card>) {
           <Link
             to="/auth/login"
             className={`${buttonVariants({ size: 'lg' })} w-full`}
+            data-testid="reset-password-login-link"
           >
             Log in
           </Link>
@@ -167,6 +168,7 @@ export function ResetPasswordForm(props: React.ComponentProps<typeof Card>) {
                     type="password"
                     autoComplete="new-password"
                     aria-invalid={fieldState.invalid}
+                    data-testid="reset-password-new-input"
                   />
                   {fieldState.invalid ? (
                     <FieldError errors={[fieldState.error]} />
@@ -192,13 +194,18 @@ export function ResetPasswordForm(props: React.ComponentProps<typeof Card>) {
                     type="password"
                     autoComplete="new-password"
                     aria-invalid={fieldState.invalid}
+                    data-testid="reset-password-confirm-input"
                   />
                   <FieldError errors={[fieldState.error]} />
                 </Field>
               )}
             />
             <Field>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
+              <Button
+                type="submit"
+                disabled={form.formState.isSubmitting}
+                data-testid="reset-password-submit"
+              >
                 {form.formState.isSubmitting
                   ? 'Resetting...'
                   : 'Reset password'}

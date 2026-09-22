@@ -91,7 +91,10 @@ export function ProfileView({ user, unverifiedEmail }: ProfileViewProps) {
                 )}
                 <AvatarFallback>{user.username.slice(0, 2)}</AvatarFallback>
               </Avatar>
-              <span className="grow w-0 truncate text-ellipsis">
+              <span
+                className="grow w-0 truncate text-ellipsis"
+                data-testid="profile-username"
+              >
                 @{user.username}
               </span>
             </div>

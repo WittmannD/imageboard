@@ -30,7 +30,7 @@ function Header() {
                 <UserMenu />
               ) : (
                 <NavigationMenuLink
-                  render={<Link to="auth/login" />}
+                  render={<Link to="auth/login" data-testid="header-login-link" />}
                   className={navigationMenuTriggerStyle({
                     variant: 'secondary',
                   })}

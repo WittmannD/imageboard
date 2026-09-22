@@ -242,6 +242,7 @@ function EmailVerificationPage({
                     inputMode="numeric"
                     maxLength={6}
                     pattern={REGEXP_ONLY_DIGITS}
+                    data-testid="verification-otp-input"
                   >
                     <InputOTPGroup className="w-full *:data-[slot=input-otp-slot]:aspect-square *:data-[slot=input-otp-slot]:h-auto *:data-[slot=input-otp-slot]:w-1/6 *:data-[slot=input-otp-slot]:text-xl">
                       <InputOTPSlot index={0} />
@@ -278,6 +279,7 @@ function EmailVerificationPage({
                   disabled={isVerifying}
                   className="w-full"
                   size="lg"
+                  data-testid="verification-submit"
                 >
                   Verify
                 </Button>

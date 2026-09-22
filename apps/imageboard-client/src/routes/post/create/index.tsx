@@ -40,6 +40,7 @@ function CreatePostPage() {
               disabled={form.formState.isSubmitting}
               form="create-post-form"
               type="submit"
+              data-testid="create-post-publish"
             >
               {form.formState.isSubmitting ? (
                 <>

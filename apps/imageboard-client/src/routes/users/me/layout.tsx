@@ -41,7 +41,7 @@ function MyProfileLayout() {
                     className: 'auto flex-row items-center gap-1',
                     variant: 'destructive',
                   })}
-                  render={<button type="submit" />}
+                  render={<button type="submit" data-testid="profile-logout" />}
                 >
                   Log Out
                 </NavigationMenuLink>

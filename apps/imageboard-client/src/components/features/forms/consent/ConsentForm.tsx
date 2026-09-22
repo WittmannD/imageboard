@@ -45,7 +45,7 @@ function ConsentCard({
   return (
     <Card {...props}>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <CardTitle data-testid="consent-heading">{title}</CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
       {children}
@@ -160,6 +160,7 @@ export function ConsentForm({
           className="w-full"
           disabled={submitting}
           onClick={() => void answer(grant)}
+          data-testid="consent-allow"
         >
           Allow
         </Button>
@@ -168,6 +169,7 @@ export function ConsentForm({
           variant="outline"
           disabled={submitting}
           onClick={() => void answer(deny)}
+          data-testid="consent-deny"
         >
           Deny
         </Button>

@@ -24,13 +24,11 @@ test.describe('password reset', () => {
 
     await page.goto('/auth/login');
     await waitForHydration(page);
-    await page.getByRole('link', { name: 'Forgot your password?' }).click();
+    await page.getByTestId('login-forgot-password-link').click();
     await expect(page).toHaveURL(/\/auth\/forgot-password$/);
-    await expect(
-      page.getByRole('button', { name: 'Send reset link' }),
-    ).toBeVisible();
-    await page.getByLabel('Email').fill(user.email);
-    await page.getByRole('button', { name: 'Send reset link' }).click();
+    await expect(page.getByTestId('forgot-password-submit')).toBeVisible();
+    await page.getByTestId('forgot-password-email-input').fill(user.email);
+    await page.getByTestId('forgot-password-submit').click();
     await expect(page.getByText('Check your email')).toBeVisible();
 
     await page.goto(await waitForResetLink(user.email));
@@ -38,12 +36,12 @@ test.describe('password reset', () => {
     // The token lives in the fragment; the page drops it from the address bar.
     await expect(page).toHaveURL(/\/auth\/reset-password$/);
 
-    await page.getByLabel('New password', { exact: true }).fill(newPassword);
-    await page.getByLabel('Confirm new password').fill(newPassword);
-    await page.getByRole('button', { name: 'Reset password' }).click();
+    await page.getByTestId('reset-password-new-input').fill(newPassword);
+    await page.getByTestId('reset-password-confirm-input').fill(newPassword);
+    await page.getByTestId('reset-password-submit').click();
     await expect(page.getByText('Password updated')).toBeVisible();
 
-    await page.getByRole('link', { name: 'Log in' }).click();
+    await page.getByTestId('reset-password-login-link').click();
 
     // The old password is dead...
     await submitLoginForm(page, user);
@@ -63,8 +61,8 @@ test.describe('password reset', () => {
 
     await page.goto('/auth/forgot-password');
     await waitForHydration(page);
-    await page.getByLabel('Email').fill(user.email);
-    await page.getByRole('button', { name: 'Send reset link' }).click();
+    await page.getByTestId('forgot-password-email-input').fill(user.email);
+    await page.getByTestId('forgot-password-submit').click();
     await expect(page.getByText('Check your email')).toBeVisible();
 
     const link = await waitForResetLink(user.email);
@@ -74,9 +72,9 @@ test.describe('password reset', () => {
       await page.goto('about:blank');
       await page.goto(link);
       await waitForHydration(page);
-      await page.getByLabel('New password', { exact: true }).fill(password);
-      await page.getByLabel('Confirm new password').fill(password);
-      await page.getByRole('button', { name: 'Reset password' }).click();
+      await page.getByTestId('reset-password-new-input').fill(password);
+      await page.getByTestId('reset-password-confirm-input').fill(password);
+      await page.getByTestId('reset-password-submit').click();
     };
 
     await choosePassword(`${user.password}-first`);
@@ -94,9 +92,9 @@ test.describe('password reset', () => {
     await page.goto('about:blank');
     await page.goto('/auth/reset-password#token=not-a-real-token');
     await waitForHydration(page);
-    await page.getByLabel('New password', { exact: true }).fill('a-long-password');
-    await page.getByLabel('Confirm new password').fill('a-long-password');
-    await page.getByRole('button', { name: 'Reset password' }).click();
+    await page.getByTestId('reset-password-new-input').fill('a-long-password');
+    await page.getByTestId('reset-password-confirm-input').fill('a-long-password');
+    await page.getByTestId('reset-password-submit').click();
     await expect(page.getByText('Reset link invalid')).toBeVisible();
   });
 });

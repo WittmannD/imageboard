@@ -75,6 +75,7 @@ export default function CreatePostForm({ onSuccess }: CreatePostFormProps) {
                   ? 'create-post-form-caption-error'
                   : undefined
               }
+              data-testid="create-post-caption-input"
             />
             {fieldState.invalid && (
               <FieldError

@@ -16,25 +16,19 @@ import { createTestUser, type TestUser } from './user.js';
  * The steps are exported separately so specs can assert between them.
  */
 
-export const LOGIN_HEADING = 'Login to your account';
-export const SIGNUP_HEADING = 'Create an account';
 export const VERIFICATION_PATH = '/users/email-verification';
 
-/**
- * Both headings appear inside the form's description too ("...to login to your
- * account"), so match the whole text of the title, not a substring.
- */
 export function loginHeading(page: Page) {
-  return page.getByText(LOGIN_HEADING, { exact: true });
+  return page.getByTestId('login-heading');
 }
 
 export function signupHeading(page: Page) {
-  return page.getByText(SIGNUP_HEADING, { exact: true });
+  return page.getByTestId('signup-heading');
 }
 
 /** From the login form, follow "Sign up" to the registration form. */
 export async function openSignupForm(page: Page) {
-  await page.getByRole('link', { name: 'Sign up', exact: true }).click();
+  await page.getByTestId('login-signup-link').click();
   await expect(signupHeading(page)).toBeVisible();
 }
 
@@ -55,11 +49,11 @@ export async function submitSignupForm(page: Page, user: TestUser) {
   // and clicking before hydration finishes lands on a page with no submit
   // handler attached yet.
   await waitForHydration(page);
-  await page.getByLabel('Username').fill(user.username);
-  await page.getByLabel('Email').fill(user.email);
-  await page.getByLabel('Password', { exact: true }).fill(user.password);
-  await page.getByLabel('Confirm Password').fill(user.password);
-  await page.getByRole('button', { name: 'Create Account' }).click();
+  await page.getByTestId('signup-username-input').fill(user.username);
+  await page.getByTestId('signup-email-input').fill(user.email);
+  await page.getByTestId('signup-password-input').fill(user.password);
+  await page.getByTestId('signup-confirm-password-input').fill(user.password);
+  await page.getByTestId('signup-submit').click();
 }
 
 /** Fill and submit the login form the identity flow lands on. */
@@ -70,9 +64,9 @@ export async function submitLoginForm(
   // Same reason as the sign-up form: it submits via fetch, so it does
   // nothing until React has hydrated.
   await waitForHydration(page);
-  await page.getByLabel('Email').fill(credentials.email);
-  await page.getByLabel('Password', { exact: true }).fill(credentials.password);
-  await page.getByRole('button', { name: 'Login', exact: true }).click();
+  await page.getByTestId('login-email-input').fill(credentials.email);
+  await page.getByTestId('login-password-input').fill(credentials.password);
+  await page.getByTestId('login-submit').click();
 }
 
 /**
@@ -97,8 +91,8 @@ export async function submitOtp(page: Page, otp: string) {
   // The code input is a controlled component: filling it before hydration
   // finishes gets wiped, and the native `required` check then blocks submit.
   await waitForHydration(page);
-  await page.locator('input[name="otp"]').fill(otp);
-  await page.getByRole('button', { name: 'Verify', exact: true }).click();
+  await page.getByTestId('verification-otp-input').fill(otp);
+  await page.getByTestId('verification-submit').click();
 }
 
 /** Read the code from the mailbox and submit it. */

@@ -3,16 +3,25 @@ import { expect, type Page } from '@playwright/test';
 import { waitForHydration } from './page.js';
 import { appSessionCookie, providerSessionCookies } from './session.js';
 
-/** The header's button - present on every page while signed in. */
-export const headerLogOut = (page: Page) =>
-  page.locator('header').getByRole('button', { name: 'Log Out' });
+/**
+ * The header's account menu trigger (avatar + "@username") - present on
+ * every page while signed in. Its "Log Out" entry is a menu item, not a
+ * plain button, and opens in a portal (see `headerMenuLogOut`).
+ */
+export const headerUserMenuTrigger = (page: Page) =>
+  page.getByTestId('header-user-menu-trigger');
 
-export const headerLogIn = (page: Page) =>
-  page.locator('header').getByRole('link', { name: 'Log In' });
+/**
+ * The dropdown's "Log Out" entry. The menu popup renders in a portal, so
+ * it's not a descendant of `<header>` once open - this looks page-wide.
+ */
+export const headerMenuLogOut = (page: Page) =>
+  page.getByTestId('header-menu-logout');
 
-/** The profile section's own button (on `/users/me`), inside `<main>`. */
-export const profileLogOut = (page: Page) =>
-  page.locator('main').getByRole('button', { name: 'Log Out' });
+export const headerLogIn = (page: Page) => page.getByTestId('header-login-link');
+
+/** The profile section's own button (on `/users/me`). */
+export const profileLogOut = (page: Page) => page.getByTestId('profile-logout');
 
 /**
  * The provider's confirmation page (the auth-pages package). The host in the
@@ -20,9 +29,9 @@ export const profileLogOut = (page: Page) =>
  */
 export function signOutPrompt(page: Page) {
   return {
-    heading: page.getByRole('heading', { name: /^Sign out of .+\?$/ }),
-    confirm: page.getByRole('button', { name: 'Yes, sign me out' }),
-    decline: page.getByRole('button', { name: 'No, stay signed in' }),
+    heading: page.getByTestId('sign-out-heading'),
+    confirm: page.getByTestId('sign-out-confirm'),
+    decline: page.getByTestId('sign-out-decline'),
   };
 }
 
@@ -33,7 +42,14 @@ export type LogOutEntry = 'header' | 'profile';
 export async function startLogOut(page: Page, entry: LogOutEntry = 'header') {
   await page.goto(entry === 'profile' ? '/users/me' : '/');
   await waitForHydration(page);
-  await (entry === 'profile' ? profileLogOut(page) : headerLogOut(page)).click();
+
+  if (entry === 'profile') {
+    await profileLogOut(page).click();
+  } else {
+    await headerUserMenuTrigger(page).click();
+    await headerMenuLogOut(page).click();
+  }
+
   await expect(signOutPrompt(page).heading).toBeVisible();
 }
 
@@ -53,7 +69,7 @@ export async function declineSignOut(page: Page) {
 export async function expectSignedOut(page: Page) {
   await expect(page).toHaveURL('/');
   await expect(headerLogIn(page)).toBeVisible();
-  await expect(headerLogOut(page)).toBeHidden();
+  await expect(headerUserMenuTrigger(page)).toBeHidden();
 }
 
 /** Which of the two login sessions the browser currently holds a cookie for. */

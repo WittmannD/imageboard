@@ -26,9 +26,9 @@ test.describe('login', () => {
     await expect(page).toHaveURL('/');
 
     await page.goto('/users/me');
-    await expect(
-      page.getByText(`@${user.username}`, { exact: true }),
-    ).toBeVisible();
+    await expect(page.getByTestId('profile-username')).toHaveText(
+      `@${user.username}`,
+    );
   });
 
   test('a wrong password shows an error on the same form and can be retried', async ({

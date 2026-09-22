@@ -14,14 +14,14 @@ test('a new post is processed, published and rendered in the feed', async ({
   // A file chosen before hydration never reaches the form state.
   await waitForHydration(page);
   await page.locator('input[type="file"]').setInputFiles(images);
-  await page.getByLabel('Caption').fill('Posted by the e2e suite');
+  await page.getByTestId('create-post-caption-input').fill('Posted by the e2e suite');
 
   const created = page.waitForResponse(
     (response) =>
       response.request().method() === 'POST' &&
       new URL(response.url()).pathname === '/api/posts',
   );
-  await page.getByRole('button', { name: 'Publish' }).click();
+  await page.getByTestId('create-post-publish').click();
   expect((await created).status()).toBe(201);
 
   // The API answers with a draft straight away; a post only reaches the feed

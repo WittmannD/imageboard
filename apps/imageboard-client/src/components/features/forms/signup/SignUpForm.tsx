@@ -75,7 +75,7 @@ export function SignUpForm({
   return (
     <Card {...props}>
       <CardHeader>
-        <CardTitle>Create an account</CardTitle>
+        <CardTitle data-testid="signup-heading">Create an account</CardTitle>
         <CardDescription>
           Enter your information below to create your account
         </CardDescription>
@@ -102,6 +102,7 @@ export function SignUpForm({
                     id="username"
                     type="text"
                     aria-invalid={fieldState.invalid}
+                    data-testid="signup-username-input"
                   />
                   <FieldError errors={[fieldState.error]} />
                 </Field>
@@ -119,6 +120,7 @@ export function SignUpForm({
                     type="email"
                     placeholder="m@example.com"
                     aria-invalid={fieldState.invalid}
+                    data-testid="signup-email-input"
                   />
                   {fieldState.invalid ? (
                     <FieldError errors={[fieldState.error]} />
@@ -142,6 +144,7 @@ export function SignUpForm({
                     id="password"
                     type="password"
                     aria-invalid={fieldState.invalid}
+                    data-testid="signup-password-input"
                   />
                   {fieldState.invalid ? (
                     <FieldError errors={[fieldState.error]} />
@@ -166,6 +169,7 @@ export function SignUpForm({
                     id="confirm-password"
                     type="password"
                     aria-invalid={fieldState.invalid}
+                    data-testid="signup-confirm-password-input"
                   />
                   {fieldState.invalid ? (
                     <FieldError errors={[fieldState.error]} />
@@ -179,7 +183,11 @@ export function SignUpForm({
             />
             <FieldGroup>
               <Field>
-                <Button type="submit" disabled={form.formState.isSubmitting}>
+                <Button
+                  type="submit"
+                  disabled={form.formState.isSubmitting}
+                  data-testid="signup-submit"
+                >
                   {form.formState.isSubmitting
                     ? 'Creating account...'
                     : 'Create Account'}

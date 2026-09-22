@@ -68,7 +68,7 @@ export function LogInForm({
   return (
     <Card {...props}>
       <CardHeader>
-        <CardTitle>Login to your account</CardTitle>
+        <CardTitle data-testid="login-heading">Login to your account</CardTitle>
         <CardDescription>
           Enter your email below to login to your account
         </CardDescription>
@@ -96,6 +96,7 @@ export function LogInForm({
                     type="email"
                     placeholder="m@example.com"
                     aria-invalid={fieldState.invalid}
+                    data-testid="login-email-input"
                   />
                   <FieldError errors={[fieldState.error]} />
                 </Field>
@@ -111,6 +112,7 @@ export function LogInForm({
                     <Link
                       to="/auth/forgot-password"
                       className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                      data-testid="login-forgot-password-link"
                     >
                       Forgot your password?
                     </Link>
@@ -120,18 +122,28 @@ export function LogInForm({
                     id="password"
                     type="password"
                     aria-invalid={fieldState.invalid}
+                    data-testid="login-password-input"
                   />
                   <FieldError errors={[fieldState.error]} />
                 </Field>
               )}
             />
             <Field>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
+              <Button
+                type="submit"
+                disabled={form.formState.isSubmitting}
+                data-testid="login-submit"
+              >
                 {form.formState.isSubmitting ? 'Logging in...' : 'Login'}
               </Button>
               <FieldDescription className="text-center">
                 Don&apos;t have an account?{' '}
-                <Link to={{ pathname: '/auth/registration', search }}>Sign up</Link>
+                <Link
+                  to={{ pathname: '/auth/registration', search }}
+                  data-testid="login-signup-link"
+                >
+                  Sign up
+                </Link>
               </FieldDescription>
             </Field>
           </FieldGroup>

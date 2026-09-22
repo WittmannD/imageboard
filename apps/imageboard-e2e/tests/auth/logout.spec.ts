@@ -9,7 +9,7 @@ import { allowAccess } from '../../src/support/consent.js';
 import {
   confirmSignOut,
   declineSignOut,
-  headerLogOut,
+  headerUserMenuTrigger,
   type LogOutEntry,
   sessionCookies,
   signOutPrompt,
@@ -63,7 +63,6 @@ test.describe('log out', () => {
     test('a different account can sign in afterwards', async ({
       page,
       browser,
-      user,
     }) => {
       // Registering and verifying the second account is a full round trip.
       test.setTimeout(120_000);
@@ -75,12 +74,9 @@ test.describe('log out', () => {
       await signIn(page, other);
 
       await page.goto('/users/me');
-      await expect(
-        page.getByText(`@${other.username}`, { exact: true }),
-      ).toBeVisible();
-      await expect(
-        page.getByText(`@${user.username}`, { exact: true }),
-      ).toBeHidden();
+      await expect(page.getByTestId('profile-username')).toHaveText(
+        `@${other.username}`,
+      );
     });
 
     test('ends only that session, and revokes its tokens', async ({
@@ -113,7 +109,7 @@ test.describe('log out', () => {
       await page.goto('/auth/logout');
 
       await expect(page).toHaveURL('/');
-      await expect(headerLogOut(page)).toBeVisible();
+      await expect(headerUserMenuTrigger(page)).toBeVisible();
       expect(await sessionCookies(page)).toEqual({ app: true, provider: true });
     });
 
@@ -148,7 +144,7 @@ test.describe('log out', () => {
         await allowAccess(page);
 
         await expect(page).toHaveURL('/');
-        await expect(headerLogOut(page)).toBeVisible();
+        await expect(headerUserMenuTrigger(page)).toBeVisible();
       });
     });
   });

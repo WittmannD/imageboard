@@ -14,7 +14,7 @@ import {
   denyAccess,
   denyButton,
 } from '../../src/support/consent.js';
-import { headerLogIn, headerLogOut } from '../../src/support/logout.js';
+import { headerLogIn, headerUserMenuTrigger } from '../../src/support/logout.js';
 import { requestVia } from '../../src/support/nginx.js';
 import { createTestUser, type TestUser } from '../../src/support/user.js';
 
@@ -59,11 +59,11 @@ test.describe('consent', () => {
     await allowButton(page).click();
 
     await expect(page).toHaveURL('/');
-    await expect(headerLogOut(page)).toBeVisible();
+    await expect(headerUserMenuTrigger(page)).toBeVisible();
     await page.goto('/users/me');
-    await expect(
-      page.getByText(`@${user.username}`, { exact: true }),
-    ).toBeVisible();
+    await expect(page.getByTestId('profile-username')).toHaveText(
+      `@${user.username}`,
+    );
   });
 
   test('denying leaves the user signed out and explains why', async ({
@@ -80,10 +80,10 @@ test.describe('consent', () => {
     await expect(page.getByText('Something went wrong')).toBeVisible();
     await expect(page.getByText('Access was not granted')).toBeVisible();
 
-    await page.getByRole('link', { name: 'Return home' }).click();
+    await page.getByTestId('auth-error-return-home').click();
     await expect(page).toHaveURL('/');
     await expect(headerLogIn(page)).toBeVisible();
-    await expect(headerLogOut(page)).toBeHidden();
+    await expect(headerUserMenuTrigger(page)).toBeHidden();
   });
 
   test('after denying, the next sign-in asks again', async ({ page }) => {
@@ -103,7 +103,7 @@ test.describe('consent', () => {
 
     await allowAccess(page);
     await expect(page).toHaveURL('/');
-    await expect(headerLogOut(page)).toBeVisible();
+    await expect(headerUserMenuTrigger(page)).toBeVisible();
   });
 
   test('the consent endpoints refuse a caller with no pending authorization', async () => {
