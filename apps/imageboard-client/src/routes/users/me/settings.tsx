@@ -5,11 +5,6 @@ import {
   CardTitle,
 } from 'src/components/ui/card/Card.tsx';
 import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from 'src/components/ui/avatar/Avatar.tsx';
-import {
   Item,
   ItemActions,
   ItemContent,
@@ -28,10 +23,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from 'src/components/features/auth/context.tsx';
 import { useGetMeQuery } from 'src/services/api/user/api.ts';
-import { getImageByVariant, getImageUrl } from 'src/lib/utils/image-source.ts';
-import type { AvatarSource } from 'src/services/api/types.ts';
 import { Link } from 'react-router';
 import { useDialogManager } from 'src/lib/dialog-manager/context.tsx';
+import { UserAvatar, UserBadge, } from 'src/components/features/user/UserBadge.tsx';
 
 function AccountSettingsPage() {
   const auth = useAuth(true);
@@ -43,27 +37,24 @@ function AccountSettingsPage() {
     return null;
   }
 
-  const avatar = getImageByVariant<AvatarSource>(user.avatars, 'icon_large');
-
   return (
     <Card className="mx-auto w-full max-w-md">
       <CardHeader>
         <CardTitle>
           <div className="flex items-center gap-2">
-            <Avatar size="lg">
-              {avatar && (
-                <AvatarImage
-                  src={getImageUrl(avatar.key)}
-                  alt={user.username}
-                />
-              )}
-              <AvatarFallback>{user.username.slice(0, 2)}</AvatarFallback>
-            </Avatar>
+            <UserBadge user={user}>
+              <UserAvatar size="lg" />
+            </UserBadge>
             <div className="grow w-0">
               <Button
                 variant="secondary"
                 size="sm"
-                render={<Link to={{ search: getDialogSearchParams('avatar-upload')  }} />}
+                nativeButton={false}
+                render={
+                  <Link
+                    to={{ search: getDialogSearchParams('avatar-upload') }}
+                  />
+                }
               >
                 <UploadIcon />
                 Upload Avatar

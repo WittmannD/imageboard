@@ -254,14 +254,14 @@ function EmailVerificationPage({
                     </InputOTPGroup>
                   </InputOTP>
                   <FieldDescription>
-                    <div className="inline-flex items-center justify-center gap-2">
+                    <span className="inline-flex items-center justify-center gap-2">
                       <span>Didn't receive the code?</span>
                       <ResendButton
                         resendAvailableAt={resendAvailableAt}
                         pending={isResending}
                         onResend={handleResend}
                       />
-                    </div>
+                    </span>
                   </FieldDescription>
                 </Field>
                 {actionData?.intent === 'verify' && !actionData.verified && (

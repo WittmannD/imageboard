@@ -4,11 +4,6 @@ import {
   CardHeader,
   CardTitle,
 } from 'src/components/ui/card/Card.tsx';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from 'src/components/ui/avatar/Avatar.tsx';
 import { cn } from 'src/lib/utils/cn.ts';
 import { Post } from 'src/components/features/post/Post.tsx';
 import {
@@ -21,12 +16,14 @@ import {
 } from 'src/components/ui/item/Item.tsx';
 import { TriangleAlertIcon } from 'lucide-react';
 import { Button } from 'src/components/ui/button/Button.tsx';
-import { getImageByVariant, getImageUrl } from 'src/lib/utils/image-source.ts';
 import type {
-  AvatarSource,
   ProfileDto,
   UserDto,
 } from 'src/services/api/types.ts';
+import {
+  UserAvatar,
+  UserBadge, UserTag,
+} from 'src/components/features/user/UserBadge.tsx';
 
 const data = [
   {
@@ -74,29 +71,16 @@ export interface ProfileViewProps {
 }
 
 export function ProfileView({ user, unverifiedEmail }: ProfileViewProps) {
-  const avatar = getImageByVariant<AvatarSource>(user.avatars, 'icon_large');
-
   return (
     <div>
       <Card className="mx-auto w-full max-w-md">
         <CardHeader>
           <CardTitle>
             <div className="flex items-center gap-2">
-              <Avatar size="lg">
-                {avatar && (
-                  <AvatarImage
-                    src={getImageUrl(avatar.key)}
-                    alt={user.username}
-                  />
-                )}
-                <AvatarFallback>{user.username.slice(0, 2)}</AvatarFallback>
-              </Avatar>
-              <span
-                className="grow w-0 truncate text-ellipsis"
-                data-testid="profile-username"
-              >
-                @{user.username}
-              </span>
+              <UserBadge user={user} data-testid="profile-username">
+                <UserAvatar size="lg" />
+                <UserTag />
+              </UserBadge>
             </div>
           </CardTitle>
           <CardContent className="px-0 pt-4">
