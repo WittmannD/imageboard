@@ -45,7 +45,7 @@ function Header() {
                   className: 'flex-row items-center gap-1',
                   variant: 'secondary',
                 })}
-                render={<Link to={{ search: getDialogSearchParams('create-post') }} mask="posts/create" />}
+                render={<Link to={{ search: getDialogSearchParams('create-post') }} mask="/posts/create" />}
               >
                 <Plus />
                 Post

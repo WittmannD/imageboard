@@ -16,6 +16,7 @@ import {
   THEME,
 } from 'src/lib/utils/local-storage.ts';
 import { getSystemTheme } from 'src/lib/utils/theme.ts';
+import { cn } from 'src/lib/utils/cn.ts';
 
 export const middleware: MiddlewareFunction[] = [authMiddleware];
 
@@ -39,7 +40,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   }, [theme]);
 
   return (
-    <html lang="en" className={theme}>
+    <html lang="en" className={cn('md:scrollbar-gutter-stable', theme)}>
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -54,7 +55,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                if (!theme) {
                 theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
                }
-               document.documentElement.className = theme;
+               document.documentElement.classList.remove(theme === "dark" ? "light" : "dark");
+               document.documentElement.classList.add(theme);
               } catch (_) {}
              })();
            `,

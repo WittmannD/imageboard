@@ -24,11 +24,14 @@ export const loadTheme = (): ThemeName | null => {
   return isThemeName(value) ? value : null;
 };
 
-export const saveTheme = (theme: string) => {
+export const saveTheme = (theme: ThemeName) => {
   setStorageItem(THEME, theme);
 };
 
 export const applyTheme = (theme: ThemeName) => {
-  document.documentElement.className = theme;
+  document.documentElement.classList.remove(
+    theme === 'dark' ? 'light' : 'dark',
+  );
+  document.documentElement.classList.add(theme);
   saveTheme(theme);
 };
