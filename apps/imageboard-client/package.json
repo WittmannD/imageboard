@@ -17,6 +17,7 @@
     "@base-ui/react": "^1.6.0",
     "@fontsource-variable/manrope": "^5.2.8",
     "@fontsource-variable/roboto": "^5.2.10",
+    "@hdotu1/config": "file:../../packages/config",
     "@hdotu1/design-tokens": "file:../../packages/design-tokens",
     "@hookform/resolvers": "^5.4.0",
     "@react-router/dev": "^8.3.0",

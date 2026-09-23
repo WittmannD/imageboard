@@ -21,7 +21,7 @@ export const UploadsModuleFactory = () =>
     imports: [ConfigModule],
     useFactory: (configService: ConfigService) => ({
       storage: diskStorage({
-        destination: configService.get<string>('uploads.destination'),
+        destination: configService.getOrThrow<string>('storage.sharedPath'),
         filename: filenameFactory,
       }),
     }),

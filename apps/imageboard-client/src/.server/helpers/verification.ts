@@ -1,3 +1,5 @@
+import { config } from 'src/.server/config.ts';
+
 interface VerificationRequestResult {
   sessionId: string;
   resendAvailableAt: number;
@@ -9,7 +11,7 @@ interface VerificationCompleteResult {
 
 async function requestEmailVerification(userId: string) {
   const response = await fetch(
-    new URL('/verification', process.env.OIDC_ISSUER_URL),
+    new URL('/verification', config.urls.auth),
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -26,7 +28,7 @@ async function requestEmailVerification(userId: string) {
 
 async function completeEmailVerification(sessionId: string, otp: string) {
   const response = await fetch(
-    new URL('/verification/complete', process.env.OIDC_ISSUER_URL),
+    new URL('/verification/complete', config.urls.auth),
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

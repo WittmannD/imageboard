@@ -35,7 +35,7 @@ export class CredentialsService {
   }
 
   private async hashPassword(password: string) {
-    const saltRounds = this.configService.getOrThrow<number>('pwHashSaltRounds');
+    const saltRounds = this.configService.getOrThrow<number>('identityProvider.pwHashSaltRounds');
     return await bcrypt.hash(password, saltRounds)
   }
 

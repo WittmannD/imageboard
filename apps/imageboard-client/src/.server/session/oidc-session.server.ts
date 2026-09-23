@@ -1,4 +1,5 @@
 import { createCookieSessionStorage } from 'react-router';
+import { config, secrets } from 'src/.server/config.ts';
 import type { OidcAuthState } from 'src/.server/interfaces.ts';
 
 export interface OidcSessionData {
@@ -20,10 +21,10 @@ export const oidcSession = createCookieSessionStorage<
     name: OIDC_SESSION_KEY,
 
     httpOnly: true,
-    maxAge: Number(process.env.OIDC_SESSION_MAX_AGE),
+    maxAge: config.client.sessionMaxAgeSec,
     path: '/',
     sameSite: 'lax',
-    secrets: [process.env.SESSION_COOKIE_SECRET],
+    secrets: [secrets.SESSION_COOKIE_SECRET],
     //secure: true,
   },
 });

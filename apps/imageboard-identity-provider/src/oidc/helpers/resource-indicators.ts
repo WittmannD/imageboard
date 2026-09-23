@@ -1,11 +1,13 @@
 import { errors } from 'oidc-provider';
 
+import { getConfig } from '@hdotu1/config';
+
 import type { OIDCDefinedFeatureConfig } from '../types/config.js';
 
 // imageboard-api is the only resource server behind this issuer, so every
 // access token is scoped to it by default - no client ever has to request it
 // by name via the `resource` parameter.
-export const API_RESOURCE_IDENTIFIER = process.env['IMAGEBOARD_API_URL'] ?? '';
+export const API_RESOURCE_IDENTIFIER = getConfig().urls.api;
 
 export default (): Omit<
   OIDCDefinedFeatureConfig<'resourceIndicators'>,

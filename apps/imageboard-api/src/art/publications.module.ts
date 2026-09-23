@@ -2,8 +2,11 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import type { AppConfig } from '@hdotu1/config';
+import { TransactionModule } from '@hdotu1/database-common';
 import { ImageProcessorClientModule } from '@hdotu1/image-processor-client';
 
+import { AuthModule } from '../auth/auth.module.js';
 import { UploadsModuleFactory } from '../multer/uploads-module-factory.js';
 import { PhotoEntity } from './entities/photo.entity.js';
 import { PostEntity } from './entities/post.entity.js';
@@ -13,8 +16,6 @@ import { GalleryLayoutEngineProvider } from './providers/gallery-layout-engine.p
 import { PhotoRepositoryProvider } from './repositories/photo.repository.js';
 import { PostRepositoryProvider } from './repositories/post.repository.js';
 import { PhotoService } from './services/photo.service.js';
-import { TransactionModule } from '@hdotu1/database-common';
-import { AuthModule } from '../auth/auth.module.js';
 
 @Module({
   imports: [
@@ -24,10 +25,7 @@ import { AuthModule } from '../auth/auth.module.js';
     ImageProcessorClientModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        redis: {
-          host: configService.get<string>('REDIS_HOST'),
-          port: configService.get<number>('REDIS_PORT'),
-        },
+        redis: configService.getOrThrow<AppConfig['redis']>('redis'),
       }),
       inject: [ConfigService],
     }),

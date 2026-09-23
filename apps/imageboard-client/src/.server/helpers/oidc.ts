@@ -1,13 +1,13 @@
-import * as process from 'node:process';
 import * as client from 'openid-client';
+import { config as appConfig, secrets } from 'src/.server/config.ts';
 import { validateShape } from 'src/.server/helpers/validate.ts';
 import type { OidcAuthState } from 'src/.server/interfaces.ts';
 import { TokenResponseModel } from 'src/.server/models/token-response.model.ts';
 import { install } from 'undici';
 
-const server = new URL(process.env.OIDC_ISSUER_URL);
-const clientId = process.env.OIDC_CLIENT_ID;
-const clientSecret = process.env.OIDC_CLIENT_SECRET;
+const server = new URL(appConfig.urls.auth);
+const clientId = appConfig.identityProvider.oidc.client.id;
+const clientSecret = secrets.OIDC_CLIENT_SECRET;
 
 install();
 
@@ -28,7 +28,7 @@ const config: client.Configuration = await client.discovery(
  * Value used in the authorization request as the redirect_uri parameter, this
  * is typically pre-registered at the Authorization Server.
  */
-const redirectUri = new URL('/auth/callback', process.env.VITE_BASE_URL).href;
+const redirectUri = new URL('/auth/callback', appConfig.urls.web).href;
 const scope = 'openid email profile offline_access';
 
 /**

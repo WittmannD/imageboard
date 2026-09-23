@@ -6,10 +6,11 @@
   "type": "module",
   "scripts": {
     "stack:prepare": "nx run-many -t build --projects=\"@hdotu1/*\"",
-    "stack:up": "docker compose -f docker-compose.e2e.yaml up -d --build --wait",
-    "stack:down": "docker compose -f docker-compose.e2e.yaml down -v",
-    "stack:logs": "docker compose -f docker-compose.e2e.yaml logs -f",
-    "stack:ps": "docker compose -f docker-compose.e2e.yaml ps",
+    "stack:env": "tsx ../../bin/config-env.ts e2e",
+    "stack:up": "npm run stack:env && docker compose -f docker-compose.e2e.yaml --env-file .env.e2e --env-file ../../.generated/config.e2e.env up -d --build --wait",
+    "stack:down": "npm run stack:env && docker compose -f docker-compose.e2e.yaml --env-file .env.e2e --env-file ../../.generated/config.e2e.env down -v",
+    "stack:logs": "docker compose -f docker-compose.e2e.yaml --env-file .env.e2e --env-file ../../.generated/config.e2e.env logs -f",
+    "stack:ps": "docker compose -f docker-compose.e2e.yaml --env-file .env.e2e --env-file ../../.generated/config.e2e.env ps",
     "e2e": "playwright test",
     "e2e:headed": "playwright test --headed",
     "e2e:ui": "playwright test --ui",
@@ -27,6 +28,9 @@
       "imageboard-identity-provider",
       "image-processor"
     ]
+  },
+  "dependencies": {
+    "@hdotu1/config": "file:../../packages/config"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0"

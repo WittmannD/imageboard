@@ -1,4 +1,5 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
+import { publicConfig } from 'src/lib/config.ts';
 import { axiosBaseQuery } from 'src/services/api/base-query.ts';
 import type { ProfileDto, UserDto } from 'src/services/api/types.ts';
 import { USER_TAG_TYPE } from 'src/services/api/user/constants.ts';
@@ -6,7 +7,7 @@ import { USER_TAG_TYPE } from 'src/services/api/user/constants.ts';
 export const userApi = createApi({
   reducerPath: 'userApi',
   baseQuery: axiosBaseQuery({
-    baseUrl: import.meta.env['VITE_API_BASE_URL'],
+    baseUrl: publicConfig.apiBaseUrl,
   }),
   tagTypes: [USER_TAG_TYPE],
   endpoints: (builder) => ({

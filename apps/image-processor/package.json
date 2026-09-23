@@ -17,6 +17,7 @@
     "debug": "nest start --debug --watch"
   },
   "dependencies": {
+    "@hdotu1/config": "file:../../packages/config",
     "@hdotu1/image-processor-contract": "file:../../packages/image-processor-contract",
     "@hdotu1/yaml-template": "file:../../packages/yaml-template",
     "@hdotu1/media-storage": "file:../../packages/media-storage",

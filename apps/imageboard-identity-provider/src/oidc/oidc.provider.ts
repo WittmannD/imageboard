@@ -26,7 +26,7 @@ export const OidcProvider = {
     const jwks = await jwksStore.getJwks();
     const findAccount = createFindAccount(userService);
 
-    return new IdProvider(configService.getOrThrow<string>('ISSUER_URL'), {
+    return new IdProvider(configService.getOrThrow<string>('urls.auth'), {
       ...oidcConfiguration(),
       jwks,
       adapter,

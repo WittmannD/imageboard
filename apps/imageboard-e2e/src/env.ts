@@ -1,6 +1,12 @@
+import { readFileSync } from 'node:fs';
+import * as path from 'node:path';
+import { parseEnv } from 'node:util';
+
+import { getConfig } from '@hdotu1/config';
+
 /**
- * Where the e2e stack lives. Everything is overridable so the suite can share a
- * machine with the regular dev stack (which already owns host port 80).
+ * Where the e2e stack lives, taken from the same `e2e` configuration profile
+ * the stack itself runs with (packages/config), so the two cannot disagree.
  *
  * The apps inside Docker only ever see port-less URLs on `http://<domain>`;
  * the browser reaches them through Chromium's `--host-resolver-rules`, which
@@ -8,12 +14,21 @@
  * the OIDC issuer, redirect URI and cookies identical for the browser and for
  * the containers talking to each other.
  */
-const domain = process.env['E2E_DOMAIN'] ?? 'e2e.test';
-const httpPort = Number(process.env['E2E_HTTP_PORT'] ?? 8088);
-const s3Port = Number(process.env['E2E_S3_PORT'] ?? 9000);
-const mailpitPort = Number(process.env['E2E_MAILPIT_PORT'] ?? 8025);
+const config = getConfig('e2e');
+const { domain } = config;
 
-const imageHost = `s3.${domain}`;
+if (!config.e2e) {
+  throw new Error('The e2e profile must declare its host ports (`e2e`).');
+}
+
+const { httpPort, s3Port, mailpitPort } = config.e2e;
+
+/** The stack's test-only secrets, shared with docker-compose.e2e.yaml. */
+const secrets = parseEnv(
+  readFileSync(path.resolve(import.meta.dirname, '../.env.e2e'), 'utf8'),
+);
+
+const imageHost = new URL(config.urls.imageServer).hostname;
 
 export const env = {
   domain,
@@ -21,23 +36,22 @@ export const env = {
   s3Port,
   mailpitPort,
 
-  baseUrl: `http://${domain}`,
-  authHost: `auth.${domain}`,
-  apiHost: `api.${domain}`,
+  baseUrl: config.urls.web,
+  authHost: new URL(config.urls.auth).hostname,
+  apiHost: new URL(config.urls.api).hostname,
   imageHost,
   /** Public-read bucket URL the client renders <img> tags from. */
-  imageServerUrl: `http://${imageHost}:${s3Port}/imageboard`,
+  imageServerUrl: config.urls.imageServer,
 
   mailpitUrl: `http://127.0.0.1:${mailpitPort}`,
 
   /**
-   * The e2e client's credentials, mirroring docker-compose.e2e.yaml. Only
-   * needed to call the provider's token endpoint the way the client's server
-   * does, e.g. to check whether a refresh token still works.
+   * The e2e client's credentials. Only needed to call the provider's token
+   * endpoint the way the client's server does, e.g. to check whether a
+   * refresh token still works.
    */
-  oidcClientId: process.env['E2E_OIDC_CLIENT_ID'] ?? 'imageboard-e2e-client',
-  oidcClientSecret:
-    process.env['E2E_OIDC_CLIENT_SECRET'] ?? 'e2e-client-secret',
+  oidcClientId: config.identityProvider.oidc.client.id,
+  oidcClientSecret: secrets['OIDC_CLIENT_SECRET'] ?? '',
 
   /**
    * Chromium applies the first matching rule. The image host keeps the port

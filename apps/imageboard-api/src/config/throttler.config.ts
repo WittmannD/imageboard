@@ -1,19 +1,17 @@
 import type { ThrottlerModuleOptions } from '@nestjs/throttler';
 
-// General DoS/abuse protection applied to every endpoint that doesn't
-// override it with a stricter, endpoint-specific throttle below.
+import { getConfig } from '@hdotu1/config';
+
+const { throttle } = getConfig().api;
+
 export default (): { throttler: ThrottlerModuleOptions } => ({
   throttler: [
     {
       name: 'default',
-      ttl: 60_000, // 1 minute
-      limit: 120, // 120 requests/min per IP
-      // Escape hatch for e2e runs, where every request shares one client IP.
-      skipIf: () => process.env['THROTTLE_DISABLED'] === 'true',
+      ...throttle.default,
+      skipIf: () => !getConfig().throttle.enabled,
     },
   ],
 });
 
-// Creating a post accepts file uploads and does image processing, so it is
-// throttled well below the general default to limit storage/processing abuse.
-export const CREATE_POST_THROTTLE = { default: { ttl: 60_000, limit: 10 } }; // 10 attempts/min per IP
+export const CREATE_POST_THROTTLE = { default: throttle.createPost };

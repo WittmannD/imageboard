@@ -42,9 +42,9 @@ export class AuthService implements OnModuleInit {
     private readonly federatedCredentialService: FederatedCredentialsService,
     private readonly tx: TransactionService,
   ) {
-    this.issuer = this.configService.getOrThrow<string>('OIDC_ISSUER');
-    this.issuerUrl = this.configService.getOrThrow<string>('OIDC_ISSUER_URL');
-    this.audience = this.configService.getOrThrow<string>('BASE_URL');
+    this.issuer = this.configService.getOrThrow<string>('urls.auth');
+    this.issuerUrl = this.configService.getOrThrow<string>('urls.auth');
+    this.audience = this.configService.getOrThrow<string>('urls.api');
   }
 
   private getJwks(): RemoteJWKSet {
@@ -75,7 +75,7 @@ export class AuthService implements OnModuleInit {
   async onModuleInit() {
     const config = await oidcClient.discovery(
       new URL(this.issuerUrl),
-      this.configService.getOrThrow<string>('OIDC_CLIENT_ID'),
+      this.configService.getOrThrow<string>('identityProvider.oidc.client.id'),
       {},
       () => {
         /* empty */

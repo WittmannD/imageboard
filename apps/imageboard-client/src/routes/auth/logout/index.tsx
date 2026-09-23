@@ -4,6 +4,7 @@ import {
   redirect,
   redirectDocument,
 } from 'react-router';
+import { config } from 'src/.server/config.ts';
 import { buildEndSessionUrl, revokeTokens } from 'src/.server/helpers/oidc.ts';
 import {
   getUserSessionFromCookie,
@@ -33,7 +34,7 @@ export const action: ActionFunction = async ({ request }) => {
 
   const endSessionUrl = buildEndSessionUrl({
     idTokenHint: userState.idToken,
-    postLogoutRedirectUri: new URL('/', process.env.VITE_BASE_URL).toString(),
+    postLogoutRedirectUri: new URL('/', config.urls.web).toString(),
   });
 
   return redirectDocument(endSessionUrl.href, { headers });

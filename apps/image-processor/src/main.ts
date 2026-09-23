@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { type AsyncMicroserviceOptions } from '@nestjs/microservices';
 
+import type { AppConfig } from '@hdotu1/config';
 import { RedisTransportServer } from '@hdotu1/redis-transport';
 
 import { AppModule } from './app.module.js';
@@ -13,8 +14,7 @@ async function bootstrap() {
     {
       useFactory: (configService: ConfigService) => ({
         strategy: new RedisTransportServer({
-          host: configService.get<string>('REDIS_HOST'),
-          port: configService.get<number>('REDIS_PORT'),
+          ...configService.getOrThrow<AppConfig['redis']>('redis'),
           keyPrefix: 'improc:'
         }),
       }),

@@ -218,11 +218,10 @@ user through a `FederatedCredentials` table, provisioning the user on first sigh
 ### Run the whole stack
 
 ```sh
-# each app reads its own apps/<app>/.env, plus the root .env for shared DB/Redis values
-docker compose up --build
+cp .env.example .env      # then fill in the secrets
 
-# development with file syncing into the client container
-docker compose watch
+npm run stack:dev         # generate the compose env from the development profile, then compose up
+npm run stack:dev:watch   # the same, with file syncing into the client container
 ```
 
 Compose brings up Postgres (with `imageboard` and `imageboard_identity` created by
@@ -262,19 +261,35 @@ npm run stack:down -w imageboard-e2e
 
 ### Configuration
 
-Each app is configured through its own `.env` file:
+All settings live in one place, the `@hdotu1/config` package (`packages/config`). Only secrets
+come from the environment.
 
-| File | Key variables |
-| --- | --- |
-| `.env` (root) | `DB_USER`, `DB_PASS`, `DB_PORT`, `REDIS_PORT` |
-| `apps/imageboard-api/.env` | `BASE_URL`, `PORT`, `DB_*`, `REDIS_PORT`, `OIDC_ISSUER`, `OIDC_ISSUER_URL`, `OIDC_CLIENT_ID` |
-| `apps/imageboard-identity-provider/.env` | `ISSUER_URL`, `INTERACTIONS_BASE_URL`, `IMAGEBOARD_API_URL`, `OIDC_CLIENT_*`, `DB_*`, `SMTP_*`, `JWKS_ENCRYPTION_KEY` |
-| `apps/imageboard-client/.env` | `VITE_BASE_URL`, `VITE_API_BASE_URL`, `VITE_IMAGE_SERVER_URL`, `OIDC_CLIENT_*`, `SESSION_COOKIE_SECRET`, `OIDC_SESSION_MAX_AGE` |
-| `apps/image-processor/.env` | `REDIS_PORT`, `FILEBASE_KEY`, `FILEBASE_SECRET` |
-| `apps/imageboard-web/.env` | `DOMAIN`, `API_INTERNAL_URL`, `CLIENT_INTERNAL_URL`, `AUTH_SERVER_INTERNAL_URL` |
+- **Profiles.** `src/profiles/base.ts` holds the defaults: ports, TTLs, rate limits, SMTP, S3,
+  database names and so on. `development.ts`, `e2e.ts` and `production.ts` override what differs,
+  and `APP_ENV` picks one (`development` when unset). Every public URL is derived from the
+  profile's `domain`: the client, `api.*`, the `auth.*` issuer, interactions and the OIDC
+  redirect URIs. Changing the domain means changing one line.
+- **Validation.** `getConfig()` merges base + profile, validates the result with zod and returns a frozen,
+  typed `AppConfig`. The Nest apps expose it through `ConfigService`, for example
+  `config.getOrThrow('urls.auth')`. The client's server code imports it from
+  `src/.server/config.ts`. The browser bundle only gets `toPublicConfig()`, which `vite.config.ts`
+  inlines at build time.
+- **Secrets.** All secrets go in one root `.env` (see `.env.example`). Each service declares and validates
+  the ones it needs (`packages/config/src/secrets.ts`) and fails at startup if any is missing:
 
-`JWKS_ENCRYPTION_KEY` must be a base64-encoded 32-byte key — generate one with
-`openssl rand -base64 32`.
+  | Secret | Used by |
+  | --- | --- |
+  | `DB_USER`, `DB_PASS` | Postgres, API, identity provider |
+  | `SMTP_USER`, `SMTP_PASS` | identity provider |
+  | `OIDC_CLIENT_SECRET` | identity provider, client |
+  | `JWKS_ENCRYPTION_KEY` | identity provider: a base64-encoded 32-byte key, from `openssl rand -base64 32` |
+  | `SESSION_COOKIE_SECRET` | client |
+  | `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | image processor |
+
+- **Compose and nginx.** They can't import TypeScript, so `npm run config:env -- <profile>` writes
+  `.generated/config.<profile>.env` with `DOMAIN`, internal service URLs, database names and
+  ports. Compose loads it with `--env-file`. `stack:dev`, the e2e `stack:*` scripts and the
+  deploy workflow run this step for you.
 
 ---
 

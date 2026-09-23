@@ -1,4 +1,5 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
+import { publicConfig } from 'src/lib/config.ts';
 import { axiosBaseQuery } from 'src/services/api/base-query.ts';
 
 interface LoginRequest {
@@ -50,7 +51,7 @@ interface ResetPasswordRequest {
 export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: axiosBaseQuery({
-    baseUrl: import.meta.env['VITE_OIDC_ISSUER_URL'],
+    baseUrl: publicConfig.oidcIssuerUrl,
     withCredentials: true,
   }),
   endpoints: (builder) => ({

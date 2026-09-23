@@ -18,6 +18,9 @@ RUN npm i
 
 COPY . .
 
+# vite.config.ts reads the shared configuration when the dev server starts.
+RUN npm -w @hdotu1/config run build
+
 EXPOSE 5734
 ENV PORT=5734
 ENV HOST=0.0.0.0
@@ -34,23 +37,21 @@ RUN npm i
 
 COPY . .
 
-# Vite inlines VITE_* values at build time, so they must be present here (not only at runtime).
-ARG VITE_BASE_URL
-ARG VITE_API_BASE_URL
-ARG VITE_OIDC_ISSUER_URL
-ARG VITE_IMAGE_SERVER_URL
-ENV VITE_BASE_URL=$VITE_BASE_URL
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
-ENV VITE_OIDC_ISSUER_URL=$VITE_OIDC_ISSUER_URL
-ENV VITE_IMAGE_SERVER_URL=$VITE_IMAGE_SERVER_URL
+# The browser bundle inlines the public part of the APP_ENV profile at build
+# time (see vite.config.ts), so an image is built for one environment.
+ARG APP_ENV=production
+ENV APP_ENV=$APP_ENV
 
-RUN npm -w ${APP} run build && npm prune --omit=dev
+RUN npm -w @hdotu1/config run build && npm -w ${APP} run build && npm prune --omit=dev
 
 
 FROM node:22-alpine AS production
 
 ENV NODE_ENV=production
 ARG APP=imageboard-client
+# The server must run the profile the browser bundle was built for.
+ARG APP_ENV=production
+ENV APP_ENV=$APP_ENV
 
 WORKDIR /usr/src/app
 

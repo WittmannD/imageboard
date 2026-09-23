@@ -1,0 +1,30 @@
+{
+  "name": "@hdotu1/config",
+  "version": "1.0.0",
+  "description": "Single source of truth for the image board configuration: per-environment profiles plus secret loading",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./dist/index.js"
+    },
+    "./public": {
+      "types": "./src/public.ts",
+      "import": "./dist/public.js"
+    }
+  },
+  "scripts": {
+    "test": "vitest run",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
+    "build": "del-cli dist && tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  }
+}

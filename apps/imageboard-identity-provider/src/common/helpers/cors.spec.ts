@@ -1,8 +1,9 @@
 import http from 'node:http';
-
 import { Controller, Get, type INestApplication, Post } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
+import { getConfig } from '@hdotu1/config';
 
 import { getCors } from './cors.js';
 
@@ -26,43 +27,25 @@ class PingController {
   }
 }
 
-const ENV = {
-  OIDC_CLIENT_REDIRECT_URIS: `${CLIENT_ORIGIN}/auth/callback, http://localhost:5173/auth/callback`,
-  ISSUER_URL: OWN_ORIGIN,
-};
-
 describe('getCors', () => {
   let app: INestApplication;
   let port: number;
-  let previousEnv: Record<string, string | undefined>;
 
   beforeEach(async () => {
     postHits = 0;
-    previousEnv = Object.fromEntries(
-      Object.keys(ENV).map((key) => [key, process.env[key]]),
-    );
-    Object.assign(process.env, ENV);
-
     const moduleRef = await Test.createTestingModule({
       controllers: [PingController],
     }).compile();
 
     app = moduleRef.createNestApplication({ logger: false });
-    app.enableCors(getCors());
+    // The e2e profile registers exactly CLIENT_ORIGIN and OWN_ORIGIN.
+    app.enableCors(getCors(getConfig('e2e')));
     await app.listen(0);
     port = Number(new URL(await app.getUrl()).port);
   });
 
   afterEach(async () => {
     await app.close();
-
-    for (const [key, value] of Object.entries(previousEnv)) {
-      if (value === undefined) {
-        delete process.env[key];
-      } else {
-        process.env[key] = value;
-      }
-    }
   });
 
   /** Node's fetch is free to drop `Origin`, so send the request by hand. */

@@ -1,44 +1,26 @@
 import type { ThrottlerModuleOptions } from '@nestjs/throttler';
 
+import { getConfig } from '@hdotu1/config';
 
-// General DoS/abuse protection applied to every endpoint that doesn't
-// override it with a stricter, endpoint-specific throttle below.
+// The limits, and the reasoning behind each of them, live in the shared
+// configuration (packages/config/src/profiles/base.ts).
+const { throttle } = getConfig().identityProvider;
+
 export default (): { throttler: ThrottlerModuleOptions } => ({
   throttler: [
     {
       name: 'default',
-      ttl: 60_000, // 1 minute
-      limit: 100, // 100 requests/min per IP
-      // Escape hatch for e2e runs, where every request shares one client IP.
-      skipIf: () => process.env['THROTTLE_DISABLED'] === 'true',
+      ...throttle.default,
+      skipIf: () => !getConfig().throttle.enabled,
     },
   ],
 });
 
-// This is an identity provider: login/registration/OTP endpoints are the
-// primary credential-stuffing and enumeration attack surface, so they get
-// much tighter, endpoint-specific limits than the general default above.
-
-// Brute-forcing a password against a known email.
-export const LOGIN_THROTTLE = { default: { ttl: 60_000, limit: 5 } }; // 5 attempts/min per IP
-
-// Mass/automated account creation.
-export const REGISTRATION_THROTTLE = { default: { ttl: 60 * 60_000, limit: 10 } }; // 10 attempts/hour per IP
-
-// Sending the verification OTP triggers an email - also guards against email-bombing a victim address.
-export const EMAIL_VERIFICATION_THROTTLE = { default: { ttl: 60_000, limit: 3 } }; // 3 attempts/min per IP
-
-// Guessing a 6-digit OTP; kept tight enough to make brute-forcing infeasible before the OTP session expires.
-export const VERIFICATION_COMPLETE_THROTTLE = { default: { ttl: 60_000, limit: 5 } }; // 5 attempts/min per IP
-
-// Requesting a reset triggers an email - also guards against email-bombing a victim address.
-export const PASSWORD_RESET_REQUEST_THROTTLE = { default: { ttl: 60_000, limit: 3 } }; // 3 attempts/min per IP
-
-// The token is 256 bits, so guessing is hopeless; this just bounds noise and hashing work.
-export const PASSWORD_RESET_COMPLETE_THROTTLE = { default: { ttl: 60_000, limit: 5 } }; // 5 attempts/min per IP
-
-// oidc-provider's own routes (authorize, token, jwks, etc), mounted behind a single catch-all controller.
-export const OIDC_THROTTLE = { default: { ttl: 60_000, limit: 60 } }; // 60 requests/min per IP
-
-// Answering the consent screen: only ever a human click, so this is generous - it just bounds noise.
-export const CONSENT_THROTTLE = { default: { ttl: 60_000, limit: 20 } }; // 20 attempts/min per IP
+export const LOGIN_THROTTLE = { default: throttle.login };
+export const REGISTRATION_THROTTLE = { default: throttle.registration };
+export const EMAIL_VERIFICATION_THROTTLE = { default: throttle.emailVerification };
+export const VERIFICATION_COMPLETE_THROTTLE = { default: throttle.verificationComplete };
+export const PASSWORD_RESET_REQUEST_THROTTLE = { default: throttle.passwordResetRequest };
+export const PASSWORD_RESET_COMPLETE_THROTTLE = { default: throttle.passwordResetComplete };
+export const OIDC_THROTTLE = { default: throttle.oidc };
+export const CONSENT_THROTTLE = { default: throttle.consent };

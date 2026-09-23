@@ -1,3 +1,4 @@
+import { publicConfig } from 'src/lib/config.ts';
 import type { ImageSource } from 'src/services/api/types.ts';
 
 export function getImageByVariant<T extends ImageSource = ImageSource>(
@@ -9,5 +10,5 @@ export function getImageByVariant<T extends ImageSource = ImageSource>(
 }
 
 export function getImageUrl(key: string) {
-  return `${import.meta.env['VITE_IMAGE_SERVER_URL']}/${key}`;
+  return `${publicConfig.imageServerUrl}/${key}`;
 }

@@ -8,6 +8,34 @@ env:
   REPO: ${{ github.repository }}
 
 jobs:
+  # Non-secret settings come from the production profile in packages/config;
+  # compose on the VPS reads them from a generated env file.
+  config:
+    runs-on: ubuntu-latest
+
+    outputs:
+      env: ${{ steps.generate.outputs.env }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate production config env
+        id: generate
+        run: |
+          {
+            echo 'env<<CONFIG_ENV'
+            npx tsx bin/config-env.ts production -
+            echo 'CONFIG_ENV'
+          } >> "$GITHUB_OUTPUT"
+
   build-and-push:
     runs-on: ubuntu-latest
 
@@ -60,7 +88,7 @@ jobs:
             ${{ env.REGISTRY }}/${{ steps.meta.outputs.repo }}-${{ steps.meta.outputs.app }}:${{ github.sha }}
 
   deploy:
-    needs: build-and-push
+    needs: [config, build-and-push]
     runs-on: ubuntu-latest
 
     steps:
@@ -80,9 +108,13 @@ jobs:
             CONFIG_URL="https://raw.githubusercontent.com/WittmannD/imageboard/${{ github.sha }}/docker-compose-ci.yaml"
             echo "Get docker compose config from ${CONFIG_URL}"
             wget -O docker-compose.yaml "$CONFIG_URL"
+            # Secrets only; every other setting is in config.env.
             echo "${{ secrets.APP_ENV }}" > .env
-            
-            docker compose -f docker-compose.yaml pull
-            docker compose --env-file .env -f docker-compose.yaml up -d
+            cat > config.env <<'CONFIG_ENV'
+            ${{ needs.config.outputs.env }}
+            CONFIG_ENV
+
+            docker compose --env-file .env --env-file config.env -f docker-compose.yaml pull
+            docker compose --env-file .env --env-file config.env -f docker-compose.yaml up -d
 
             docker image prune -f

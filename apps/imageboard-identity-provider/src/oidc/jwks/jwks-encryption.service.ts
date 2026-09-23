@@ -10,7 +10,7 @@ const AUTH_TAG_LENGTH = 16;
 
 /**
  * Encrypts/decrypts JWKS private key material at rest using a single
- * master key from JWKS_MASTER_ENCRYPTION_KEY (base64-encoded AES-256 key,
+ * master key from JWKS_ENCRYPTION_KEY (base64-encoded AES-256 key,
  * e.g. generated with `openssl rand -base64 32`).
  */
 @Injectable()
@@ -18,7 +18,7 @@ export class JwksEncryptionService {
   private readonly masterKey: Buffer;
 
   constructor(configService: ConfigService) {
-    const encoded = configService.getOrThrow<string>('jwksEncryptionKey');
+    const encoded = configService.getOrThrow<string>('secrets.JWKS_ENCRYPTION_KEY');
     const key = Buffer.from(encoded, 'base64');
 
     if (key.length !== KEY_LENGTH) {

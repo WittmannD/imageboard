@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, ManyToOne, type Relation } from 'typeorm';
 
 import type { ImageOutput } from '@hdotu1/image-processor-contract';
 
@@ -28,5 +28,5 @@ export class PhotoEntity extends BaseEntity {
   status: PhotoProcessingStatus = PhotoProcessingStatus.Pending;
 
   @ManyToOne(() => PostEntity, (post) => post.photos)
-  post!: PostEntity;
+  post!: Relation<PostEntity>;
 }

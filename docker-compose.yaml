@@ -1,4 +1,15 @@
+# Local development stack. Start it with `npm run stack:dev`, which generates
+# .generated/config.development.env from the shared configuration
+# (packages/config) and passes it together with the root .env (secrets):
+#
+#   docker compose --env-file .env --env-file .generated/config.development.env up --build
+#
+# Apps read their settings from the APP_ENV profile themselves; only values
+# compose and nginx need are interpolated here.
 version: '3.9'
+
+x-app-env: &app-env
+  APP_ENV: ${APP_ENV:?generate it with npm run config:env -- development}
 
 services:
   redis:
@@ -20,7 +31,7 @@ services:
     container_name: postgres
     restart: unless-stopped
     environment:
-      POSTGRES_MULTIPLE_DATABASES: imageboard, imageboard_identity
+      POSTGRES_MULTIPLE_DATABASES: ${DB_NAMES}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
     volumes:
@@ -54,8 +65,11 @@ services:
       context: .
       dockerfile: apps/imageboard-web/Dockerfile
     container_name: imageboard-web
-    env_file:
-      - './apps/imageboard-web/.env'
+    environment:
+      DOMAIN: ${DOMAIN}
+      API_INTERNAL_URL: ${API_INTERNAL_URL}
+      CLIENT_INTERNAL_URL: ${CLIENT_INTERNAL_URL}
+      AUTH_SERVER_INTERNAL_URL: ${AUTH_SERVER_INTERNAL_URL}
     ports:
       - "80:80"
       - "443:443"
@@ -64,9 +78,9 @@ services:
     networks:
       public:
         aliases:
-          - auth.spottish.website
-          - api.spottish.website
-          - spottish.website
+          - ${DOMAIN}
+          - api.${DOMAIN}
+          - auth.${DOMAIN}
 
   imageboard-api:
     build:
@@ -81,13 +95,11 @@ services:
       imageboard-identity-provider:
         condition: service_healthy
     environment:
-      REDIS_HOST: redis
-      REDIS_PORT: ${REDIS_PORT:-6379}
-      SHARED_PATH: /shared
+      <<: *app-env
     volumes:
       - shared-data:/shared
     env_file:
-      - './apps/imageboard-api/.env'
+      - './.env'
     networks:
       - internal
       - public
@@ -101,11 +113,9 @@ services:
       redis:
         condition: service_healthy
     environment:
-      REDIS_HOST: redis
-      REDIS_PORT: ${REDIS_PORT:-6379}
-      SHARED_PATH: /shared
+      <<: *app-env
     env_file:
-      - './apps/image-processor/.env'
+      - './.env'
     volumes:
       - shared-data:/shared
     networks:
@@ -120,15 +130,16 @@ services:
       redis:
         condition: service_healthy
     environment:
-      REDIS_HOST: redis
-      REDIS_PORT: ${REDIS_PORT:-6379}
+      <<: *app-env
+      # Read by the `debug` library straight from the environment.
+      DEBUG: ${IDP_DEBUG}
     env_file:
-      - './apps/imageboard-identity-provider/.env'
+      - './.env'
     networks:
       - internal
       - public
     healthcheck:
-      test: ["CMD", "wget", "--no-check-certificat", "--no-verbose", "--tries=1", "--spider", "http://0.0.0.0:3001/.well-known/openid-configuration"]
+      test: ["CMD", "wget", "--no-check-certificat", "--no-verbose", "--tries=1", "--spider", "http://0.0.0.0:${IDP_PORT}/.well-known/openid-configuration"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -140,10 +151,12 @@ services:
       dockerfile: apps/imageboard-client/Dockerfile
       target: dev
     container_name: imageboard-client
+    environment:
+      <<: *app-env
     env_file:
-      - './apps/imageboard-client/.env'
+      - './.env'
     ports:
-      - "5734:5734"
+      - "${CLIENT_PORT}:${CLIENT_PORT}"
     depends_on:
       imageboard-identity-provider:
         condition: service_healthy

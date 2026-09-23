@@ -27,3 +27,6 @@ node_modules
 
 # TypeScript cache
 *.tsbuildinfo
+
+# Generated from packages/config by bin/config-env.ts
+.generated

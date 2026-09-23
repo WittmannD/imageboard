@@ -60,9 +60,9 @@ export class PasswordResetService {
    * is still inside the resend cooldown (its email is already on the way).
    */
   private async issueToken(userId: string): Promise<string | null> {
-    const ttl = this.configService.getOrThrow<number>('passwordResetTokenTTL');
+    const ttl = this.configService.getOrThrow<number>('identityProvider.passwordReset.tokenTtlMs');
     const cooldown = this.configService.getOrThrow<number>(
-      'passwordResetRequestCooldown',
+      'identityProvider.passwordReset.requestCooldownMs',
     );
     const previous = await this.keyv.get<UserTokenRecord>(this.userKey(userId));
 
@@ -142,11 +142,11 @@ export class PasswordResetService {
     // or a Referer header, only the browser that opens the link.
     const link = new URL(
       'reset-password',
-      this.configService.getOrThrow<string>('INTERACTIONS_BASE_URL'),
+      this.configService.getOrThrow<string>('urls.interactions'),
     );
     link.hash = new URLSearchParams({ token }).toString();
 
-    const ttl = this.configService.getOrThrow<number>('passwordResetTokenTTL');
+    const ttl = this.configService.getOrThrow<number>('identityProvider.passwordReset.tokenTtlMs');
 
     this.sendEmail(
       passwordResetEmail,

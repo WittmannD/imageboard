@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany, type Relation } from 'typeorm';
 
 import { BaseEntity } from '../../common/entity/base.entity.js';
 import { UserEntity } from '../../user/entities/user.entity.js';
@@ -17,5 +17,5 @@ export class PostEntity extends BaseEntity {
   photos!: PhotoEntity[];
 
   @ManyToOne(() => UserEntity, (user) => user.posts)
-  user!: UserEntity;
+  user!: Relation<UserEntity>;
 }

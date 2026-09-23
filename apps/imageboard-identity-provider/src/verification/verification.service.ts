@@ -50,12 +50,12 @@ export class VerificationService {
     userId: string,
     purpose: VerificationSession['purpose'],
   ) {
-    const ttl = this.configService.getOrThrow<number>('verificationSessionTTL');
+    const ttl = this.configService.getOrThrow<number>('identityProvider.verification.sessionTtlMs');
     const resendCooldown = this.configService.getOrThrow<number>(
-      'verificationResendCooldown',
+      'identityProvider.verification.resendCooldownMs',
     );
     const rounds = this.configService.getOrThrow<number>(
-      'verificationOTPSaltRounds',
+      'identityProvider.verification.otpSaltRounds',
     );
     let sessionId = await this.keyv.get<string>(this.getUserKey(userId));
     const existingSession = sessionId

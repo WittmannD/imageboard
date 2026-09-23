@@ -17,6 +17,8 @@ import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import IdProvider, { errors, type Interaction } from 'oidc-provider';
 
+import { ErrorCode } from '../common/errors/error-code.js';
+import { ErrorCodeFilter } from '../common/filters/error-code.filter.js';
 import {
   CONSENT_THROTTLE,
   LOGIN_THROTTLE,
@@ -27,14 +29,12 @@ import scopesConfig from '../oidc/config/scopes.config.js';
 import { API_RESOURCE_IDENTIFIER } from '../oidc/helpers/resource-indicators.js';
 import { OIDC_PROVIDER } from '../oidc/oidc.provider.js';
 import { UserService } from '../user/user.service.js';
-import type { ConsentDetails } from './interfaces.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegistrationDto } from './dto/registration.dto.js';
-import { ErrorCode } from '../common/errors/error-code.js';
 import { UsernameTakenError } from './errors/registration-error.js';
-import { ErrorCodeFilter } from '../common/filters/error-code.filter.js';
 import { InteractionRedirectFilter } from './filters/interaction-redirect.filter.js';
 import { InteractionService } from './interaction.service.js';
+import type { ConsentDetails } from './interfaces.js';
 
 @Controller('interactions')
 @UseFilters(ErrorCodeFilter)
@@ -61,7 +61,7 @@ export class InteractionController {
     res.redirect(
       new URL(
         `${interaction.prompt.name}?${params.toString()}`,
-        this.configService.getOrThrow('INTERACTIONS_BASE_URL'),
+        this.configService.getOrThrow<string>('urls.interactions'),
       ).href,
     );
   }

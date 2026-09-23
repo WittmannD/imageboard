@@ -17,6 +17,7 @@
     "debug": "nest start --debug --watch"
   },
   "dependencies": {
+    "@hdotu1/config": "file:../../packages/config",
     "@hdotu1/database-common": "file:../../packages/database-common",
     "@hdotu1/gallery-layout-engine": "file:../../packages/gallery-layout-engine",
     "@hdotu1/image-processor-client": "file:../../packages/image-processor-client",

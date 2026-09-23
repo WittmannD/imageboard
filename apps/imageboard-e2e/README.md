@@ -42,14 +42,20 @@ from the root `docker-compose.yaml`.
 
 ### Ports
 
-| Port | Service                                   | Override           |
-| ---- | ----------------------------------------- | ------------------ |
-| 8088 | nginx front door (app, `api.*`, `auth.*`) | `E2E_HTTP_PORT`    |
-| 8025 | Mailpit UI and API                        | `E2E_MAILPIT_PORT` |
-| 9000 | MinIO (public image bucket)               | `E2E_S3_PORT`      |
+| Port | Service                                   |
+| ---- | ----------------------------------------- |
+| 8088 | nginx front door (app, `api.*`, `auth.*`) |
+| 8025 | Mailpit UI and API                        |
+| 9000 | MinIO (public image bucket)               |
 
-Set the same variables for both `stack:up` and `e2e`. `E2E_DOMAIN` (default
-`e2e.test`) changes the hostname everything is served from.
+### Configuration
+
+The stack and the suite read the same `e2e` profile in
+`packages/config/src/profiles/e2e.ts`. It sets the domain (`e2e.test`), the host
+ports above and the Mailpit/MinIO wiring. Change them there. `stack:up`
+generates `.generated/config.e2e.env` from the profile for compose, and
+`src/env.ts` imports the profile directly. The stack's test-only secrets are
+committed in `.env.e2e`.
 
 ## How it works
 
@@ -83,15 +89,14 @@ Assert with `expect(...).toPass()` / web-first assertions, never fixed sleeps.
 
 ## Configuration the stack relies on
 
-These are opt-in environment switches added to the apps for this stack. Their
-defaults leave production behaviour unchanged.
+The `e2e` profile differs from production in these settings:
 
-| App                    | Variable                                                                                                   | Effect                                                                                                                                    |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| identity provider, API | `THROTTLE_DISABLED=true`                                                                                   | Skips rate limiting. Requests all come from one container IP, so per-IP limits (e.g. 3 verification emails/min) can't hold for a test run |
-| identity provider      | `SMTP_SECURE=false`                                                                                        | Plain SMTP instead of implicit TLS, for Mailpit                                                                                           |
-| image-processor        | `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_FORCE_PATH_STYLE`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | Point at any S3-compatible store (falls back to Filebase and `FILEBASE_*`)                                                                |
-| client image           | `VITE_BASE_URL`, `VITE_API_BASE_URL`, `VITE_IMAGE_SERVER_URL` build args                                   | Vite inlines these at build time                                                                                                          |
+| App                    | Setting                                                      | Effect                                                                                                                                    |
+| ---------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| identity provider, API | `throttle.enabled: false`                                    | Skips rate limiting. Requests all come from one container IP, so per-IP limits (e.g. 3 verification emails/min) can't hold for a test run |
+| identity provider      | `identityProvider.smtp` (Mailpit, `secure: false`)           | Plain SMTP instead of implicit TLS, for Mailpit                                                                                           |
+| image-processor        | `imageProcessor.s3` (MinIO endpoint, `forcePathStyle: true`) | Points at MinIO instead of Filebase                                                                                                       |
+| client image           | `APP_ENV=e2e` build arg                                      | Vite inlines the profile's public URLs at build time                                                                                      |
 
 ## Layout
 

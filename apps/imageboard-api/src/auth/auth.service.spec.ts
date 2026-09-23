@@ -30,9 +30,8 @@ describe('AuthService', () => {
   };
   const config = {
     getOrThrow: vi.fn((key: string) => {
-      if (key === 'OIDC_ISSUER') return ISSUER;
-      if (key === 'OIDC_ISSUER_URL') return ISSUER;
-      if (key === 'BASE_URL') return AUDIENCE;
+      if (key === 'urls.auth') return ISSUER;
+      if (key === 'urls.api') return AUDIENCE;
       throw new Error(`unexpected config key: ${key}`);
     }),
   };
@@ -47,9 +46,8 @@ describe('AuthService', () => {
   beforeEach(async () => {
     vi.resetAllMocks();
     config.getOrThrow.mockImplementation((key: string) => {
-      if (key === 'OIDC_ISSUER') return ISSUER;
-      if (key === 'OIDC_ISSUER_URL') return ISSUER;
-      if (key === 'BASE_URL') return AUDIENCE;
+      if (key === 'urls.auth') return ISSUER;
+      if (key === 'urls.api') return AUDIENCE;
       throw new Error(`unexpected config key: ${key}`);
     });
     vi.mocked(jwtVerify).mockResolvedValue({

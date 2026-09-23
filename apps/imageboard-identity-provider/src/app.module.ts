@@ -7,7 +7,10 @@ import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { AppConfig } from './config/app.config.js';
+import type { AppConfig } from '@hdotu1/config';
+
+import { AppController } from './app.controller.js';
+import configuration from './config/configuration.js';
 import throttlerConfig from './config/throttler.config.js';
 import { CredentialsModule } from './credentials/credentials.module.js';
 import { InteractionModule } from './interaction/interaction.module.js';
@@ -16,14 +19,13 @@ import { OidcModule } from './oidc/oidc.module.js';
 import { PasswordResetModule } from './password-reset/password-reset.module.js';
 import { UserModule } from './user/user.module.js';
 import { VerificationModule } from './verification/verification.module.js';
-import { AppController } from './app.controller.js';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [AppConfig, throttlerConfig],
-      envFilePath: './.env',
+      ignoreEnvFile: true,
+      load: [configuration, throttlerConfig],
     }),
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
@@ -40,19 +42,19 @@ import { AppController } from './app.controller.js';
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        const sslEnabled = config.get('DB_SSL') === 'true';
+        const database = config.getOrThrow<AppConfig['database']>('database');
 
         return {
           type: 'postgres',
-          host: config.get<string>('DB_HOST'),
-          port: Number(config.get('DB_PORT')),
-          username: config.get<string>('DB_USER'),
-          password: config.get<string>('DB_PASS'),
-          database: config.get<string>('DB_NAME'),
-          dropSchema: true,
+          host: database.host,
+          port: database.port,
+          username: config.getOrThrow<string>('secrets.DB_USER'),
+          password: config.getOrThrow<string>('secrets.DB_PASS'),
+          database: database.names.identity,
+          dropSchema: database.dropSchema,
           autoLoadEntities: true,
-          synchronize: true,
-          ssl: sslEnabled ? { rejectUnauthorized: false } : false,
+          synchronize: database.synchronize,
+          ssl: database.ssl ? { rejectUnauthorized: false } : false,
         };
       },
     }),

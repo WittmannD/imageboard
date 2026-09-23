@@ -37,9 +37,9 @@ describe('VerificationController', () => {
     emailService.sendFromTemplate.mockResolvedValue(undefined);
 
     const settings: Record<string, number> = {
-      verificationSessionTTL: 60_000,
-      verificationResendCooldown: 60_000,
-      verificationOTPSaltRounds: 4,
+      'identityProvider.verification.sessionTtlMs': 60_000,
+      'identityProvider.verification.resendCooldownMs': 60_000,
+      'identityProvider.verification.otpSaltRounds': 4,
     };
     const moduleRef = await Test.createTestingModule({
       imports: [

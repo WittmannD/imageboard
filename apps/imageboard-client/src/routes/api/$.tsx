@@ -3,9 +3,10 @@ import {
   type LoaderFunction,
 } from 'react-router';
 import { userSessionStorage, getUserSessionFromCookie, toUserSessionState } from 'src/.server/session/user-session.server.ts';
+import { config } from 'src/.server/config.ts';
 import { refreshTokenGrant } from 'src/.server/helpers/oidc.ts';
 
-const apiUrl = new URL(process.env['IMAGEBOARD_API_URL']);
+const apiUrl = new URL(config.urls.api);
 const includeResponseHeaderKeys: string[] = ['Content-Type', 'Retry-After', 'Cache-Control', 'ETag', 'Last-Modified'];
 // hop-by-hop / connection-specific headers that must not be forwarded as-is to the upstream API
 const excludeRequestHeaderKeys: string[] = ['Host', 'Connection', 'Content-Length'];

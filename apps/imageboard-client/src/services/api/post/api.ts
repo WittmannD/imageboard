@@ -1,4 +1,5 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
+import { publicConfig } from 'src/lib/config.ts';
 import { axiosBaseQuery } from 'src/services/api/base-query.ts';
 
 import type {
@@ -13,7 +14,7 @@ import { POST_LIST_TAG, POST_TAG_TYPE } from './constants.ts';
 export const postsApi = createApi({
   reducerPath: 'postsApi',
   baseQuery: axiosBaseQuery({
-    baseUrl: import.meta.env['VITE_API_BASE_URL'],
+    baseUrl: publicConfig.apiBaseUrl,
   }),
   tagTypes: [POST_TAG_TYPE],
   endpoints: (builder) => ({

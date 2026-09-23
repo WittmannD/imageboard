@@ -2,6 +2,7 @@ import { forwardRef, Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import type { AppConfig } from '@hdotu1/config';
 import { TransactionModule } from '@hdotu1/database-common';
 import { ImageProcessorClientModule } from '@hdotu1/image-processor-client';
 
@@ -21,10 +22,7 @@ import { UserController } from './user.controller.js';
     ImageProcessorClientModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        redis: {
-          host: configService.get<string>('REDIS_HOST'),
-          port: configService.get<number>('REDIS_PORT'),
-        },
+        redis: configService.getOrThrow<AppConfig['redis']>('redis'),
       }),
       inject: [ConfigService],
     }),

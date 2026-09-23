@@ -16,7 +16,10 @@
     "build:clean": "nx exec -- del-cli dist",
     "test": "nx run-many -t=test",
     "lint": "nx run-many -t=lint",
-    "release": "tsx ./bin/nx-release.ts"
+    "release": "tsx ./bin/nx-release.ts",
+    "config:env": "tsx ./bin/config-env.ts",
+    "stack:dev": "npm run config:env -- development && docker compose --env-file .env --env-file .generated/config.development.env up --build",
+    "stack:dev:watch": "npm run config:env -- development && docker compose --env-file .env --env-file .generated/config.development.env watch"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",

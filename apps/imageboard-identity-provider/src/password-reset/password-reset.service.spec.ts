@@ -9,9 +9,9 @@ const USER = { id: 'user-1', email: 'user@example.test' };
 
 function build({ ttl = 60_000, cooldown = 60_000 } = {}) {
   const settings: Record<string, unknown> = {
-    passwordResetTokenTTL: ttl,
-    passwordResetRequestCooldown: cooldown,
-    INTERACTIONS_BASE_URL: 'http://client.test/auth/',
+    'identityProvider.passwordReset.tokenTtlMs': ttl,
+    'identityProvider.passwordReset.requestCooldownMs': cooldown,
+    'urls.interactions': 'http://client.test/auth/',
   };
   const userService = {
     findOneByEmail: vi.fn().mockResolvedValue(USER),

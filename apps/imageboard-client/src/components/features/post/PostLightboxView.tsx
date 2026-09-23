@@ -7,6 +7,7 @@ import {
   CarouselPrevious,
   type CarouselApi,
 } from 'src/components/ui/carousel/Carousel.tsx';
+import { getImageUrl } from 'src/lib/utils/image-source.ts';
 import type { PhotoDto, PhotoSource, PostDto } from 'src/services/api/types.ts';
 import {
   Card,
@@ -64,7 +65,7 @@ function PostLightboxView({
             >
               <img
                 data-lightbox-stop
-                src={`${import.meta.env['VITE_IMAGE_SERVER_URL']}/${image.key}`}
+                src={getImageUrl(image.key)}
                 alt=""
                 className="block h-full max-h-[1080px] w-auto max-w-full object-contain"
               />
