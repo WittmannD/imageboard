@@ -124,4 +124,33 @@ export const base: Omit<Profile, 'env' | 'domain' | 'imageServerUrl' | 'e2e'> = 
       bucket: 'imageboard',
     },
   },
+
+  post: {
+    maxImagesPerPost: 5,
+    allowedImageMimeTypes: [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'image/bmp',
+      'image/avif',
+    ],
+    allowedImageFormats: ['jpeg', 'jpg', 'png', 'gif', 'webp', 'bmp', 'avif'],
+    imageSizeLimitBytes: 6291456, // 6MB
+  },
+
+  user: {
+    allowedAvatarMimeTypes: [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'image/bmp',
+      'image/avif',
+    ],
+    allowedAvatarFormats: ['jpeg', 'jpg', 'png', 'gif', 'webp', 'bmp', 'avif'],
+    avatarSizeLimitBytes: 2097152, // 2MB
+  },
 };

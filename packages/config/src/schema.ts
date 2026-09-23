@@ -3,8 +3,21 @@ import { z } from 'zod';
 export const APP_ENVS = ['development', 'e2e', 'production'] as const;
 export type AppEnv = (typeof APP_ENVS)[number];
 
+const mimeTypeRegex = /^[a-z0-9-]+\/[a-z0-9-+.]+$/i;
+const imageFileFormats = [
+  'jpg',
+  'jpeg',
+  'png',
+  'gif',
+  'webp',
+  'svg',
+  'bmp',
+  'avif',
+];
 const port = z.number().int().min(1).max(65_535);
 const positiveInt = z.number().int().positive();
+const mime = z.string().regex(mimeTypeRegex);
+const imageFileFormat = z.enum(imageFileFormats);
 const url = z.url();
 
 /** A @nestjs/throttler limit: at most `limit` requests per `ttl` milliseconds. */
@@ -136,6 +149,19 @@ export const profileSchema = z.object({
       forcePathStyle: z.boolean(),
       bucket: z.string().min(1),
     }),
+  }),
+
+  post: z.object({
+    maxImagesPerPost: positiveInt,
+    imageSizeLimitBytes: positiveInt,
+    allowedImageMimeTypes: z.array(mime),
+    allowedImageFormats: z.array(imageFileFormat),
+  }),
+
+  user: z.object({
+    avatarSizeLimitBytes: positiveInt,
+    allowedAvatarMimeTypes: z.array(mime),
+    allowedAvatarFormats: z.array(imageFileFormat),
   }),
 
   /** Host ports the e2e stack publishes; only the e2e profile sets them. */

@@ -17,8 +17,14 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 
+import { SkipEmailVerification } from '../common/decorators/skip-email-verification.decorator.js';
 import { User } from '../common/decorators/user.decorator.js';
 import { AuthGuard } from '../common/guard/auth.guard.js';
+import { ParseImageFilePipe } from '../common/pipes/parse-image-file.pipe.js';
+import {
+  ALLOWED_AVATAR_FORMATS,
+  AVATAR_SIZE_LIMIT,
+} from '../config/configuration.js';
 import type { FileUpload } from '../multer/file-upload.js';
 import { ProfileDto } from './dto/profile.dto.js';
 import { UpdateUsernameDto } from './dto/update-username.dto.js';
@@ -27,7 +33,6 @@ import type { UserEntity } from './entities/user.entity.js';
 import { UsernameTakenError } from './errors/user-service-error.js';
 import { AvatarService } from './service/avatar.service.js';
 import { UserService } from './service/user.service.js';
-import { SkipEmailVerification } from '../common/decorators/skip-email-verification.decorator.js';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('user')
@@ -80,7 +85,8 @@ export class UserController {
   @SerializeOptions({ type: ProfileDto })
   public async uploadAvatar(
     @User() unverifiedUser: UserEntity,
-    @UploadedFile() avatar: FileUpload | undefined,
+    @UploadedFile(ParseImageFilePipe(ALLOWED_AVATAR_FORMATS, AVATAR_SIZE_LIMIT))
+    avatar: FileUpload | undefined,
   ): Promise<ProfileDto> {
     if (!avatar) {
       throw new BadRequestException('Avatar file is required');

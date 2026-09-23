@@ -16,6 +16,7 @@ import FileDropzoneController from 'src/components/features/forms/controllers/Fi
 import { createPostFormSchema } from 'src/components/features/forms/create-post-form/schema.ts';
 import { clsx } from 'clsx';
 import { useCreatePostMutation } from 'src/services/api/post/api.ts';
+import { publicConfig } from 'src/lib/config.ts';
 
 export interface CreatePostFormProps {
   onSuccess?: () => void;
@@ -49,7 +50,10 @@ export default function CreatePostForm({ onSuccess }: CreatePostFormProps) {
       <FileDropzoneController
         name="files"
         multiple
-        accept={{ 'image/*': [] }}
+        accept={{ 'image/*': publicConfig.post.allowedImageFormats.map((f) => `.${f}`) }}
+        maxFiles={publicConfig.post.maxImagesPerPost}
+        maxSize={publicConfig.post.imageSizeLimitBytes}
+        minSize={1}
         placeholder={
           <div className="flex min-h-48 flex-col items-center justify-center gap-2">
             <ImageUp />

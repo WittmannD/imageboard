@@ -26,6 +26,12 @@ import { PostWithAuthorDto } from './dto/post-with-author.dto.js';
 import type { PostEntity } from './entities/post.entity.js';
 import { PostService } from './post.service.js';
 import type { PostPage } from './repositories/post.repository.js';
+import { ParseImageFilePipe } from '../common/pipes/parse-image-file.pipe.js';
+import {
+  ALLOWED_POST_IMAGE_FORMATS,
+  MAX_IMAGES_PER_POST,
+  POST_IMAGE_SIZE_LIMIT,
+} from '../config/configuration.js';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('posts')
@@ -35,11 +41,12 @@ export class PostController {
   @UseGuards(AuthGuard)
   @Throttle(CREATE_POST_THROTTLE)
   @Post()
-  @UseInterceptors(FilesInterceptor('images', 3))
+  @UseInterceptors(FilesInterceptor('images', MAX_IMAGES_PER_POST))
   @SerializeOptions({ type: PostDraftDto })
   public async create(
     @User() user: UserEntity,
-    @UploadedFiles() images: FileUpload[],
+    @UploadedFiles(ParseImageFilePipe(ALLOWED_POST_IMAGE_FORMATS, POST_IMAGE_SIZE_LIMIT))
+    images: FileUpload[],
     @Body() body: CreatePostDto,
   ): Promise<PostDraftDto> {
     return (await this.postService.createUserPost(

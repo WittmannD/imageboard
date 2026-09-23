@@ -1,4 +1,4 @@
-import type { AppConfig } from './schema.js';
+import type { AppConfig, Profile } from './schema.js';
 
 /**
  * The only part of the configuration that may reach the browser bundle. Keep
@@ -9,6 +9,9 @@ export interface PublicConfig {
   apiBaseUrl: string;
   oidcIssuerUrl: string;
   imageServerUrl: string;
+
+  post: Profile['post'];
+  user: Profile['user'];
 }
 
 export function toPublicConfig(config: AppConfig): PublicConfig {
@@ -17,5 +20,8 @@ export function toPublicConfig(config: AppConfig): PublicConfig {
     apiBaseUrl: config.urls.apiProxy,
     oidcIssuerUrl: config.urls.auth,
     imageServerUrl: config.urls.imageServer,
+
+    post: config.post,
+    user: config.user,
   };
 }
