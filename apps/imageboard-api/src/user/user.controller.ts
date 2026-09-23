@@ -1,17 +1,15 @@
 import {
-  BadRequestException,
   Body,
   ClassSerializerInterceptor,
-  ConflictException,
   Controller,
   Get,
-  NotFoundException,
   Param,
   ParseIntPipe,
   Patch,
   Post,
   SerializeOptions,
   UploadedFile,
+  UseFilters,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -30,10 +28,11 @@ import { ProfileDto } from './dto/profile.dto.js';
 import { UpdateUsernameDto } from './dto/update-username.dto.js';
 import { UserDto } from './dto/user.dto.js';
 import type { UserEntity } from './entities/user.entity.js';
-import { UsernameTakenError } from './errors/user-service-error.js';
 import { AvatarService } from './service/avatar.service.js';
 import { UserService } from './service/user.service.js';
+import { UserErrorFilter } from './user-error.filter.js';
 
+@UseFilters(UserErrorFilter)
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('user')
 export class UserController {
@@ -47,13 +46,7 @@ export class UserController {
   @Get('me')
   @SerializeOptions({ type: ProfileDto })
   public async getProfile(@User() unverifiedUser: UserEntity) {
-    const profile = await this.userService.findOneById(unverifiedUser.id);
-
-    if (!profile) {
-      throw new NotFoundException();
-    }
-
-    return profile;
+    return await this.userService.getOneById(unverifiedUser.id);
   }
 
   @UseGuards(AuthGuard)
@@ -64,18 +57,10 @@ export class UserController {
     @User() unverifiedUser: UserEntity,
     @Body() body: UpdateUsernameDto,
   ): Promise<ProfileDto> {
-    try {
-      return (await this.userService.updateUsername(
-        unverifiedUser,
-        body.username,
-      )) as ProfileDto;
-    } catch (error) {
-      if (error instanceof UsernameTakenError) {
-        throw new ConflictException(error.message);
-      }
-
-      throw error;
-    }
+    return (await this.userService.updateUsername(
+      unverifiedUser,
+      body.username,
+    )) as ProfileDto;
   }
 
   @UseGuards(AuthGuard)
@@ -85,13 +70,10 @@ export class UserController {
   @SerializeOptions({ type: ProfileDto })
   public async uploadAvatar(
     @User() unverifiedUser: UserEntity,
+    // the pipe rejects a missing file with file_required
     @UploadedFile(ParseImageFilePipe(ALLOWED_AVATAR_FORMATS, AVATAR_SIZE_LIMIT))
-    avatar: FileUpload | undefined,
+    avatar: FileUpload,
   ): Promise<ProfileDto> {
-    if (!avatar) {
-      throw new BadRequestException('Avatar file is required');
-    }
-
     return (await this.avatarService.setAvatar(
       unverifiedUser,
       avatar,
@@ -101,12 +83,6 @@ export class UserController {
   @Get(':id')
   @SerializeOptions({ type: UserDto })
   public async getUserById(@Param('id', ParseIntPipe) id: number) {
-    const user = await this.userService.findOneById(id);
-
-    if (!user) {
-      throw new NotFoundException();
-    }
-
-    return user;
+    return await this.userService.getOneById(id);
   }
 }

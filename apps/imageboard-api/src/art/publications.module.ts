@@ -11,7 +11,7 @@ import { UploadsModuleFactory } from '../multer/uploads-module-factory.js';
 import { PhotoEntity } from './entities/photo.entity.js';
 import { PostEntity } from './entities/post.entity.js';
 import { PostController } from './post.controller.js';
-import { PostService } from './post.service.js';
+import { PostService } from './services/post.service.js';
 import { GalleryLayoutEngineProvider } from './providers/gallery-layout-engine.provider.js';
 import { PhotoRepositoryProvider } from './repositories/photo.repository.js';
 import { PostRepositoryProvider } from './repositories/post.repository.js';

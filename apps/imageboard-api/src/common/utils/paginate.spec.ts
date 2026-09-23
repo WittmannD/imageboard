@@ -1,7 +1,8 @@
-import { Brackets, type SelectQueryBuilder } from 'typeorm';
+import { Brackets, QueryFailedError, type SelectQueryBuilder } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { BaseEntity } from '../entity/base.entity.js';
+import { InvalidCursorError } from '../errors/common-errors.js';
 import type { KeySetCursor } from '../types/cursor.js';
 import { paginate } from './paginate.js';
 
@@ -159,5 +160,61 @@ describe('paginate', () => {
       hasNextPage: false,
       nextCursor: null,
     });
+  });
+});
+
+describe('paginate cursor validation', () => {
+  const createQB = (getMany = vi.fn().mockResolvedValue([])) =>
+    ({
+      alias: 'entity',
+      addSelect: vi.fn().mockReturnThis(),
+      orderBy: vi.fn().mockReturnThis(),
+      addOrderBy: vi.fn().mockReturnThis(),
+      take: vi.fn().mockReturnThis(),
+      andWhere: vi.fn().mockReturnThis(),
+      getMany,
+    }) as unknown as SelectQueryBuilder<BaseEntity>;
+
+  it.each([
+    ['a non-integer id', { id: '1; drop table post' }],
+    ['a field outside the allow-list', { id: 1, 'id; drop table post': 1 }],
+    ['a non-scalar tie-breaker value', { id: 1, createdAt: { $gt: 1 } }],
+  ])('rejects %s', async (_, cursor) => {
+    const qb = createQB();
+
+    await expect(
+      paginate(qb, cursor as unknown as KeySetCursor<BaseEntity>),
+    ).rejects.toBeInstanceOf(InvalidCursorError);
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(qb.getMany).not.toHaveBeenCalled();
+  });
+
+  it('only allows the given sortable fields', async () => {
+    await expect(
+      paginate(createQB(), { id: 1, createdAt: new Date() } as KeySetCursor<BaseEntity>, {
+        sortableFields: [],
+      }),
+    ).rejects.toBeInstanceOf(InvalidCursorError);
+  });
+
+  it('turns a Postgres data exception into InvalidCursorError', async () => {
+    const dataException = new QueryFailedError('SELECT', [], {
+      code: '22007', // invalid_datetime_format
+    } as unknown as Error);
+
+    await expect(
+      paginate(
+        createQB(vi.fn().mockRejectedValue(dataException)),
+        { id: 1, createdAt: 'not a date' } as unknown as KeySetCursor<BaseEntity>,
+      ),
+    ).rejects.toBeInstanceOf(InvalidCursorError);
+  });
+
+  it('rethrows other query failures untouched', async () => {
+    const connectionError = new Error('connection terminated');
+
+    await expect(
+      paginate(createQB(vi.fn().mockRejectedValue(connectionError)), {}),
+    ).rejects.toBe(connectionError);
   });
 });

@@ -116,6 +116,7 @@ export const base: Omit<Profile, 'env' | 'domain' | 'imageServerUrl' | 'e2e'> = 
   },
 
   imageProcessor: {
+    timeoutMs: 60_000, // 1 minute
     // Filebase, the production object store.
     s3: {
       endpoint: 'https://s3.filebase.io',

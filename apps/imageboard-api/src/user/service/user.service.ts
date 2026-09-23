@@ -5,7 +5,11 @@ import { type EntityManager } from 'typeorm';
 import { isUniqueViolation, TransactionService } from '@hdotu1/database-common';
 
 import { UserEntity } from '../entities/user.entity.js';
-import { UsernameTakenError } from '../errors/user-service-error.js';
+import {
+  UsernameGenerationError,
+  UsernameTakenError,
+  UserNotFoundError,
+} from '../errors/user-service-error.js';
 import { UserRepository } from '../repositories/user.repository.js';
 
 const USERNAME_CREATION_ATTEMPTS = 10;
@@ -39,6 +43,16 @@ export class UserService {
 
       return await userRepository.findOneBy({ id });
     });
+  }
+
+  async getOneById(id: number, em?: EntityManager) {
+    const user = await this.findOneById(id, em);
+
+    if (!user) {
+      throw new UserNotFoundError();
+    }
+
+    return user;
   }
 
   async updateUsername(user: UserEntity, username: string, em?: EntityManager) {
@@ -93,7 +107,7 @@ export class UserService {
         }
 
         if ((++attempts) > USERNAME_CREATION_ATTEMPTS) {
-          throw new UsernameTakenError();
+          throw new UsernameGenerationError();
         }
 
         // User entity insertion failed, try again with a different username

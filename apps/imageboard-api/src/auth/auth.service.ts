@@ -1,8 +1,13 @@
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { plainToInstance } from 'class-transformer';
-import { validate } from 'class-validator';
-import { createRemoteJWKSet, jwtVerify, type RemoteJWKSet } from 'jose';
+import { validate, type ValidationError } from 'class-validator';
+import {
+  createRemoteJWKSet,
+  errors as joseErrors,
+  jwtVerify,
+  type RemoteJWKSet,
+} from 'jose';
 import * as oidcClient from 'openid-client';
 import type { EntityManager } from 'typeorm';
 
@@ -13,16 +18,41 @@ import type {
 } from '../common/types/oidc.js';
 import { FederatedCredentialsService } from '../federated-credentials/federated-credentials.service.js';
 import type { UserEntity } from '../user/entities/user.entity.js';
+import { UserServiceError } from '../user/errors/user-service-error.js';
 import { UserService } from '../user/service/user.service.js';
 import { AccessTokenPayloadModel } from './access-token-payload.model.js';
 import {
-  AuthServiceError,
-  AuthServiceJWKSError,
-  InvalidAccessToken,
+  AccessTokenExpiredError,
+  AuthProviderUnavailableError,
+  EmailNotVerifiedError,
+  InvalidAccessTokenError,
+  OrphanedFederatedCredentialError,
+  UserProvisioningError,
 } from './errors/auth-service-error.js';
+
+// Only the email_verified check is tagged with VERIFIED_EMAIL_GROUP
+function isOnlyEmailUnverified(errors: ValidationError[]) {
+  return errors.every(
+    (error) =>
+      error.property === 'email_verified' &&
+      Object.keys(error.constraints ?? {}).every((key) => key === 'equals'),
+  );
+}
+
+// jose reports JWKS fetch failures (timeouts, non-200s, unparsable bodies) with
+// these; every other JOSEError means the token itself is bad
+function isJwksFetchError(error: unknown) {
+  return (
+    error instanceof joseErrors.JWKSTimeout ||
+    error instanceof joseErrors.JWKSInvalid ||
+    (error instanceof joseErrors.JOSEError &&
+      error.code === joseErrors.JOSEError.code)
+  );
+}
 
 @Injectable()
 export class AuthService implements OnModuleInit {
+  private readonly logger = new Logger(AuthService.name);
   private readonly requiredClaims = [
     'iss',
     'aud',
@@ -35,6 +65,7 @@ export class AuthService implements OnModuleInit {
   private readonly issuerUrl: string;
   private readonly audience: string;
   private jwks: RemoteJWKSet | null = null;
+  private jwksDiscovery: Promise<RemoteJWKSet> | null = null;
 
   constructor(
     private readonly configService: ConfigService,
@@ -47,10 +78,54 @@ export class AuthService implements OnModuleInit {
     this.audience = this.configService.getOrThrow<string>('urls.api');
   }
 
-  private getJwks(): RemoteJWKSet {
-    if (!this.jwks) {
-      throw new AuthServiceJWKSError('Failed to create JWKS set');
+  private async discoverJwks(): Promise<RemoteJWKSet> {
+    // outside the try: a missing config key is a bug, not an IdP outage
+    const clientId = this.configService.getOrThrow<string>(
+      'identityProvider.oidc.client.id',
+    );
+    let jwksUri: string | undefined;
+
+    try {
+      const config = await oidcClient.discovery(
+        new URL(this.issuerUrl),
+        clientId,
+        {},
+        () => {
+          /* empty */
+        },
+        {
+          // todo: remove in prod
+          // eslint-disable-next-line @typescript-eslint/no-deprecated
+          execute: [oidcClient.allowInsecureRequests],
+        },
+      );
+      jwksUri = config.serverMetadata().jwks_uri;
+    } catch (error) {
+      throw new AuthProviderUnavailableError(
+        'OpenID configuration discovery failed',
+        error,
+      );
     }
+
+    if (!jwksUri) {
+      throw new AuthProviderUnavailableError(
+        'JWKS URI not found in OpenID configuration',
+      );
+    }
+
+    return createRemoteJWKSet(new URL(jwksUri));
+  }
+
+  // Retry on demand and share one in-flight attempt between concurrent requests
+  private async getJwks(): Promise<RemoteJWKSet> {
+    if (this.jwks) {
+      return this.jwks;
+    }
+
+    this.jwksDiscovery ??= this.discoverJwks().finally(() => {
+      this.jwksDiscovery = null;
+    });
+    this.jwks = await this.jwksDiscovery;
 
     return this.jwks;
   }
@@ -59,42 +134,47 @@ export class AuthService implements OnModuleInit {
     token: string,
     skipEmailVerification: boolean,
   ): Promise<AccessTokenPayloadModel> {
-    const { payload } = await jwtVerify<UnvalidatedOidcClaims>(
-      token,
-      this.getJwks(),
-      {
+    const jwks = await this.getJwks();
+    let payload: UnvalidatedOidcClaims;
+
+    try {
+      ({ payload } = await jwtVerify<UnvalidatedOidcClaims>(token, jwks, {
         issuer: this.issuer,
         audience: this.audience,
         requiredClaims: this.requiredClaims,
-      },
-    );
+      }));
+    } catch (error) {
+      if (error instanceof joseErrors.JWTExpired) {
+        throw new AccessTokenExpiredError(error);
+      }
+
+      if (isJwksFetchError(error)) {
+        throw new AuthProviderUnavailableError('Failed to fetch JWKS', error);
+      }
+
+      if (error instanceof joseErrors.JOSEError) {
+        throw new InvalidAccessTokenError(undefined, error);
+      }
+
+      // not jose's own error, e.g. fetch() failing to connect to the JWKS URI
+      throw new AuthProviderUnavailableError(
+        'Failed to verify access token',
+        error,
+      );
+    }
 
     return this.validateClaims(payload, skipEmailVerification);
   }
 
   async onModuleInit() {
-    const config = await oidcClient.discovery(
-      new URL(this.issuerUrl),
-      this.configService.getOrThrow<string>('identityProvider.oidc.client.id'),
-      {},
-      () => {
-        /* empty */
-      },
-      {
-        // todo: remove in prod
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
-        execute: [oidcClient.allowInsecureRequests],
-      },
-    );
-    const jwksUri = config.serverMetadata().jwks_uri;
-
-    if (!jwksUri) {
-      throw new AuthServiceJWKSError(
-        'JWKS URI not found in OpenID configuration',
+    try {
+      await this.getJwks();
+    } catch (error) {
+      // Not fatal: public routes keep working and getJwks() retries later
+      this.logger.warn(
+        `JWKS discovery failed, retrying on the next authenticated request: ${String(error)}`,
       );
     }
-
-    this.jwks = createRemoteJWKSet(new URL(jwksUri));
   }
 
   async validateAccessToken(
@@ -120,11 +200,21 @@ export class AuthService implements OnModuleInit {
     em?: EntityManager,
   ) {
     return await this.tx.withManager(em, async (entityManager) => {
-      const user = await this.userService.createWithUsernameOrFindUser(
-        payload.preferred_username,
-        payload.email,
-        entityManager,
-      );
+      let user: UserEntity;
+
+      try {
+        user = await this.userService.createWithUsernameOrFindUser(
+          payload.preferred_username,
+          payload.email,
+          entityManager,
+        );
+      } catch (error) {
+        if (error instanceof UserServiceError) {
+          throw new UserProvisioningError(error);
+        }
+
+        throw error;
+      }
 
       const credentials =
         await this.federatedCredentialService.createOrFindForUser(
@@ -141,9 +231,7 @@ export class AuthService implements OnModuleInit {
         );
 
         if (!credentialUser) {
-          throw new AuthServiceError(
-            'Federated credential points to a missing user',
-          );
+          throw new OrphanedFederatedCredentialError();
         }
 
         return credentialUser;
@@ -175,9 +263,7 @@ export class AuthService implements OnModuleInit {
       );
 
       if (!user) {
-        throw new AuthServiceError(
-          'Federated credential points to a missing user',
-        );
+        throw new OrphanedFederatedCredentialError();
       }
 
       return user;
@@ -198,11 +284,17 @@ export class AuthService implements OnModuleInit {
       strictGroups: skipEmailVerification,
     });
 
-    if (errors.length && errors[0]) {
-      Logger.warn('Invalid Access Token payload: ' + errors[0].toString());
-      throw new InvalidAccessToken();
+    if (errors.length === 0) {
+      return claims;
     }
 
-    return claims;
+    if (isOnlyEmailUnverified(errors)) {
+      throw new EmailNotVerifiedError();
+    }
+
+    this.logger.warn(
+      'Invalid Access Token payload: ' + errors.map(String).join('; '),
+    );
+    throw new InvalidAccessTokenError();
   }
 }

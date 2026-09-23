@@ -142,6 +142,8 @@ export const profileSchema = z.object({
   }),
 
   imageProcessor: z.object({
+    /** How long the API waits for an image-processing RPC reply before giving up. */
+    timeoutMs: positiveInt,
     s3: z.object({
       endpoint: url,
       region: z.string().min(1),

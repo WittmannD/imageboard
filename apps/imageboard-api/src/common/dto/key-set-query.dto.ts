@@ -1,7 +1,9 @@
 import { BadRequestException } from '@nestjs/common';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { IsEnum, IsInt, IsObject, IsOptional, Max, Min } from 'class-validator';
 
+import { ErrorCode } from '../errors/error-code.js';
+import { httpError } from '../errors/error-mapping.js';
 import type { KeySetCursor, KeySetOrder } from '../types/cursor.js';
 import { decodeBase64Json } from '../utils/base64-json.js';
 
@@ -11,13 +13,21 @@ export class KeySetQueryDto<T> {
       if (value == null || value === '') return undefined;
 
       if (typeof value !== 'string') {
-        throw new BadRequestException('Cursor must be a base64 string');
+        throw httpError(
+          BadRequestException,
+          ErrorCode.InvalidCursor,
+          'Cursor must be a base64 string',
+        );
       }
 
       try {
         return decodeBase64Json(value) as KeySetCursor<T>;
       } catch {
-        throw new BadRequestException('Invalid base64/json in cursor');
+        throw httpError(
+          BadRequestException,
+          ErrorCode.InvalidCursor,
+          'Invalid base64/json in cursor',
+        );
       }
     },
     { toClassOnly: true },
@@ -34,6 +44,7 @@ export class KeySetQueryDto<T> {
   order?: KeySetOrder;
 
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(100)

@@ -1,15 +1,31 @@
 import { Injectable } from '@nestjs/common';
 import { imageSizeFromFile } from 'image-size/fromFile';
-import { defer, EMPTY, from, map, mergeMap, switchMap } from 'rxjs';
+import {
+  catchError,
+  defer,
+  EMPTY,
+  from,
+  map,
+  mergeMap,
+  switchMap,
+  throwError,
+  timeout,
+} from 'rxjs';
 import type { EntityManager } from 'typeorm';
 
+import { TransactionService } from '@hdotu1/database-common';
 import { LayoutEngine } from '@hdotu1/gallery-layout-engine';
 import { ImageProcessorService } from '@hdotu1/image-processor-client';
 
+import { IMAGE_PROCESSING_TIMEOUT } from '../../config/configuration.js';
 import type { FileUpload } from '../../multer/file-upload.js';
 import type { PhotoEntity } from '../entities/photo.entity.js';
+import {
+  GalleryLayoutError,
+  ImageProcessingError,
+  InvalidImageError,
+} from '../errors/post-service-error.js';
 import { PhotoRepository } from '../repositories/photo.repository.js';
-import { TransactionService } from '@hdotu1/database-common';
 
 @Injectable()
 export class PhotoService {
@@ -20,24 +36,36 @@ export class PhotoService {
     private readonly tx: TransactionService,
   ) {}
 
+  private async readImageSize(file: FileUpload) {
+    try {
+      return await imageSizeFromFile(file.path);
+    } catch (error) {
+      throw new InvalidImageError(error);
+    }
+  }
+
   private async createLayoutFromUploads(files: FileUpload[]) {
     const images = [];
 
     for (const file of files) {
-      const metadata = await imageSizeFromFile(file.path);
+      const metadata = await this.readImageSize(file);
       images.push({
         metadata,
         file,
       });
     }
 
-    return this.layoutEngine.evaluate(
-      images.map((image) => ({
-        key: image.file.uuid,
-        width: image.metadata.width,
-        height: image.metadata.height,
-      })),
-    );
+    try {
+      return this.layoutEngine.evaluate(
+        images.map((image) => ({
+          key: image.file.uuid,
+          width: image.metadata.width,
+          height: image.metadata.height,
+        })),
+      );
+    } catch (error) {
+      throw new GalleryLayoutError(error);
+    }
   }
 
   private processPhotoUploads(files: FileUpload[]) {
@@ -57,6 +85,10 @@ export class PhotoService {
                 variables: { tile },
               })
               .pipe(
+                timeout(IMAGE_PROCESSING_TIMEOUT),
+                catchError((error: unknown) =>
+                  throwError(() => new ImageProcessingError(error)),
+                ),
                 map((processed) => ({
                   processed,
                   file,

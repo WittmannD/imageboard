@@ -85,7 +85,7 @@ function FileDropzonePreview({
       <AttachmentMedia variant={isImage ? 'image' : 'icon'}>
         {isImage ? <FileDropzonePreviewImage file={file} /> : <FileIcon />}
         {onRemove && (
-          <span className="absolute w-full h-full z-20 flex size-5 items-center justify-center bg-background/80 opacity-0 transition-opacity group-hover/attachment:opacity-100">
+          <span className="pointer-events-none absolute w-full h-full z-20 flex size-5 items-center justify-center bg-background/80 opacity-0 transition-opacity group-hover/attachment:opacity-100">
             <XIcon className="size-3" />
           </span>
         )}
