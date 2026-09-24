@@ -1,16 +1,22 @@
 import {
   Card,
   CardDescription,
-  CardHeader, CardTitle
+  CardHeader,
+  CardTitle,
 } from 'src/components/ui/card/Card.tsx';
-import type { LayoutTile, PhotoSource, PostDto } from 'src/services/api/types.ts';
+import type {
+  LayoutTile,
+  PhotoSource,
+  PostDto,
+} from 'src/services/api/types.ts';
 import React from 'react';
 import { Link } from 'react-router';
 import { useDialogManager } from 'src/lib/dialog-manager/context.tsx';
 import { getImageByVariant, getImageUrl } from 'src/lib/utils/image-source.ts';
 import {
   UserAvatar,
-  UserBadge, UserTag,
+  UserBadge,
+  UserTag,
 } from 'src/components/features/user/UserBadge.tsx';
 
 const getImageCellStyle = (tile: LayoutTile): React.CSSProperties => ({
@@ -28,7 +34,12 @@ function PostGalleryTiles({ post }: { post: PostDto }) {
       <Link
         key={photo.id}
         className="block outline-none"
-        to={{ search: getDialogSearchParams('post', { id: post.id, photoId: photo.id }) }}
+        to={{
+          search: getDialogSearchParams('post', {
+            id: post.id,
+            photoId: photo.id,
+          }),
+        }}
         mask={{ pathname: `/posts/${post.id}`, search: `?photoId=${photo.id}` }}
         style={getImageCellStyle(tile.metadata.tile)}
       >
@@ -42,7 +53,7 @@ function PostGalleryTiles({ post }: { post: PostDto }) {
         />
       </Link>
     );
-  })
+  });
 }
 
 function Post({ data: post }: { data: PostDto }) {
@@ -60,17 +71,22 @@ function Post({ data: post }: { data: PostDto }) {
       )}
       <CardHeader>
         <CardTitle>
-          <UserBadge user={post.user} render={<Link to={`/users/${post.user.id}`}/>} >
+          <UserBadge
+            user={post.user}
+            render={<Link to={`/users/${post.user.id}`} />}
+          >
             <UserAvatar size="sm" />
             <UserTag />
           </UserBadge>
         </CardTitle>
-        <CardDescription className="line-clamp-2">
-          {post.caption}
-        </CardDescription>
+        {post.caption && (
+          <CardDescription className="line-clamp-2">
+            {post.caption}
+          </CardDescription>
+        )}
       </CardHeader>
     </Card>
   );
 }
 
-export { Post }
+export { Post };

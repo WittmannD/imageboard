@@ -25,13 +25,31 @@ import { useAuth } from 'src/components/features/auth/context.tsx';
 import { useGetMeQuery } from 'src/services/api/user/api.ts';
 import { Link } from 'react-router';
 import { useDialogManager } from 'src/lib/dialog-manager/context.tsx';
-import { UserAvatar, UserBadge, } from 'src/components/features/user/UserBadge.tsx';
+import {
+  UserAvatar,
+  UserBadge,
+} from 'src/components/features/user/UserBadge.tsx';
+import { useCallback } from 'react';
+import { toast } from 'src/components/ui/toast/Toast.tsx';
 
 function AccountSettingsPage() {
   const auth = useAuth(true);
   const { getDialogSearchParams } = useDialogManager();
-
   const { data: user } = useGetMeQuery();
+
+  const onPasswordChangeClick = useCallback(() => {
+    toast.add({
+      type: 'error',
+      title: 'Not implemented yet.',
+    });
+  }, []);
+
+  const onUsernameChangeClick = useCallback(() => {
+    toast.add({
+      type: 'error',
+      title: 'Not implemented yet.',
+    });
+  }, []);
 
   if (!user) {
     return null;
@@ -77,7 +95,11 @@ function AccountSettingsPage() {
                 </ItemDescription>
               </ItemContent>
               <ItemActions>
-                <Button variant="outline" size="sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onUsernameChangeClick}
+                >
                   Change
                 </Button>
               </ItemActions>
@@ -111,7 +133,12 @@ function AccountSettingsPage() {
                   </ItemDescription>
                 </ItemContent>
                 <ItemActions>
-                  <Button variant="outline" size="sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    nativeButton={false}
+                    render={<Link to="/users/ermail-verification" />}
+                  >
                     Verify
                   </Button>
                 </ItemActions>
@@ -125,7 +152,11 @@ function AccountSettingsPage() {
                 <ItemTitle>Password</ItemTitle>
               </ItemContent>
               <ItemActions>
-                <Button variant="outline" size="sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onPasswordChangeClick}
+                >
                   Change
                 </Button>
               </ItemActions>

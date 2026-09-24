@@ -12,8 +12,13 @@ import {
   CardHeader,
   CardTitle,
 } from 'src/components/ui/card/Card.tsx';
+import { useCallback } from 'react';
+import { toast } from 'src/components/ui/toast/Toast.tsx';
+import { useNavigate } from 'react-router';
 
 function CreatePostPage() {
+  const navigate = useNavigate();
+
   const form = useForm<z.infer<typeof createPostFormSchema>>({
     resolver: zodResolver(createPostFormSchema),
     defaultValues: {
@@ -21,6 +26,16 @@ function CreatePostPage() {
       files: [],
     },
   });
+
+  const onSuccess = useCallback(() => {
+    toast.add({
+      type: 'success',
+      title: 'Post sent to moderation.',
+      description: 'Your post will be published once it has been approved.',
+    });
+    form.reset();
+    navigate('/');
+  }, [form.reset, navigate]);
 
   return (
     <div className="min-h-[calc(100svh-var(--header-height))] py-8 flex items-center justify-center">
@@ -30,7 +45,7 @@ function CreatePostPage() {
             <CardTitle>Create Post</CardTitle>
           </CardHeader>
           <CardContent className="px-0">
-            <CreatePostForm />
+            <CreatePostForm onSuccess={onSuccess} />
           </CardContent>
           <CardFooter>
             <Button

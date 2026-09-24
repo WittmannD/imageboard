@@ -14,6 +14,8 @@ import { createPostFormSchema } from 'src/components/features/forms/create-post-
 import { ScrollArea } from 'src/components/ui/scroll-area/ScrollArea.tsx';
 import { LoaderCircle } from 'lucide-react';
 import type { DialogComponentProps } from 'src/lib/dialog-manager/registry.tsx';
+import { useCallback } from 'react';
+import { toast } from 'src/components/ui/toast/Toast.tsx';
 
 function CreatePostDialog({
   open,
@@ -28,6 +30,15 @@ function CreatePostDialog({
     },
   });
 
+  const onSuccess = useCallback(() => {
+    onOpenChange(false);
+    toast.add({
+      type: 'success',
+      title: 'Post sent to moderation.',
+      description: 'Your post will be published once it has been approved.',
+    });
+  }, [onOpenChange])
+
   return (
     <Dialog
       open={open}
@@ -40,7 +51,7 @@ function CreatePostDialog({
             <DialogTitle>Create Post</DialogTitle>
           </DialogHeader>
           <ScrollArea className="max-h-[calc(100dvh-300px)]">
-            <CreatePostForm onSuccess={() => onOpenChange(false)} />
+            <CreatePostForm onSuccess={onSuccess} />
           </ScrollArea>
           <DialogFooter showCloseButton={true}>
             <Button

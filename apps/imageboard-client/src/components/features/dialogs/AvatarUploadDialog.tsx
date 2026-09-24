@@ -12,8 +12,8 @@ import { LoaderCircle } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { DialogComponentProps } from 'src/lib/dialog-manager/registry.tsx';
 import z from 'zod';
-import { avatarUploadFormSchema } from 'src/components/features/forms/controllers/schema.ts';
 import AvatarUploadForm from 'src/components/features/forms/avatar-upload/AvatarUploadForm.tsx';
+import { avatarUploadFormSchema } from 'src/components/features/forms/avatar-upload/schema.ts';
 
 function AvatarUploadDialog({
   open,

@@ -22,6 +22,12 @@ export interface CreatePostFormProps {
   onSuccess?: () => void;
 }
 
+const acceptImageFormats = publicConfig.post.allowedImageFormats.map(
+  (f) => `.${f}`,
+);
+const maxFiles = publicConfig.post.maxImagesPerPost;
+const maxSize = publicConfig.post.imageSizeLimitBytes;
+
 export default function CreatePostForm({ onSuccess }: CreatePostFormProps) {
   const form = useFormContext<z.infer<typeof createPostFormSchema>>();
   const filesValue = form.watch('files');
@@ -50,9 +56,11 @@ export default function CreatePostForm({ onSuccess }: CreatePostFormProps) {
       <FileDropzoneController
         name="files"
         multiple
-        accept={{ 'image/*': publicConfig.post.allowedImageFormats.map((f) => `.${f}`) }}
-        maxFiles={publicConfig.post.maxImagesPerPost}
-        maxSize={publicConfig.post.imageSizeLimitBytes}
+        accept={{
+          'image/*': acceptImageFormats,
+        }}
+        maxFiles={maxFiles}
+        maxSize={maxSize}
         minSize={1}
         placeholder={
           <div className="flex min-h-48 flex-col items-center justify-center gap-2">

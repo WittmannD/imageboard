@@ -17,6 +17,7 @@ import {
 } from 'src/lib/utils/local-storage.ts';
 import { getSystemTheme } from 'src/lib/utils/theme.ts';
 import { cn } from 'src/lib/utils/cn.ts';
+import { Toaster } from 'src/components/ui/toast/Toast.tsx';
 
 export const middleware: MiddlewareFunction[] = [authMiddleware];
 
@@ -67,6 +68,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
+        <Toaster />
         <ScrollRestoration />
         <Scripts />
       </body>

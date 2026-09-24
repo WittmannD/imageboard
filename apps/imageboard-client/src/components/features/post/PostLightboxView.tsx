@@ -7,7 +7,7 @@ import {
   CarouselPrevious,
   type CarouselApi,
 } from 'src/components/ui/carousel/Carousel.tsx';
-import { getImageUrl } from 'src/lib/utils/image-source.ts';
+import { getImageByVariant, getImageUrl } from 'src/lib/utils/image-source.ts';
 import type { PhotoDto, PhotoSource, PostDto } from 'src/services/api/types.ts';
 import {
   Card,
@@ -15,12 +15,12 @@ import {
   CardHeader,
   CardTitle,
 } from 'src/components/ui/card/Card.tsx';
-
-const getPhotoLightboxImage = (photo: PhotoDto) => {
-  return photo.sourceSet.find(
-    (source) => source.metadata?.variant === 'lightbox',
-  );
-};
+import {
+  UserAvatar,
+  UserBadge,
+  UserTag,
+} from 'src/components/features/user/UserBadge.tsx';
+import { Link } from 'react-router';
 
 function PostLightboxView({
   post,
@@ -41,7 +41,7 @@ function PostLightboxView({
   };
 
   const slides = post.photos
-    .map((photo) => ({ photo, image: getPhotoLightboxImage(photo) }))
+    .map((photo) => ({ photo, image: getImageByVariant<PhotoSource>(photo.sourceSet, 'lightbox') }))
     .filter(
       (slide): slide is { photo: PhotoDto; image: PhotoSource } =>
         !!slide.image,
@@ -94,8 +94,21 @@ function PostLightboxView({
           className="w-full max-w-lg bg-popover/90 backdrop-blur-sm"
         >
           <CardHeader>
-            <CardTitle>{post.user.username}</CardTitle>
-            {post.caption && <CardDescription>{post.caption}</CardDescription>}
+            <CardTitle>
+              <UserBadge
+                user={post.user}
+                render={<Link to={`/users/${post.user.id}`} />}
+                className="font-normal"
+              >
+                <UserAvatar size="sm" />
+                <UserTag />
+              </UserBadge>
+            </CardTitle>
+            {post.caption && (
+              <CardDescription>
+                {post.caption}
+              </CardDescription>
+            )}
           </CardHeader>
         </Card>
       </div>
