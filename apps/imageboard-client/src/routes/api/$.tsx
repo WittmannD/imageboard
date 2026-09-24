@@ -39,6 +39,8 @@ async function apiRequest(endpoint: string, request: Request, body: BodyInit | u
     body,
   } satisfies RequestInit;
   const url = new URL(endpoint, apiUrl);
+  // the splat param only holds the path - carry the query string over too
+  url.search = new URL(request.url).search;
   return await fetch(url.href, options);
 }
 

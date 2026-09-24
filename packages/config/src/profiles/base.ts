@@ -25,6 +25,7 @@ export const base: Omit<Profile, 'env' | 'domain' | 'imageServerUrl' | 'e2e'> = 
     ssl: false,
     dropSchema: true,
     synchronize: true,
+    seed: false,
     names: { api: 'imageboard', identity: 'imageboard_identity' },
   },
 

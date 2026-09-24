@@ -1,31 +1,46 @@
-import { type RefObject, useEffect, useState } from 'react';
+import { type RefObject, useEffect, useRef } from 'react';
 
-function useIntersectionObserver (
+interface UseIntersectionObserverOptions extends IntersectionObserverInit {
+  // the observer only runs while enabled; re-enabling re-observes the element,
+  // which reports its current intersection state right away
+  enabled?: boolean;
+}
+
+// Calls onIntersect from the observer callback itself rather than exposing the
+// entry as state: a stored entry goes stale as soon as the layout changes (e.g.
+// new items push the element off screen), and acting on it fires spuriously.
+function useIntersectionObserver(
   ref: RefObject<HTMLElement | null>,
-  options: IntersectionObserverInit,
-): IntersectionObserverEntry | null {
-  const [intersectionObserverEntry, setIntersectionObserverEntry] =
-    useState<IntersectionObserverEntry | null>(null);
+  onIntersect: (entry: IntersectionObserverEntry) => void,
+  { enabled = true, root, rootMargin, threshold }: UseIntersectionObserverOptions = {},
+): void {
+  const onIntersectRef = useRef(onIntersect);
 
   useEffect(() => {
-    let observer: IntersectionObserver | null = null;
+    onIntersectRef.current = onIntersect;
+  });
 
-    if (ref.current && typeof IntersectionObserver === 'function') {
-      const handler = (entries: IntersectionObserverEntry[]) => {
-        setIntersectionObserverEntry(entries[0]);
-      };
+  useEffect(() => {
+    const element = ref.current;
 
-      observer = new IntersectionObserver(handler, options);
-      observer.observe(ref.current);
+    if (!enabled || !element || typeof IntersectionObserver !== 'function') {
+      return;
     }
 
-    return () => {
-      setIntersectionObserverEntry(null);
-      observer?.disconnect();
-    };
-  }, [ref.current, options.threshold, options.root, options.rootMargin]);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          onIntersectRef.current(entry);
+        }
+      },
+      { root, rootMargin, threshold },
+    );
+    observer.observe(element);
 
-  return intersectionObserverEntry;
-};
+    return () => {
+      observer.disconnect();
+    };
+  }, [ref, enabled, root, rootMargin, threshold]);
+}
 
 export default useIntersectionObserver;

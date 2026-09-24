@@ -17,6 +17,7 @@
     "debug": "nest start --debug --watch"
   },
   "dependencies": {
+    "@faker-js/faker": "^10.6.0",
     "@hdotu1/config": "file:../../packages/config",
     "@hdotu1/database-common": "file:../../packages/database-common",
     "@hdotu1/gallery-layout-engine": "file:../../packages/gallery-layout-engine",
@@ -37,7 +38,8 @@
     "pg": "^8.18.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
-    "typeorm": "^1.1.1"
+    "typeorm": "^1.1.1",
+    "typeorm-extension": "^4.2.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.7",

@@ -11,17 +11,20 @@ import { PublicationsModule } from './art/publications.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { HttpErrorFilter } from './common/filters/http-error.filter.js';
 import configuration from './config/configuration.js';
+import dataSourceConfig from './config/data-source.config.js';
 import throttlerConfig from './config/throttler.config.js';
 import { FederatedCredentialsModule } from './federated-credentials/federated-credentials.module.js';
 import { UserModule } from './user/user.module.js';
+import { SeederModule } from './seeds/seeder.module.js';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       ignoreEnvFile: true,
-      load: [configuration, throttlerConfig],
+      load: [configuration, throttlerConfig, dataSourceConfig],
     }),
+    SeederModule,
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => config.getOrThrow('throttler'),

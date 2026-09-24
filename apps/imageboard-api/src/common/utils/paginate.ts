@@ -91,15 +91,15 @@ export async function paginate<Entity extends BaseEntity>(
       .take(limit + 1)
       .andWhere(
         new Brackets((w) => {
-          w.where(`${query.alias}_tieBreaker ${op} :tieBreakerValue`, {
+          w.where(`${query.alias}.${tieBreakerKey} ${op} :tieBreakerValue`, {
             tieBreakerKey,
             tieBreakerValue,
           }).orWhere(
             new Brackets((w2) => {
-              w2.where(`${query.alias}_tieBreaker = :tieBreakerValue`, {
+              w2.where(`${query.alias}.${tieBreakerKey} = :tieBreakerValue`, {
                 tieBreakerKey,
                 tieBreakerValue,
-              }).andWhere(`${query.alias}_id ${op} :id`, { id });
+              }).andWhere(`${query.alias}.id ${op} :id`, { id });
             }),
           );
         }),
@@ -109,10 +109,11 @@ export async function paginate<Entity extends BaseEntity>(
     query = query
       .orderBy(`${query.alias}_id`, order)
       .take(limit + 1)
-      .andWhere(`${query.alias}_id ${op} :id`, { id });
+      .andWhere(`${query.alias}.id ${op} :id`, { id });
   }
   let idRows: Entity[];
   try {
+    console.log(query.getSql());
     idRows = await query.getMany();
   } catch (error) {
     if (isDataException(error)) {

@@ -16,7 +16,9 @@ export const e2e: ProfileOverrides = {
   // Every request reaches the services from the client container's one IP, so
   // the per-IP rate limits cannot work for a test run.
   throttle: { enabled: false },
-
+  database: {
+    seed: true,
+  },
   identityProvider: {
     smtp: {
       host: 'mailpit',

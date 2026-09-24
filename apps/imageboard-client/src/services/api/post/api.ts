@@ -37,6 +37,7 @@ export const postsApi = createApi({
       infiniteQueryOptions: {
         initialPageParam: undefined,
         getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+        getPreviousPageParam: () => undefined,
         maxPages: MAX_CACHE_PAGES
       },
       providesTags: (result) =>

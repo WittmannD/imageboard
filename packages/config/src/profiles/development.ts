@@ -5,7 +5,9 @@ export const development: ProfileOverrides = {
   env: 'development',
   domain: 'spottish.website',
   imageServerUrl: 'https://imageboard.s3.filebase.io',
-
+  database: {
+    seed: true,
+  },
   identityProvider: {
     debug: 'oidc-provider*',
     oidc: {

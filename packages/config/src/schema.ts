@@ -58,6 +58,7 @@ export const profileSchema = z.object({
       api: z.string().min(1),
       identity: z.string().min(1),
     }),
+    seed: z.boolean(),
   }),
 
   storage: z.object({

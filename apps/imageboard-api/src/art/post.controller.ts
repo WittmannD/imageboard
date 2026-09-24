@@ -32,9 +32,9 @@ import { CreatePostDto } from './dto/create-post.dto.js';
 import { PostDraftDto } from './dto/post-draft.dto.js';
 import { PostWithAuthorDto } from './dto/post-with-author.dto.js';
 import type { PostEntity } from './entities/post.entity.js';
-import { PostService } from './services/post.service.js';
 import { PostErrorFilter } from './post-error.filter.js';
 import type { PostPage } from './repositories/post.repository.js';
+import { PostService } from './services/post.service.js';
 
 @UseFilters(PostErrorFilter)
 @UseInterceptors(ClassSerializerInterceptor)

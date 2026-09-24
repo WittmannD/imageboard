@@ -1,6 +1,6 @@
 import { Post } from 'src/components/features/post/Post.tsx';
 import { useGetPostsInfiniteQuery } from 'src/services/api/post/api.ts';
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import useIntersectionObserver from 'src/hooks/useIntersectionObserver.ts';
 import { LoaderCircleIcon } from 'lucide-react';
 
@@ -21,13 +21,12 @@ function FeedPage() {
     () => data?.pages.flatMap((page) => page.items) ?? [],
     [data?.pages],
   );
-  const entry = useIntersectionObserver(loadMoreRef, { threshold: 1.0 });
-
-  useEffect(() => {
-    if (entry?.isIntersecting && hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  }, [entry, hasNextPage, isFetchingNextPage, fetchNextPage]);
+  // observing only while idle means each loaded page re-checks the sentinel
+  // against the new layout, and nothing fires while a request is in flight
+  useIntersectionObserver(loadMoreRef, () => fetchNextPage(), {
+    threshold: 1.0,
+    enabled: hasNextPage && !isFetching,
+  });
 
   return (
     <div>
