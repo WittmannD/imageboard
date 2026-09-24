@@ -68,11 +68,13 @@ export class FederatedCredentialsService {
           subject,
           userId: user.id,
         })
-        .orUpdate([], [ISSUER_SUBJECT_UNIQUE_CONSTRAINT])
+        // no overwrite columns: ON CONFLICT ON CONSTRAINT ... DO NOTHING
+        .orUpdate([], ISSUER_SUBJECT_UNIQUE_CONSTRAINT)
         .returning('*')
         .execute();
 
-      if (result.identifiers.length > 0) {
+      // a skipped insert still yields one (null) identifier per value set
+      if (result.identifiers.at(0)) {
         return federatedCredentialRepository.merge(
           federatedCredentialRepository.create(),
           result.generatedMaps[0],

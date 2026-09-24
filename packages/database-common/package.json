@@ -28,7 +28,7 @@
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
     "@nestjs/typeorm": "^11.0.0",
-    "typeorm": "^0.3.28",
+    "typeorm": "^1.1.1",
     "rxjs": "*"
   }
 }

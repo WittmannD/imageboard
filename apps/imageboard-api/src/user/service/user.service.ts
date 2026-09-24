@@ -21,7 +21,7 @@ export class UserService {
     private readonly userRepository: UserRepository,
   ) {}
 
-  private generatePreferredUsername(prefix: string, suffixLength = 8) {
+  private modifyPreferredUsername(prefix: string, suffixLength = 6) {
     const suffix = crypto
       .randomBytes(suffixLength)
       .toString('hex')
@@ -78,9 +78,9 @@ export class UserService {
       let username = preferredUsername;
       const userRepository = entityManager.withRepository(this.userRepository);
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      while (true) {
-        // todo: check if this approach for handling unique violations actually works
+      for (;;) {
+        // email and username are separately unique, so no single ON CONFLICT
+        // target covers both; skip the insert on either and tell them apart below
         const result = await userRepository
           .createQueryBuilder()
           .insert()
@@ -89,11 +89,13 @@ export class UserService {
             email,
             username,
           })
-          .orUpdate([], ['email', 'username'])
+          .orIgnore()
           .returning('*')
           .execute();
 
-        if (result.identifiers.length > 0) {
+        // a skipped insert still yields one (null) identifier per value set
+        if (result.identifiers.at(0)) {
+          // Insertion succeed: return inserted user entity
           return userRepository.merge(
             userRepository.create(),
             result.generatedMaps[0],
@@ -103,15 +105,19 @@ export class UserService {
         const user = await userRepository.findOneBy({ email });
 
         if (user) {
+          // User exists, so the insertion attempt above failed due to email
+          // uniqueness violation. Return existed user.
           return user;
         }
 
-        if ((++attempts) > USERNAME_CREATION_ATTEMPTS) {
+        // The insertion attempt above failed due to the username uniqueness
+        // violation. Making the attempt to modify the preferred username by
+        // adding a random chars suffix.
+        if (++attempts > USERNAME_CREATION_ATTEMPTS) {
           throw new UsernameGenerationError();
         }
 
-        // User entity insertion failed, try again with a different username
-        username = this.generatePreferredUsername(preferredUsername);
+        username = this.modifyPreferredUsername(preferredUsername);
       }
     });
   }
