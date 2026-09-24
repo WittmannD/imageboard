@@ -92,13 +92,11 @@ export async function paginate<Entity extends BaseEntity>(
       .andWhere(
         new Brackets((w) => {
           w.where(`${query.alias}.${tieBreakerKey} ${op} :tieBreakerValue`, {
-            tieBreakerKey,
-            tieBreakerValue,
+            tieBreakerValue
           }).orWhere(
             new Brackets((w2) => {
               w2.where(`${query.alias}.${tieBreakerKey} = :tieBreakerValue`, {
-                tieBreakerKey,
-                tieBreakerValue,
+                tieBreakerValue
               }).andWhere(`${query.alias}.id ${op} :id`, { id });
             }),
           );
