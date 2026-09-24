@@ -11,6 +11,9 @@ import type {
 } from '../types.ts';
 import { POST_LIST_TAG, POST_TAG_TYPE } from './constants.ts';
 
+const DEFAULT_PAGE_SIZE = 10;
+const MAX_CACHE_PAGES = 10;
+
 export const postsApi = createApi({
   reducerPath: 'postsApi',
   baseQuery: axiosBaseQuery({
@@ -18,20 +21,35 @@ export const postsApi = createApi({
   }),
   tagTypes: [POST_TAG_TYPE],
   endpoints: (builder) => ({
-    getPosts: builder.query<GetPostsResponse, GetPostsQuery | undefined>({
-      query: (params) => ({
+    getPosts: builder.infiniteQuery<
+      GetPostsResponse,
+      GetPostsQuery,
+      GetPostsQuery['cursor']
+    >({
+      query: ({ queryArg, pageParam: cursor }) => ({
         url: '/posts',
-        params,
+        params: {
+          limit: DEFAULT_PAGE_SIZE,
+          ...queryArg,
+          cursor,
+        },
       }),
+      infiniteQueryOptions: {
+        initialPageParam: undefined,
+        getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+        maxPages: MAX_CACHE_PAGES
+      },
       providesTags: (result) =>
-        result
+        result?.pages
           ? [
-              ...result.items.map(({ id }) => ({
+            ...result.pages.flatMap(({ items }) =>
+              items.map(({ id }) => ({
                 type: POST_TAG_TYPE,
                 id,
-              })),
-              { type: POST_TAG_TYPE, id: POST_LIST_TAG },
-            ]
+              }))
+            ),
+            { type: POST_TAG_TYPE, id: POST_LIST_TAG },
+          ]
           : [{ type: POST_TAG_TYPE, id: POST_LIST_TAG }],
     }),
     getPost: builder.query<PostDto, number>({
@@ -73,5 +91,5 @@ export const postsApi = createApi({
   }),
 });
 
-export const { useGetPostsQuery, useGetPostQuery, useLazyGetPostsQuery, useCreatePostMutation } =
+export const { useGetPostsInfiniteQuery, useGetPostQuery, useCreatePostMutation } =
   postsApi;

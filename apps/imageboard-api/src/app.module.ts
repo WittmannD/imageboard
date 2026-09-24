@@ -3,8 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
-import type { AppConfig } from '@hdotu1/config';
+import type { DataSourceOptions } from 'typeorm';
 
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
@@ -29,23 +28,10 @@ import { UserModule } from './user/user.module.js';
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => {
-        const database = config.getOrThrow<AppConfig['database']>('database');
-
-        return {
-          type: 'postgres',
-          host: database.host,
-          port: database.port,
-          username: config.getOrThrow<string>('secrets.DB_USER'),
-          password: config.getOrThrow<string>('secrets.DB_PASS'),
-          database: database.names.api,
-          dropSchema: database.dropSchema,
-          autoLoadEntities: true,
-          synchronize: database.synchronize,
-
-          ssl: database.ssl ? { rejectUnauthorized: false } : false,
-        };
-      },
+      useFactory: (config: ConfigService) => ({
+        ...config.getOrThrow<DataSourceOptions>('dataSource'),
+        autoLoadEntities: true,
+      }),
     }),
     PublicationsModule,
     UserModule,
