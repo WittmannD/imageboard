@@ -12,8 +12,11 @@ export class CredentialsEntity extends BaseEntity {
   @Column({ nullable: false })
   userId!: string;
 
-  @ManyToOne(() => UserEntity, (user) => user.credentials)
-  @JoinColumn({ name: "userId" })
+  @ManyToOne(() => UserEntity, (user) => user.credentials, {
+    nullable: false,
+    onDelete: 'CASCADE'
+  })
+  @JoinColumn({ name: 'userId' })
   user!: Relation<UserEntity>;
 
   async compare(password: string) {

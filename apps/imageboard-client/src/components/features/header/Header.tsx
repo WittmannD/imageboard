@@ -30,7 +30,9 @@ function Header() {
                 <UserMenu />
               ) : (
                 <NavigationMenuLink
-                  render={<Link to="auth/login" data-testid="header-login-link" />}
+                  render={
+                    <Link to="auth/login" data-testid="header-login-link" />
+                  }
                   className={navigationMenuTriggerStyle({
                     variant: 'secondary',
                   })}
@@ -45,9 +47,14 @@ function Header() {
                   className: 'flex-row items-center gap-1',
                   variant: 'secondary',
                 })}
-                render={<Link to={{ search: getDialogSearchParams('create-post') }} mask="/posts/create" />}
+                render={
+                  <Link
+                    to={{ search: getDialogSearchParams('create-post') }}
+                    mask="/posts/create"
+                  />
+                }
               >
-                <Plus />
+                <Plus data-icon="inline-start" />
                 Post
               </NavigationMenuLink>
             </NavigationMenuItem>

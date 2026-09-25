@@ -19,6 +19,9 @@ export class PostEntity extends BaseEntity {
   @OneToMany(() => PhotoEntity, (photo) => photo.post)
   photos!: PhotoEntity[];
 
-  @ManyToOne(() => UserEntity, (user) => user.posts)
+  @ManyToOne(() => UserEntity, (user) => user.posts, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
   user!: Relation<UserEntity>;
 }

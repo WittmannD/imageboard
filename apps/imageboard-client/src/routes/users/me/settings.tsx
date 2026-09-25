@@ -74,7 +74,7 @@ function AccountSettingsPage() {
                   />
                 }
               >
-                <UploadIcon />
+                <UploadIcon data-icon="inline-start" />
                 Upload Avatar
               </Button>
             </div>

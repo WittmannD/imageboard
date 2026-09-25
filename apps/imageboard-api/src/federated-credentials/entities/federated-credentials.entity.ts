@@ -24,7 +24,10 @@ export class FederatedCredentialsEntity extends BaseEntity {
   @Column({ nullable: false })
   userId!: number;
 
-  @ManyToOne(() => UserEntity, (user) => user.credentials)
+  @ManyToOne(() => UserEntity, (user) => user.credentials, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'userId' })
   user!: Relation<UserEntity>;
 }

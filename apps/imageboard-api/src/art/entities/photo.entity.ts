@@ -27,6 +27,9 @@ export class PhotoEntity extends BaseEntity {
   })
   status: PhotoProcessingStatus = PhotoProcessingStatus.Pending;
 
-  @ManyToOne(() => PostEntity, (post) => post.photos)
+  @ManyToOne(() => PostEntity, (post) => post.photos, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
   post!: Relation<PostEntity>;
 }

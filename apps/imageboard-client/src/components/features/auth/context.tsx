@@ -13,6 +13,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function useAuth(guard: true): Required<AuthContextValue>;
 export function useAuth(guard: false): AuthContextValue;
+export function useAuth(): AuthContextValue;
 export function useAuth(
   guard: boolean = false,
 ): Required<AuthContextValue> | AuthContextValue {

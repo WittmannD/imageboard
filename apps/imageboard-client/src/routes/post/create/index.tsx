@@ -59,7 +59,10 @@ function CreatePostPage() {
             >
               {form.formState.isSubmitting ? (
                 <>
-                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                  <LoaderCircle
+                    className="mr-2 h-4 w-4 animate-spin"
+                    data-icon="inline-start"
+                  />
                   Publishing...
                 </>
               ) : (
