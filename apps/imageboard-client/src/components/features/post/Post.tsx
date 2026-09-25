@@ -1,5 +1,6 @@
 import {
   Card,
+  CardAction,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -9,7 +10,7 @@ import type {
   PhotoSource,
   PostDto,
 } from 'src/services/api/types.ts';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Link } from 'react-router';
 import { useDialogManager } from 'src/lib/dialog-manager/context.tsx';
 import { getImageByVariant, getImageUrl } from 'src/lib/utils/image-source.ts';
@@ -18,6 +19,9 @@ import {
   UserBadge,
   UserTag,
 } from 'src/components/features/user/UserBadge.tsx';
+import { HeartIcon } from 'lucide-react';
+import { useLikePostMutation } from 'src/services/api/post/api.ts';
+import { Button } from 'src/components/ui/button/Button.tsx';
 
 const getImageCellStyle = (tile: LayoutTile): React.CSSProperties => ({
   gridColumn: `${tile.column.toString()} / span ${tile.columnSpan.toString()}`,
@@ -58,6 +62,11 @@ function PostGalleryTiles({ post }: { post: PostDto }) {
 
 function Post({ data: post }: { data: PostDto }) {
   const hasPhotos = post.photos.length > 0;
+  const [likePost] = useLikePostMutation();
+
+  const onLikeClick = useCallback(() => {
+    likePost(post.id).unwrap().catch();
+  }, [likePost, post.id]);
 
   return (
     <Card size="sm">
@@ -79,6 +88,12 @@ function Post({ data: post }: { data: PostDto }) {
             <UserTag />
           </UserBadge>
         </CardTitle>
+        <CardAction>
+          <Button variant="ghost" size="lg" onClick={onLikeClick}>
+            <HeartIcon />
+            {post.likesCount}
+          </Button>
+        </CardAction>
         {post.caption && (
           <CardDescription className="line-clamp-2">
             {post.caption}

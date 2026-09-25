@@ -59,6 +59,7 @@ export interface PostDraftDto {
   id: number;
   caption: string | null;
   status: PostStatus;
+  likesCount: number;
   user: UserDto;
   photos: PhotoDraftDto[];
   createdAt: string;
@@ -68,6 +69,14 @@ export interface PostDraftDto {
 
 export interface PostDto extends PostDraftDto {
   photos: PhotoDto[];
+  // false for anonymous viewers
+  likedByMe: boolean;
+}
+
+export interface LikeStatusDto {
+  postId: number;
+  likesCount: number;
+  likedByMe: boolean;
 }
 
 export interface GetPostsQuery {
@@ -97,6 +106,7 @@ export interface UserDto {
   id: number;
   username: string;
   avatars: AvatarSource[];
+  likesReceivedCount: number;
   createdAt: string;
   updatedAt: string;
 }

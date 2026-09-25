@@ -13,6 +13,9 @@ export class PostEntity extends BaseEntity {
   @Column({ type: 'enum', enum: PostStatus, default: PostStatus.Draft })
   status: PostStatus = PostStatus.Draft;
 
+  @Column({ type: 'integer', default: 0, update: false })
+  likesCount = 0;
+
   @OneToMany(() => PhotoEntity, (photo) => photo.post)
   photos!: PhotoEntity[];
 

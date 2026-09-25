@@ -11,6 +11,7 @@ import { PhotoProcessingStatus } from '../enums/photo-status.enum.js';
 import { GalleryLayoutError } from '../errors/post-service-error.js';
 import { PhotoRepository } from '../repositories/photo.repository.js';
 import { PostRepository } from '../repositories/post.repository.js';
+import { LikeService } from './like.service.js';
 import { PostService } from './post.service.js';
 import { PhotoService } from './photo.service.js';
 
@@ -50,6 +51,7 @@ describe('PostService.createUserPost gallery failures', () => {
         { provide: PostRepository, useValue: postRepository },
         { provide: PhotoRepository, useValue: photoRepository },
         { provide: PhotoService, useValue: photoService },
+        { provide: LikeService, useValue: {} },
         { provide: TransactionService, useValue: tx },
       ],
     }).compile();

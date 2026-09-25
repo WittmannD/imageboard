@@ -31,6 +31,9 @@ export const ErrorCode = {
   // user
   UserNotFound: 'user_not_found',
   UsernameTaken: 'username_taken',
+
+  // post
+  PostNotFound: 'post_not_found',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];

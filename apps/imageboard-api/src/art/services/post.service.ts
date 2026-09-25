@@ -14,8 +14,10 @@ import { PhotoProcessingStatus } from '../enums/photo-status.enum.js';
 import { PostStatus } from '../enums/post-status.enum.js';
 import { PhotoRepository } from '../repositories/photo.repository.js';
 import {
+  type PostPage,
   PostRepository,
 } from '../repositories/post.repository.js';
+import { LikeService } from './like.service.js';
 import { PhotoService } from './photo.service.js';
 
 // cursor fields a client may paginate posts by
@@ -29,6 +31,7 @@ export class PostService {
     private readonly postRepository: PostRepository,
     private readonly photoRepository: PhotoRepository,
     private readonly photoService: PhotoService,
+    private readonly likeService: LikeService,
     private readonly tx: TransactionService,
   ) {}
 
@@ -129,11 +132,13 @@ export class PostService {
     }
   }
 
+  /** `viewer` is the requesting user, used to fill `likedByMe`. */
   async getPaginatedPublishedPostsWithUser(
     cursor?: KeySetCursor<PostEntity>,
     options: PaginateOptions = {},
+    viewer?: UserEntity,
     em?: EntityManager,
-  ) {
+  ): Promise<PostPage> {
     return await this.tx.withManager(em, async (entityManager) => {
       const postRepository = entityManager.withRepository(this.postRepository);
       const query = postRepository
@@ -162,9 +167,13 @@ export class PostService {
 
       // preserve the same order as ids
       const byId = new Map<number, PostEntity>(posts.map((p) => [p.id, p]));
+      const likedIds = viewer
+        ? await this.likeService.getLikedPostIds(viewer, page.ids, entityManager)
+        : new Set<number>();
       const items = page.ids
         .map((id) => byId.get(id))
-        .filter(Boolean) as PostEntity[];
+        .filter((post): post is PostEntity => post !== undefined)
+        .map((post) => Object.assign(post, { likedByMe: likedIds.has(post.id) }));
 
       return {
         items,

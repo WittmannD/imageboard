@@ -115,6 +115,8 @@ export function ProfileView({ user, unverifiedEmail }: ProfileViewProps) {
           data={{
             caption: '',
             status: 'Published',
+            likesCount: 0,
+            likedByMe: false,
             id: 1,
             createdAt: '2026-09-13T13:14:23.434Z',
             updatedAt: '2026-09-13T13:14:23.483Z',
@@ -167,6 +169,7 @@ export function ProfileView({ user, unverifiedEmail }: ProfileViewProps) {
               updatedAt: '2026-09-13T13:14:23.318Z',
               username: '@Akame',
               avatars: [],
+              likesReceivedCount: 0,
             },
           }}
         />

@@ -17,6 +17,9 @@ export class UserEntity extends BaseEntity {
   @Column({ type: 'text', nullable: false, unique: true })
   email!: string;
 
+  @Column({ type: 'integer', default: 0, update: false })
+  likesReceivedCount = 0;
+
   @OneToMany(() => PostEntity, (post) => post.user)
   posts!: PostEntity[];
 
