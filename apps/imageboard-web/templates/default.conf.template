@@ -1,0 +1,58 @@
+# Front door for ${DOMAIN}: the client on it, the API on api.${DOMAIN} and
+# the identity provider on auth.${DOMAIN}.
+#
+# NGINX_MODE (http or tls) is set by docker-entrypoint.d/15-select-mode.envsh;
+# modes/<mode>/ holds everything that differs between plain HTTP and HTTPS.
+
+resolver 127.0.0.11 valid=10s;
+
+# Inherited by every location below.
+client_max_body_size 1m;
+proxy_set_header Host $host;
+proxy_set_header X-Real-IP $remote_addr;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Forwarded-Proto $scheme;
+
+include /etc/nginx/conf.d/modes/${NGINX_MODE}/main.conf;
+
+server {
+    include /etc/nginx/conf.d/modes/${NGINX_MODE}/server.conf;
+    server_name ${DOMAIN};
+    # A variable, so nginx resolves the container at request time rather than
+    # failing to start while it is down.
+    set $upstream ${CLIENT_INTERNAL_URL};
+
+    location / {
+        proxy_pass $upstream;
+    }
+
+    location /api {
+        client_max_body_size 50m;
+        proxy_pass $upstream;
+    }
+}
+
+server {
+    include /etc/nginx/conf.d/modes/${NGINX_MODE}/server.conf;
+    server_name api.${DOMAIN};
+    set $upstream ${API_INTERNAL_URL};
+
+    location / {
+        proxy_pass $upstream;
+    }
+
+    location /posts {
+        client_max_body_size 50m;
+        proxy_pass $upstream;
+    }
+}
+
+server {
+    include /etc/nginx/conf.d/modes/${NGINX_MODE}/server.conf;
+    server_name auth.${DOMAIN};
+    set $upstream ${AUTH_SERVER_INTERNAL_URL};
+
+    location / {
+        proxy_pass $upstream;
+    }
+}

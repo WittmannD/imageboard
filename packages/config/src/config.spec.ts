@@ -34,6 +34,18 @@ describe('getConfig', () => {
     });
   });
 
+  it('serves staging over https and keeps its data', () => {
+    const staging = getConfig('staging');
+
+    expect(staging.urls).toMatchObject({
+      web: 'https://staging.spottish.website',
+      api: 'https://api.staging.spottish.website',
+      auth: 'https://auth.staging.spottish.website',
+      oidcRedirectUris: ['https://staging.spottish.website/auth/callback'],
+    });
+    expect(staging.database).toMatchObject({ dropSchema: false, seed: true });
+  });
+
   it('merges profile overrides into the base profile', () => {
     const development = getConfig('development');
     const e2e = getConfig('e2e');
@@ -49,7 +61,7 @@ describe('getConfig', () => {
   });
 
   it('rejects an unknown APP_ENV', () => {
-    expect(() => resolveAppEnv('staging')).toThrow(/Unknown APP_ENV "staging"/);
+    expect(() => resolveAppEnv('qa')).toThrow(/Unknown APP_ENV "qa"/);
     expect(resolveAppEnv('')).toBe('development');
   });
 });

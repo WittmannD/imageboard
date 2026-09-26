@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const APP_ENVS = ['development', 'e2e', 'production'] as const;
+export const APP_ENVS = ['development', 'e2e', 'staging', 'production'] as const;
 export type AppEnv = (typeof APP_ENVS)[number];
 
 const mimeTypeRegex = /^[a-z0-9-]+\/[a-z0-9-+.]+$/i;

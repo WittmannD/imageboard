@@ -25,7 +25,8 @@ export const oidcSession = createCookieSessionStorage<
     path: '/',
     sameSite: 'lax',
     secrets: [secrets.SESSION_COOKIE_SECRET],
-    //secure: true,
+    // Browsers drop Secure cookies set over plain HTTP (dev, e2e).
+    secure: config.scheme === 'https',
   },
 });
 

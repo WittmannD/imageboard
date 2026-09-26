@@ -4,3 +4,7 @@
 # JS and TS files must always use LF for tools to work
 *.js eol=lf
 *.ts eol=lf
+
+# Shell scripts run inside Linux containers
+*.sh eol=lf
+*.envsh eol=lf

@@ -9,6 +9,8 @@ const __dirname = import.meta.dirname;
 const seederOptions = {
   seeds: [path.resolve(__dirname, './seeders/*{.ts,.js}')],
   factories: [path.resolve(__dirname, './factories/*{.ts,.js}')],
+  // Records executed seeders, so a persistent database (staging) is seeded once.
+  seedTracking: true,
 } satisfies SeederOptions;
 
 @Module({

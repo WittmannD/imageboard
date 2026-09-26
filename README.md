@@ -265,7 +265,7 @@ All settings live in one place, the `@hdotu1/config` package (`packages/config`)
 come from the environment.
 
 - **Profiles.** `src/profiles/base.ts` holds the defaults: ports, TTLs, rate limits, SMTP, S3,
-  database names and so on. `development.ts`, `e2e.ts` and `production.ts` override what differs,
+  database names and so on. `development.ts`, `e2e.ts`, `staging.ts` and `production.ts` override what differs,
   and `APP_ENV` picks one (`development` when unset). Every public URL is derived from the
   profile's `domain`: the client, `api.*`, the `auth.*` issuer, interactions and the OIDC
   redirect URIs. Changing the domain means changing one line.
@@ -290,6 +290,31 @@ come from the environment.
   `.generated/config.<profile>.env` with `DOMAIN`, internal service URLs, database names and
   ports. Compose loads it with `--env-file`. `stack:dev`, the e2e `stack:*` scripts and the
   deploy workflow run this step for you.
+
+### Staging
+
+`https://staging.spottish.website` (plus `api.` and `auth.`) runs the full stack on its own
+server: `docker-compose.staging.yaml` with the `staging` profile. It uses HTTPS, keeps its
+Postgres data between deploys, runs the seeders only once, and stores images in its own
+`imageboard-staging` bucket. Deploy it by running **Deploy Staging**
+(`.github/workflows/deploy-staging.yml`) from the Actions tab. The workflow builds every image,
+tags it `staging` and `staging-<sha>`, and starts that exact commit on the server.
+
+On the first deploy, nginx starts on plain HTTP and certbot gets a Let's Encrypt certificate
+for all three hostnames. The deploy then restarts nginx in its HTTPS mode
+(`apps/imageboard-web/templates/modes/tls`). After that, the `certbot` service renews the certificate
+and nginx reloads every 6 hours.
+
+One-time setup:
+
+- DNS A records for `staging`, `api.staging` and `auth.staging` pointing at the server.
+- The server needs Docker with the compose plugin, and ports 22, 80 and 443 open. If the GHCR
+  packages are private, it also needs `docker login ghcr.io`.
+- A public-read Filebase bucket named `imageboard-staging`.
+- A `staging` environment in the GitHub repository settings with the secrets `VPS_HOST`,
+  `VPS_USER`, `VPS_SSH_KEY` and `APP_ENV` (the whole secrets `.env`, see `.env.example`; use
+  fresh values rather than the production ones). Optionally add the variable `LETSENCRYPT_EMAIL`
+  to receive certificate expiry notices.
 
 ---
 

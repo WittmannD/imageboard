@@ -3,6 +3,7 @@ import { base } from './profiles/base.js';
 import { development } from './profiles/development.js';
 import { e2e } from './profiles/e2e.js';
 import { production } from './profiles/production.js';
+import { staging } from './profiles/staging.js';
 import {
   APP_ENVS,
   type AppConfig,
@@ -14,6 +15,7 @@ import {
 const profiles: Record<AppEnv, ProfileOverrides> = {
   development,
   e2e,
+  staging,
   production,
 };
 

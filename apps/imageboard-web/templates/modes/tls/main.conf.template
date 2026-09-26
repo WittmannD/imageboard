@@ -1,0 +1,17 @@
+# One Let's Encrypt SAN certificate covers ${DOMAIN}, api.* and auth.*.
+ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+ssl_protocols TLSv1.2 TLSv1.3;
+ssl_session_cache shared:SSL:10m;
+ssl_session_timeout 1d;
+
+# Plain HTTP only answers certificate renewals and redirects to HTTPS.
+server {
+    listen 80;
+    server_name ${DOMAIN} api.${DOMAIN} auth.${DOMAIN};
+    include /etc/nginx/snippets/acme-challenge.conf;
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}

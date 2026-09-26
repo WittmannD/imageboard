@@ -1,0 +1,13 @@
+#!/bin/sh
+# Sourced by the nginx image's entrypoint before 20-envsubst-on-templates.sh,
+# which substitutes NGINX_MODE into the templates' include paths. HTTPS only
+# when it is enabled (staging) and the Let's Encrypt certificate exists; until
+# then plain HTTP, which also answers the challenge that issues it.
+
+if [ "${TLS_ENABLED:-}" = "true" ] && [ -f "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" ]; then
+    export NGINX_MODE=tls
+else
+    export NGINX_MODE=http
+fi
+
+echo "$0: serving ${NGINX_MODE}"

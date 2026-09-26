@@ -1,0 +1,178 @@
+name: Deploy Staging
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  # Every image is pushed as ghcr.io/<owner>/<repo>/<app>:<tag>, see
+  # docker-compose.staging.yaml.
+  REPO: ${{ github.repository }}
+  IMAGE_TAG: staging-${{ github.sha }}
+
+jobs:
+  # Non-secret settings come from the staging profile in packages/config;
+  # compose on the server reads them from a generated env file.
+  config:
+    runs-on: ubuntu-latest
+
+    outputs:
+      env: ${{ steps.generate.outputs.env }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate staging config env
+        id: generate
+        run: |
+          {
+            echo 'env<<CONFIG_ENV'
+            npx tsx bin/config-env.ts staging -
+            echo 'CONFIG_ENV'
+          } >> "$GITHUB_OUTPUT"
+
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      matrix:
+        app:
+          - image-processor
+          - imageboard-api
+          - imageboard-identity-provider
+          - imageboard-client
+          - imageboard-web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The app Dockerfiles copy the built packages from the build context.
+      - name: Build packages
+        run: npx nx run-many -t build --projects="packages/*"
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare Docker metadata
+        id: meta
+        run: |
+          echo "image=${{ env.REGISTRY }}/$(echo '${{ env.REPO }}' | tr '[:upper:]' '[:lower:]')/${{ matrix.app }}" >> "$GITHUB_OUTPUT"
+
+      - name: Build & push ${{ matrix.app }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/${{ matrix.app }}/Dockerfile
+          # Only the client has stages to pick from; its browser bundle inlines
+          # the staging profile, so it is built for it.
+          target: ${{ matrix.app == 'imageboard-client' && 'production' || '' }}
+          build-args: |
+            APP_ENV=staging
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image }}:staging
+            ${{ steps.meta.outputs.image }}:${{ env.IMAGE_TAG }}
+          cache-from: type=gha,scope=${{ matrix.app }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.app }}
+
+  deploy:
+    needs: [config, build-and-push]
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging.spottish.website
+
+    steps:
+      - name: Deploy on the staging server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+
+            mkdir -p /opt/imageboard-staging/sh
+            cd /opt/imageboard-staging
+
+            RAW_URL="https://raw.githubusercontent.com/${{ env.REPO }}/${{ github.sha }}"
+            wget -q -O docker-compose.yaml "$RAW_URL/docker-compose.staging.yaml"
+            wget -q -O sh/multiple-databases.sh "$RAW_URL/sh/multiple-databases.sh"
+            chmod +x sh/multiple-databases.sh
+
+            # Secrets only; every other setting is in config.env.
+            echo "${{ secrets.APP_ENV }}" > .env
+            cat > config.env <<'CONFIG_ENV'
+            ${{ needs.config.outputs.env }}
+            CONFIG_ENV
+            echo 'IMAGE_TAG="${{ env.IMAGE_TAG }}"' >> config.env
+
+            compose() {
+              docker compose --env-file .env --env-file config.env -f docker-compose.yaml "$@"
+            }
+
+            compose pull
+            compose up -d --remove-orphans
+
+            # Issue the certificate on the first deploy (a no-op afterwards
+            # until it is close to expiry).
+            set -a; . ./config.env; set +a
+            CERT="/etc/letsencrypt/live/$DOMAIN/fullchain.pem"
+            HAD_CERT=true
+            compose run --rm --no-deps --entrypoint test certbot -f "$CERT" || HAD_CERT=false
+
+            LETSENCRYPT_EMAIL="${{ vars.LETSENCRYPT_EMAIL }}"
+            if [ -n "$LETSENCRYPT_EMAIL" ]; then
+              ACCOUNT="--email $LETSENCRYPT_EMAIL"
+            else
+              ACCOUNT="--register-unsafely-without-email"
+            fi
+            compose run --rm --no-deps --entrypoint certbot certbot certonly \
+              --webroot -w /var/www/certbot \
+              -d "$DOMAIN" -d "api.$DOMAIN" -d "auth.$DOMAIN" \
+              --cert-name "$DOMAIN" \
+              $ACCOUNT --agree-tos --non-interactive --keep-until-expiring
+
+            if [ "$HAD_CERT" = true ]; then
+              # Picks up a certificate renewed just now.
+              compose exec -T web nginx -s reload
+            else
+              # nginx picks its HTTPS mode at startup; the API and client
+              # discover the https:// issuer at boot, which failed until now.
+              compose restart web
+              compose restart imageboard-api imageboard-client
+            fi
+
+            docker image prune -f
