@@ -77,9 +77,9 @@ export function ProfileView({ user, unverifiedEmail }: ProfileViewProps) {
         <CardHeader>
           <CardTitle>
             <div className="flex items-center gap-2">
-              <UserBadge user={user} data-testid="profile-username">
+              <UserBadge user={user}>
                 <UserAvatar size="lg" />
-                <UserTag />
+                <UserTag data-testid="profile-username" />
               </UserBadge>
             </div>
           </CardTitle>
