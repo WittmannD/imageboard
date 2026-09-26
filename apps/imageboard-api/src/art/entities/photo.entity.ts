@@ -6,7 +6,7 @@ import { BaseEntity } from '../../common/entity/base.entity.js';
 import { PhotoProcessingStatus } from '../enums/photo-status.enum.js';
 import { PostEntity } from './post.entity.js';
 
-@Entity()
+@Entity('photos')
 export class PhotoEntity extends BaseEntity {
   @Column({ unique: true })
   uploadUuid!: string;

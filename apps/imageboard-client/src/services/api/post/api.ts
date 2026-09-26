@@ -3,7 +3,7 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import { publicConfig } from 'src/lib/config.ts';
 import { axiosBaseQuery } from 'src/services/api/base-query.ts';
 import { userApi } from 'src/services/api/user/api.ts';
-import { USER_TAG_TYPE } from 'src/services/api/user/constants.ts';
+import { USER_STATS_TAG_TYPE } from 'src/services/api/user/constants.ts';
 
 import type {
   CreatePostBody,
@@ -188,10 +188,12 @@ async function syncLikeState(
       post.likedByMe = data.likedByMe;
     });
 
-    // the author's likesReceivedCount changed too
+    // the user's likesReceived stat changed too
     if (authorId !== undefined) {
       dispatch(
-        userApi.util.invalidateTags([{ type: USER_TAG_TYPE, id: authorId }]),
+        userApi.util.invalidateTags([
+          { type: USER_STATS_TAG_TYPE, id: authorId },
+        ]),
       );
     }
   } catch {

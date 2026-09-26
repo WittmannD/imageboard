@@ -72,13 +72,6 @@ export class LikeService {
       if (changed) {
         const delta = liked ? 1 : -1;
         await adjustCounter(entityManager, PostEntity, post.id, 'likesCount', delta);
-        await adjustCounter(
-          entityManager,
-          UserEntity,
-          post.user.id,
-          'likesReceivedCount',
-          delta,
-        );
 
         // re-read rather than add delta: concurrent likes may have landed
         // since the post was loaded

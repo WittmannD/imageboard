@@ -12,7 +12,11 @@ function UserProfilePage() {
     return null;
   }
 
-  return <ProfileView user={user} />;
+  return (
+    <div className="py-8">
+      <ProfileView user={user} />
+    </div>
+  );
 }
 
 export default UserProfilePage;

@@ -106,7 +106,6 @@ export interface UserDto {
   id: number;
   username: string;
   avatars: AvatarSource[];
-  likesReceivedCount: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -115,3 +114,8 @@ export interface ProfileDto extends UserDto {
   email: string;
 }
 
+export interface UserStatsDto {
+  userId: number;
+  postsCount: number;
+  likesReceived: number;
+}

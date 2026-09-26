@@ -31,6 +31,7 @@ import type { UserEntity } from './entities/user.entity.js';
 import { AvatarService } from './service/avatar.service.js';
 import { UserService } from './service/user.service.js';
 import { UserErrorFilter } from './user-error.filter.js';
+import { UserStatsDto } from './dto/user-stats.dto.js';
 
 @UseFilters(UserErrorFilter)
 @UseInterceptors(ClassSerializerInterceptor)
@@ -84,5 +85,11 @@ export class UserController {
   @SerializeOptions({ type: UserDto })
   public async getUserById(@Param('id', ParseIntPipe) id: number) {
     return await this.userService.getOneById(id);
+  }
+
+  @Get(':id/stats')
+  @SerializeOptions({ type: UserStatsDto })
+  public async getUserStats(@Param('id', ParseIntPipe) id: number) {
+    return await this.userService.getUserStatsByUserId(id);
   }
 }

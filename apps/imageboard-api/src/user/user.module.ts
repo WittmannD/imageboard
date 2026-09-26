@@ -9,14 +9,18 @@ import { ImageProcessorClientModule } from '@hdotu1/image-processor-client';
 import { AuthModule } from '../auth/auth.module.js';
 import { UploadsModuleFactory } from '../multer/uploads-module-factory.js';
 import { UserEntity } from './entities/user.entity.js';
+import { UserStatsEntity } from './entities/user-stats.entity.js';
 import { UserRepositoryProvider } from './repositories/user.repository.js';
+import {
+  UserStatsRepositoryProvider,
+} from './repositories/user-stats.repository.js';
 import { AvatarService } from './service/avatar.service.js';
 import { UserService } from './service/user.service.js';
 import { UserController } from './user.controller.js';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserEntity]),
+    TypeOrmModule.forFeature([UserEntity, UserStatsEntity]),
     TransactionModule,
     UploadsModuleFactory(),
     ImageProcessorClientModule.registerAsync({
@@ -31,11 +35,10 @@ import { UserController } from './user.controller.js';
   controllers: [UserController],
   providers: [
     UserRepositoryProvider,
+    UserStatsRepositoryProvider,
     UserService,
-    AvatarService
+    AvatarService,
   ],
-  exports: [
-    UserService
-  ]
+  exports: [UserService],
 })
 export class UserModule {}

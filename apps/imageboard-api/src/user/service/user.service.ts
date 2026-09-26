@@ -11,6 +11,7 @@ import {
   UserNotFoundError,
 } from '../errors/user-service-error.js';
 import { UserRepository } from '../repositories/user.repository.js';
+import { UserStatsRepository } from '../repositories/user-stats.repository.js';
 
 const USERNAME_CREATION_ATTEMPTS = 10;
 
@@ -19,6 +20,7 @@ export class UserService {
   constructor(
     private readonly tx: TransactionService,
     private readonly userRepository: UserRepository,
+    private readonly userStatsRepository: UserStatsRepository,
   ) {}
 
   private modifyPreferredUsername(prefix: string, suffixLength = 6) {
@@ -26,7 +28,7 @@ export class UserService {
       .randomBytes(suffixLength)
       .toString('hex')
       .slice(0, suffixLength);
-    return `${prefix}-${suffix}`
+    return `${prefix}-${suffix}`;
   }
 
   async findOneByEmail(email: string, em?: EntityManager) {
@@ -55,6 +57,22 @@ export class UserService {
     return user;
   }
 
+  async getUserStatsByUserId(userId: number, em?: EntityManager) {
+    return await this.tx.withManager(em, async (entityManager) => {
+      const userStatsRepository = entityManager.withRepository(
+        this.userStatsRepository,
+      );
+
+      const stats = await userStatsRepository.findOneBy({ userId });
+
+      if (!stats) {
+        throw new UserNotFoundError();
+      }
+
+      return stats;
+    });
+  }
+
   async updateUsername(user: UserEntity, username: string, em?: EntityManager) {
     return await this.tx.withManager(em, async (entityManager) => {
       const userRepository = entityManager.withRepository(this.userRepository);
@@ -72,7 +90,11 @@ export class UserService {
     });
   }
 
-  async createWithUsernameOrFindUser(preferredUsername: string, email: string, em?: EntityManager) {
+  async createWithUsernameOrFindUser(
+    preferredUsername: string,
+    email: string,
+    em?: EntityManager,
+  ) {
     return await this.tx.withManager(em, async (entityManager) => {
       let attempts = 0;
       let username = preferredUsername;

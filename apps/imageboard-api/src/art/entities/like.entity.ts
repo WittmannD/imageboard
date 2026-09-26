@@ -6,7 +6,7 @@ import { PostEntity } from './post.entity.js';
 
 // Likes are hard-deleted on unlike, so the unique constraint never trips on a
 // soft-deleted row
-@Entity()
+@Entity('likes')
 @Unique(['user', 'post'])
 export class LikeEntity extends BaseEntity {
   @ManyToOne(() => UserEntity, { nullable: false, onDelete: 'CASCADE' })

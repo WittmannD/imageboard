@@ -5,7 +5,7 @@ import { UserEntity } from '../../user/entities/user.entity.js';
 import { PostStatus } from '../enums/post-status.enum.js';
 import { PhotoEntity } from './photo.entity.js';
 
-@Entity()
+@Entity('posts')
 export class PostEntity extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   caption: string | null = null;

@@ -6,7 +6,7 @@ import { PostEntity } from '../../art/entities/post.entity.js';
 import { BaseEntity } from '../../common/entity/base.entity.js';
 import { FederatedCredentialsEntity } from '../../federated-credentials/entities/federated-credentials.entity.js';
 
-@Entity()
+@Entity('users')
 export class UserEntity extends BaseEntity {
   @Column({ type: 'text', nullable: false, unique: true })
   username!: string;
@@ -16,9 +16,6 @@ export class UserEntity extends BaseEntity {
 
   @Column({ type: 'text', nullable: false, unique: true })
   email!: string;
-
-  @Column({ type: 'integer', default: 0, update: false })
-  likesReceivedCount = 0;
 
   @OneToMany(() => PostEntity, (post) => post.user)
   posts!: PostEntity[];

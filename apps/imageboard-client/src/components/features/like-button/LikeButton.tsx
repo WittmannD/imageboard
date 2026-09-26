@@ -8,6 +8,7 @@ import type { PostDto } from 'src/services/api/types.ts';
 import { useAuth } from 'src/components/features/auth/context.tsx';
 import { Button } from 'src/components/ui/button/Button.tsx';
 import { cn } from 'src/lib/utils/cn.ts';
+import useNumberFormatter from 'src/hooks/useNumberFormatter.ts';
 
 function LikeButton({
   post,
@@ -17,6 +18,10 @@ function LikeButton({
   const [likePost] = useLikePostMutation();
   const [unlikePost] = useUnlikePostMutation();
   const { isLoggedIn } = useAuth();
+  const formatter = useNumberFormatter({
+    notation: 'compact',
+    compactDisplay: 'short',
+  });
 
   const onLikeClick = useCallback(() => {
     if (!isLoggedIn) {
@@ -57,7 +62,7 @@ function LikeButton({
           )}
         />
       </span>
-      <span className="tabular-nums leading-none">{post.likesCount}</span>
+      <span className="tabular-nums leading-none">{formatter.format(post.likesCount)}</span>
     </Button>
   );
 }
