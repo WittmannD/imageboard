@@ -54,7 +54,7 @@ describe('paginate', () => {
       { limit: 2 },
     );
 
-    expect(qb.andWhere).toHaveBeenCalledWith('entity_id < :id', { id: cursor.id });
+    expect(qb.andWhere).toHaveBeenCalledWith('entity.id < :id', { id: cursor.id });
 
     expect(result).toEqual({
       ids: [5, 4],

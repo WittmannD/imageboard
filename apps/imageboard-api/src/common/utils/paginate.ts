@@ -111,7 +111,6 @@ export async function paginate<Entity extends BaseEntity>(
   }
   let idRows: Entity[];
   try {
-    console.log(query.getSql());
     idRows = await query.getMany();
   } catch (error) {
     if (isDataException(error)) {

@@ -2,73 +2,34 @@
 
 import { Buffer } from 'node:buffer';
 import fsPromises from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
-import path from 'node:path';
+import path, { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { firstValueFrom, Observable } from 'rxjs';
+import sharp from 'sharp';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { LocalStorageDriver } from '@hdotu1/media-storage/drivers';
 import { YamlTemplate } from '@hdotu1/yaml-template';
 
 import { AppService } from './app.service.js';
 import {
+  DEFAULT_IMAGE_TRANSFORM_CONFIG,
   IMAGE_TRANSFORM_CONFIG_LOADER,
   type ImageTransformConfig,
 } from './providers/image-transform-config.js';
-import { SourceStorageProvider } from './providers/storage/source-storage.provider.js';
-import { TransformStorageProvider } from './providers/storage/transform-storage.provider.js';
-import type {
-  OperationNestedConfigs,
-} from './transform/operation/operation-map.js';
+import { SOURCE_STORAGE } from './providers/storage/source-storage.provider.js';
+import { TRANSFORM_STORAGE } from './providers/storage/transform-storage.provider.js';
+import type { OperationNestedConfigs } from './transform/operation/operation-map.js';
 
-describe('AppService', () => {
-  let mockConfigService;
-  let service: AppService;
-  let root: string;
-  let mockImageTransformConfigLoader;
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const schemaPath = resolve(
+  __dirname,
+  './schema/image-transform-config.schema.json',
+);
+const sourceRoot = resolve(__dirname, '../test');
 
-  beforeEach(async () => {
-    // reset mock call history + implementations between tests
-    vi.clearAllMocks();
-
-    root = await fsPromises.mkdtemp(path.resolve('./test', 'app-service-'));
-
-    mockConfigService = {
-      get: vi.fn((key: string, defaultValue?: unknown): unknown => {
-        const cfg: Record<string, unknown> = {
-          SOURCE_STORAGE_PATH: './test',
-          TRANSFORM_STORAGE_PATH: root,
-        };
-
-        return cfg[key] ?? defaultValue;
-      }),
-      getOrThrow: vi.fn((key: string): unknown => {
-        const cfg: Record<string, unknown> = {
-          SOURCE_STORAGE_PATH: './test',
-          TRANSFORM_STORAGE_PATH: root,
-        };
-
-        if (!(key in cfg)) {
-          throw new Error();
-        }
-
-        return cfg[key];
-      }),
-    };
-
-    mockImageTransformConfigLoader = {
-      get: vi.fn((): Promise<YamlTemplate<ImageTransformConfig>> => {
-        const __dirname = dirname(fileURLToPath(import.meta.url));
-        const schemaPath = resolve(
-          __dirname,
-          './schema/image-transform-config.schema.json',
-        );
-
-        return YamlTemplate.create(
-          Buffer.from(
-            `$schema: '${schemaPath}'
+const DEFAULT_CONFIG_YAML = `$schema: '${schemaPath}'
 transform:
   - operation: resize
     args:
@@ -76,26 +37,45 @@ transform:
       height: 200
   - operation: save
     args:
-      key: '\${{file.name}}_200x200\${{file.ext}}'`,
-            'utf-8',
-          ),
-        );
-      }),
+      key: '\${{file.name}}_200x200\${{file.ext}}'`;
+
+describe('AppService', () => {
+  let service: AppService;
+  let root: string;
+  let configYaml: string;
+  let mockImageTransformConfigLoader: {
+    get: ReturnType<typeof vi.fn>;
+  };
+
+  beforeEach(async () => {
+    // reset mock call history + implementations between tests
+    vi.clearAllMocks();
+
+    root = await fsPromises.mkdtemp(path.join(sourceRoot, 'app-service-'));
+    configYaml = DEFAULT_CONFIG_YAML;
+
+    mockImageTransformConfigLoader = {
+      get: vi.fn((): Promise<YamlTemplate<ImageTransformConfig>> =>
+        YamlTemplate.create<ImageTransformConfig>(
+          Buffer.from(configYaml, 'utf-8'),
+        ),
+      ),
     };
 
     const moduleRef = await Test.createTestingModule({
-      imports: [],
       providers: [
-        {
-          provide: ConfigService,
-          useValue: mockConfigService,
-        },
         {
           provide: IMAGE_TRANSFORM_CONFIG_LOADER,
           useValue: mockImageTransformConfigLoader,
         },
-        SourceStorageProvider,
-        TransformStorageProvider,
+        {
+          provide: SOURCE_STORAGE,
+          useValue: new LocalStorageDriver({ root: sourceRoot }),
+        },
+        {
+          provide: TRANSFORM_STORAGE,
+          useValue: new LocalStorageDriver({ root }),
+        },
         AppService,
       ],
     }).compile();
@@ -139,6 +119,56 @@ transform:
           format: 'jpeg',
           width: 300,
           height: 300,
+        },
+      ]);
+    });
+
+    it('writes output to transform storage', async () => {
+      await firstValueFrom(
+        service.process('original.jpeg', [
+          {
+            operation: 'resize',
+            args: {
+              width: 120,
+              height: 80,
+            },
+          },
+          {
+            operation: 'save',
+            args: {
+              key: 'nested/stored.jpeg',
+            },
+          },
+        ]),
+      );
+
+      const metadata = await sharp(
+        path.join(root, 'nested/stored.jpeg'),
+      ).metadata();
+      expect(metadata).toMatchObject({
+        format: 'jpeg',
+        width: 120,
+        height: 80,
+      });
+    });
+
+    it('passes save metadata through to outputs', async () => {
+      const outputs = await firstValueFrom(
+        service.process('original.jpeg', [
+          {
+            operation: 'save',
+            args: {
+              key: 'with-metadata.jpeg',
+              metadata: { variant: 'original' },
+            },
+          },
+        ]),
+      );
+
+      expect(outputs).toMatchObject([
+        {
+          key: 'with-metadata.jpeg',
+          metadata: { variant: 'original' },
         },
       ]);
     });
@@ -255,6 +285,53 @@ transform:
           format: 'jpeg',
           width: 200,
           height: 200,
+        },
+      ]);
+    });
+
+    it('loads the default config when no config key is given', async () => {
+      await firstValueFrom(service.processFromConfig('original.jpeg'));
+
+      expect(mockImageTransformConfigLoader.get).toHaveBeenCalledWith(
+        DEFAULT_IMAGE_TRANSFORM_CONFIG,
+      );
+    });
+
+    it('loads the given config key', async () => {
+      await firstValueFrom(
+        service.processFromConfig(
+          'original.jpeg',
+          undefined,
+          'avatar-transform.config.yaml',
+        ),
+      );
+
+      expect(mockImageTransformConfigLoader.get).toHaveBeenCalledWith(
+        'avatar-transform.config.yaml',
+      );
+    });
+
+    it('resolves variables and source metadata in config', async () => {
+      configYaml = `$schema: '${schemaPath}'
+transform:
+  - operation: save
+    args:
+      key: '\${{variables.prefix}}/\${{file.name}}\${{file.ext}}'
+      metadata:
+        sourceWidth: \${{metadata.width}}`;
+
+      const { width } = await sharp(
+        path.join(sourceRoot, 'original.jpeg'),
+      ).metadata();
+      const outputs = await firstValueFrom(
+        service.processFromConfig('original.jpeg', { prefix: 'user-1' }),
+      );
+
+      expect(outputs).toMatchObject([
+        {
+          key: 'user-1/original.jpeg',
+          filename: 'original.jpeg',
+          metadata: { sourceWidth: width },
         },
       ]);
     });

@@ -1,9 +1,9 @@
 import { Logger, Module, type OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectDataSource, TypeOrmModule } from '@nestjs/typeorm';
 import path from 'path';
 import type { DataSource } from 'typeorm';
 import { runSeeders, type SeederOptions } from 'typeorm-extension';
-import { ConfigService } from '@nestjs/config';
 
 const __dirname = import.meta.dirname;
 const seederOptions = {
