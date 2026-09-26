@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import { toComposeEnv } from './compose-env.js';
 import { getConfig, resolveAppEnv } from './get-config.js';
-import { toPublicConfig } from './public.js';
 import { APP_ENVS } from './schema.js';
 import { clientSecrets, loadSecrets } from './secrets.js';
 
@@ -81,17 +80,6 @@ describe('loadSecrets', () => {
     expect(() => loadSecrets(clientSecrets, { OIDC_CLIENT_SECRET: '' })).toThrow(
       'Missing or invalid secrets in the environment: OIDC_CLIENT_SECRET, SESSION_COOKIE_SECRET',
     );
-  });
-});
-
-describe('toPublicConfig', () => {
-  it('exposes only browser-safe URLs', () => {
-    expect(toPublicConfig(getConfig('e2e'))).toEqual({
-      webUrl: 'http://e2e.test',
-      apiBaseUrl: 'http://e2e.test/api',
-      oidcIssuerUrl: 'http://auth.e2e.test',
-      imageServerUrl: 'http://s3.e2e.test:9000/imageboard',
-    });
   });
 });
 

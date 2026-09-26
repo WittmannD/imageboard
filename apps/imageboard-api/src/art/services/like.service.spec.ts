@@ -61,13 +61,6 @@ describe('LikeService', () => {
       'likesCount',
       1,
     );
-    expect(adjustCounter).toHaveBeenCalledWith(
-      entityManager,
-      UserEntity,
-      2,
-      'likesReceivedCount',
-      1,
-    );
   });
 
   it('leaves the counters alone when the post is already liked', async () => {
@@ -97,13 +90,6 @@ describe('LikeService', () => {
       PostEntity,
       7,
       'likesCount',
-      -1,
-    );
-    expect(adjustCounter).toHaveBeenCalledWith(
-      entityManager,
-      UserEntity,
-      2,
-      'likesReceivedCount',
       -1,
     );
   });

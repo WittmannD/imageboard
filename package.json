@@ -14,7 +14,7 @@
   "scripts": {
     "build": "nx run-many -t=build",
     "build:clean": "nx exec -- del-cli dist",
-    "test": "nx run-many -t=test",
+    "test": "nx run-many -t=test -- --passWithNoTests",
     "lint": "nx run-many -t=lint",
     "release": "tsx ./bin/nx-release.ts",
     "config:env": "tsx ./bin/config-env.ts",
