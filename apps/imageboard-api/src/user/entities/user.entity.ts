@@ -11,7 +11,7 @@ export class UserEntity extends BaseEntity {
   @Column({ type: 'text', nullable: false, unique: true })
   username!: string;
 
-  @Column({ type: 'jsonb', default: () => "'[]'::jsonb" })
+  @Column({ type: 'jsonb', default: [] })
   avatars: ImageOutput[] = [];
 
   @Column({ type: 'text', nullable: false, unique: true })

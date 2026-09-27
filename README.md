@@ -291,6 +291,26 @@ come from the environment.
   ports. Compose loads it with `--env-file`. `stack:dev`, the e2e `stack:*` scripts and the
   deploy workflow run this step for you.
 
+### Database migrations
+
+The API and the identity provider own their schemas through TypeORM migrations
+(`apps/<app>/src/migrations`) in every environment. `synchronize` is off everywhere. Each service
+runs its pending migrations on boot. Development and e2e also drop the schema on every boot, so
+their databases are always rebuilt from the migrations.
+
+After changing an entity, generate a migration against the running dev stack's Postgres. The
+stack publishes it on `127.0.0.1:5433`; set `DB_HOST_PORT` to change the port.
+
+```sh
+export MIGRATIONS_DB_HOST=localhost MIGRATIONS_DB_PORT=5433   # or put them in .env
+npm run migration:generate -w imageboard-api -- AddPostTitle
+```
+
+The script builds the app, applies pending migrations, writes `src/migrations/<timestamp>-AddPostTitle.ts`
+and formats it. Review the generated file and commit it with the entity change. Other scripts, each run with
+`-w <app>`: `migration:run`, `migration:revert` and `migration:check`. `migration:check` fails
+when the entities and the migrations disagree.
+
 ### Staging
 
 `https://staging.spottish.website` (plus `api.` and `auth.`) runs the full stack on its own

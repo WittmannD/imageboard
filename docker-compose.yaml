@@ -37,6 +37,10 @@ services:
     volumes:
       - ./sh/multiple-databases.sh:/docker-entrypoint-initdb.d/multiple-databases.sh
       - pg-data:/var/lib/postgresql
+    # Loopback only: lets the TypeORM CLI (npm run migration:*) reach the
+    # databases from the host.
+    ports:
+      - "127.0.0.1:${DB_HOST_PORT:-5433}:5432"
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ${DB_USER}']
       interval: 5s

@@ -6,11 +6,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
-import type { AppConfig } from '@hdotu1/config';
+import type { DataSourceOptions } from 'typeorm';
 
 import { AppController } from './app.controller.js';
 import configuration from './config/configuration.js';
+import dataSourceConfig from './config/data-source.config.js';
 import throttlerConfig from './config/throttler.config.js';
 import { CredentialsModule } from './credentials/credentials.module.js';
 import { InteractionModule } from './interaction/interaction.module.js';
@@ -25,7 +25,7 @@ import { VerificationModule } from './verification/verification.module.js';
     ConfigModule.forRoot({
       isGlobal: true,
       ignoreEnvFile: true,
-      load: [configuration, throttlerConfig],
+      load: [configuration, throttlerConfig, dataSourceConfig],
     }),
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
@@ -41,22 +41,10 @@ import { VerificationModule } from './verification/verification.module.js';
     PasswordResetModule,
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => {
-        const database = config.getOrThrow<AppConfig['database']>('database');
-
-        return {
-          type: 'postgres',
-          host: database.host,
-          port: database.port,
-          username: config.getOrThrow<string>('secrets.DB_USER'),
-          password: config.getOrThrow<string>('secrets.DB_PASS'),
-          database: database.names.identity,
-          dropSchema: database.dropSchema,
-          autoLoadEntities: true,
-          synchronize: database.synchronize,
-          ssl: database.ssl ? { rejectUnauthorized: false } : false,
-        };
-      },
+      useFactory: (config: ConfigService) => ({
+        ...config.getOrThrow<DataSourceOptions>('dataSource'),
+        autoLoadEntities: true,
+      }),
     }),
   ],
   providers: [

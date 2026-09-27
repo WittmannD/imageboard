@@ -14,7 +14,12 @@
     "build": "nest build",
     "dev": "nest start --watch",
     "start:prod": "NODE_ENV=production node dist/main.js",
-    "debug": "nest start --debug --watch"
+    "debug": "nest start --debug --watch",
+    "typeorm": "typeorm -d dist/migrations.data-source.js",
+    "migration:run": "nest build && npm run typeorm -- migration:run",
+    "migration:revert": "nest build && npm run typeorm -- migration:revert",
+    "migration:generate": "nest build && npm run typeorm -- migration:run && tsx ../../bin/migration-generate.ts",
+    "migration:check": "nest build && npm run typeorm -- migration:run && npm run typeorm -- migration:generate --check --dryrun src/migrations/Check"
   },
   "dependencies": {
     "@faker-js/faker": "^10.6.0",

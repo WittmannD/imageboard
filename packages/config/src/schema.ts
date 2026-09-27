@@ -53,7 +53,6 @@ export const profileSchema = z.object({
     port,
     ssl: z.boolean(),
     dropSchema: z.boolean(),
-    synchronize: z.boolean(),
     names: z.object({
       api: z.string().min(1),
       identity: z.string().min(1),

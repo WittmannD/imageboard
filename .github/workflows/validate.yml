@@ -34,3 +34,46 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
 
       - run: npx nx affected -t lint test build
+
+  # Dev and e2e build their schema from the migrations too, but only this job
+  # notices an entity change that was committed without its migration.
+  migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: imageboard
+          POSTGRES_PASSWORD: imageboard
+          POSTGRES_DB: imageboard
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U imageboard"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DB_USER: imageboard
+      DB_PASS: imageboard
+      MIGRATIONS_DB_HOST: localhost
+      MIGRATIONS_DB_PORT: 5432
+      PGPASSWORD: imageboard
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      - run: npm ci
+
+      - name: Create the identity provider database
+        run: psql -h localhost -U imageboard -d imageboard -c 'CREATE DATABASE imageboard_identity'
+
+      # The apps import the workspace packages from their build output.
+      - run: npx nx run-many -t build --projects="packages/*"
+
+      - run: npm run migration:check -w imageboard-api
+      - run: npm run migration:check -w imageboard-identity-provider

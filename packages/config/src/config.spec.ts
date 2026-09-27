@@ -45,6 +45,10 @@ describe('getConfig', () => {
     expect(staging.database).toMatchObject({ dropSchema: false, seed: true });
   });
 
+  it('keeps production data between boots', () => {
+    expect(getConfig('production').database.dropSchema).toBe(false);
+  });
+
   it('merges profile overrides into the base profile', () => {
     const development = getConfig('development');
     const e2e = getConfig('e2e');

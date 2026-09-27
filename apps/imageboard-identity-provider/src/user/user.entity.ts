@@ -6,7 +6,7 @@ import { CredentialsEntity } from '../credentials/credentials.entity.js';
 export const USERNAME_UNIQUE_CONSTRAINT = 'UQ_user_username';
 export const EMAIL_UNIQUE_CONSTRAINT = 'UQ_user_email';
 
-@Entity()
+@Entity('users')
 export class UserEntity extends BaseEntity {
   @Index(USERNAME_UNIQUE_CONSTRAINT, { unique: true })
   @Column({ type: 'text', nullable: false })

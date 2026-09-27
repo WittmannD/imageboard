@@ -23,8 +23,9 @@ export const base: Omit<Profile, 'env' | 'domain' | 'imageServerUrl' | 'e2e'> = 
     host: 'postgres',
     port: 5432,
     ssl: false,
+    // Dev and e2e start from an empty database on every boot; the schema is
+    // then rebuilt by the migrations.
     dropSchema: true,
-    synchronize: true,
     seed: false,
     names: { api: 'imageboard', identity: 'imageboard_identity' },
   },
