@@ -15,6 +15,27 @@ proxy_set_header X-Forwarded-Proto $scheme;
 
 include /etc/nginx/conf.d/modes/${NGINX_MODE}/main.conf;
 
+# Container healthcheck, answered by nginx itself: probing a proxied host would
+# wait on DNS for an upstream that is not up yet (and the client and API only
+# start once this reports healthy). Not published outside the container.
+server {
+    listen 127.0.0.1:8080;
+    access_log off;
+
+    location = /healthz {
+        return 200 "ok\n";
+    }
+}
+
+# Requests for any other host (scanners probing the bare IP) are dropped
+# without a response rather than reaching an app. Certificate renewals name
+# ${DOMAIN}, so they still reach the challenge location.
+server {
+    listen 80 default_server;
+    server_name _;
+    return 444;
+}
+
 server {
     include /etc/nginx/conf.d/modes/${NGINX_MODE}/server.conf;
     server_name ${DOMAIN};

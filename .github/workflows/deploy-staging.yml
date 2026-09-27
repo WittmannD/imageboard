@@ -24,10 +24,10 @@ jobs:
       env: ${{ steps.generate.outputs.env }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 24.x
 
@@ -60,10 +60,10 @@ jobs:
           - imageboard-web
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 24.x
 
@@ -75,10 +75,10 @@ jobs:
         run: npx nx run-many -t build --projects="packages/*"
 
       - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Login to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -90,7 +90,7 @@ jobs:
           echo "image=${{ env.REGISTRY }}/$(echo '${{ env.REPO }}' | tr '[:upper:]' '[:lower:]')/${{ matrix.app }}" >> "$GITHUB_OUTPUT"
 
       - name: Build & push ${{ matrix.app }}
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: apps/${{ matrix.app }}/Dockerfile

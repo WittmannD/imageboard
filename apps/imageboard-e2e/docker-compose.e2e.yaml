@@ -207,12 +207,9 @@ services:
           - api.${DOMAIN}
           - auth.${DOMAIN}
     healthcheck:
-      # Any HTTP response (even a 502 while upstreams boot) means nginx is up.
-      test:
-        [
-          'CMD-SHELL',
-          'wget -S -O /dev/null http://127.0.0.1/ 2>&1 | grep -q "HTTP/"',
-        ]
+      # nginx's own endpoint (see default.conf.template), independent of the
+      # upstreams, which wait for this before they start.
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:8080/healthz']
       interval: 2s
       timeout: 3s
       retries: 15

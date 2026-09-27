@@ -5,6 +5,13 @@ ssl_protocols TLSv1.2 TLSv1.3;
 ssl_session_cache shared:SSL:10m;
 ssl_session_timeout 1d;
 
+# HTTPS for any other name (or none, e.g. the bare IP) is refused during the
+# handshake, before the certificate is shown.
+server {
+    listen 443 ssl default_server;
+    ssl_reject_handshake on;
+}
+
 # Plain HTTP only answers certificate renewals and redirects to HTTPS.
 server {
     listen 80;
