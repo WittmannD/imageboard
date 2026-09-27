@@ -1,9 +1,11 @@
 import { useGetUserStatsQuery } from 'src/services/api/user/api.ts';
 import { StatsRow } from 'src/components/features/stats/StatsRow.tsx';
+import { StatsSkeleton } from 'src/components/features/stats/StatsSkeleton.tsx';
 
 function Stats({ userId }: { userId: number }) {
-  const { data: stats } = useGetUserStatsQuery(userId);
+  const { data: stats, isLoading } = useGetUserStatsQuery(userId);
 
+  if (!stats && isLoading) return <StatsSkeleton />;
   if (!stats) return null;
 
   return (
@@ -19,7 +21,7 @@ function Stats({ userId }: { userId: number }) {
         />
       </div>
     </div>
-  );
+  )
 }
 
 export { Stats };

@@ -36,6 +36,7 @@ function PostGalleryTiles({ post }: { post: PostDto }) {
       <Link
         key={photo.id}
         className="block outline-none"
+        preventScrollReset={true}
         to={{
           search: getDialogSearchParams('post', {
             id: post.id,
@@ -50,6 +51,8 @@ function PostGalleryTiles({ post }: { post: PostDto }) {
           src={getImageUrl(tile.key)}
           width={tile.width}
           height={tile.height}
+          loading="lazy"
+          fetchPriority="auto"
           alt=""
           className="block bg-muted/50"
         />

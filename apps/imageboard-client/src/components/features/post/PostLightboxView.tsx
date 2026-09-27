@@ -11,6 +11,7 @@ import { getImageByVariant, getImageUrl } from 'src/lib/utils/image-source.ts';
 import type { PhotoDto, PhotoSource, PostDto } from 'src/services/api/types.ts';
 import {
   Card,
+  CardAction,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -21,6 +22,7 @@ import {
   UserTag,
 } from 'src/components/features/user/UserBadge.tsx';
 import { Link } from 'react-router';
+import LikeButton from '../like-button/LikeButton';
 
 function PostLightboxView({
   post,
@@ -30,14 +32,14 @@ function PostLightboxView({
 }: {
   post: PostDto;
   initialPhotoId?: string;
-  onBackgroundClick: () => void;
+  onBackgroundClick?: () => void;
   setCarouselApi: (api: CarouselApi) => void;
 }) {
   const handleBackgroundClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if ((event.target as HTMLElement).closest('[data-lightbox-stop]')) {
       return;
     }
-    onBackgroundClick();
+    onBackgroundClick?.();
   };
 
   const slides = post.photos
@@ -53,7 +55,7 @@ function PostLightboxView({
 
   return (
     <div
-      className="group relative h-dvh w-full"
+      className="group relative h-dvh w-full overflow-hidden"
       onClick={handleBackgroundClick}
     >
       <Carousel opts={{ duration: 0, startIndex }} setApi={setCarouselApi}>
@@ -66,8 +68,9 @@ function PostLightboxView({
               <img
                 data-lightbox-stop
                 src={getImageUrl(image.key)}
+                loading="eager"
                 alt=""
-                className="block h-full max-h-[1080px] w-auto max-w-full object-contain"
+                className="block max-h-full w-auto bg-muted/50 max-w-full object-contain"
               />
             </CarouselItem>
           ))}
@@ -87,11 +90,11 @@ function PostLightboxView({
       </Carousel>
       <div
         data-lightbox-stop
-        className="pointer-events-none absolute inset-x-0 bottom-0 z-40 flex justify-center p-4 opacity-0 transition-opacity duration-150 group-hover:pointer-events-auto group-hover:opacity-100"
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-40 flex translate-y-4 justify-center p-4 opacity-0 transition-[opacity,translate] duration-200 ease-out group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100"
       >
         <Card
           size="sm"
-          className="w-full max-w-lg bg-popover/90 backdrop-blur-sm"
+          className="w-full max-w-lg bg-popover/90 backdrop-blur-xs"
         >
           <CardHeader>
             <CardTitle>
@@ -104,11 +107,10 @@ function PostLightboxView({
                 <UserTag />
               </UserBadge>
             </CardTitle>
-            {post.caption && (
-              <CardDescription>
-                {post.caption}
-              </CardDescription>
-            )}
+            <CardAction>
+              <LikeButton post={post} />
+            </CardAction>
+            {post.caption && <CardDescription>{post.caption}</CardDescription>}
           </CardHeader>
         </Card>
       </div>

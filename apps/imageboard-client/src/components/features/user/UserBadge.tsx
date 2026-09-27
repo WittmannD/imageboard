@@ -2,7 +2,11 @@ import { useRender } from '@base-ui/react/use-render';
 import type { AvatarSource, UserDto } from 'src/services/api/types.ts';
 import { cn } from 'src/lib/utils/cn.ts';
 import React, { useMemo } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from 'src/components/ui/avatar/Avatar.tsx';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from 'src/components/ui/avatar/Avatar.tsx';
 import { getImageByVariant, getImageUrl } from 'src/lib/utils/image-source.ts';
 
 type UserBadgeContextProps = {
@@ -73,17 +77,23 @@ export function UserAvatar({
     return null;
   }
 
-  const avatar = useMemo(() => getImageByVariant<AvatarSource>(
-    user.avatars,
-    avatarSizeMap[size] || 'icon_medium',
-  ), [user.avatars, size]);
+  const avatar = useMemo(
+    () =>
+      getImageByVariant<AvatarSource>(
+        user.avatars,
+        avatarSizeMap[size] || 'icon_medium',
+      ),
+    [user.avatars, size],
+  );
 
   return (
     <Avatar size={size} {...props}>
       {avatar && (
         <AvatarImage src={getImageUrl(avatar.key)} alt={user.username} />
       )}
-      <AvatarFallback>{user.username.slice(0, 2)}</AvatarFallback>
+      <AvatarFallback className="select-none">
+        {user.username.slice(0, 2)}
+      </AvatarFallback>
     </Avatar>
   );
 }

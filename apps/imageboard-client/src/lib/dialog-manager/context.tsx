@@ -55,7 +55,10 @@ function isDialogName(name: string | null): name is DialogName {
   return !!name && name in dialogRegistry;
 }
 
-export function DialogManagerProvider({ children, modal }: PropsWithChildren & { modal: ModalData | null }) {
+export function DialogManagerProvider({
+  children,
+  modal,
+}: PropsWithChildren & { modal: ModalData | null }) {
   const [, setSearchParams] = useSearchParams();
   const [mounted, setMounted] = useState<MountedDialog | null>(null);
 
@@ -65,18 +68,23 @@ export function DialogManagerProvider({ children, modal }: PropsWithChildren & {
     }
   }, [modal]);
 
-  const open = Boolean(modal && isDialogName(modal.name) && mounted?.name === modal.name);
+  const open = Boolean(
+    modal && isDialogName(modal.name) && mounted?.name === modal.name,
+  );
 
   const openDialog = useCallback(
     (name: DialogName, params?: DialogParams) => {
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        next.set('modal', name);
-        for (const [key, value] of toParamEntries(params)) {
-          next.set(key, value);
-        }
-        return next;
-      });
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.set('modal', name);
+          for (const [key, value] of toParamEntries(params)) {
+            next.set(key, value);
+          }
+          return next;
+        },
+        { preventScrollReset: true },
+      );
     },
     [setSearchParams],
   );
@@ -105,7 +113,7 @@ export function DialogManagerProvider({ children, modal }: PropsWithChildren & {
         }
         return next;
       },
-      { replace: true },
+      { replace: true, preventScrollReset: true },
     );
   }, [setSearchParams, mounted]);
 
