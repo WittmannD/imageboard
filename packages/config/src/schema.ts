@@ -34,6 +34,11 @@ export const profileSchema = z.object({
   /** Public domain; the client lives on it, the API on api.<domain>, the IdP on auth.<domain>. */
   domain: z.string().min(1),
   scheme: z.enum(['http', 'https']),
+  /**
+   * Let the client and the API call a plain-http OIDC issuer (openid-client
+   * refuses it otherwise). Only for the local stacks, which have no TLS.
+   */
+  allowInsecureOidcRequests: z.boolean(),
 
   /** Public base URL browsers load processed images from (the S3 bucket). */
   imageServerUrl: url,

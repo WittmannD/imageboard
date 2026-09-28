@@ -4,6 +4,8 @@ import type { ProfileOverrides } from '../schema.js';
 export const development: ProfileOverrides = {
   env: 'development',
   domain: 'spottish.website',
+  // The issuer is served over plain http.
+  allowInsecureOidcRequests: true,
   imageServerUrl: 'https://imageboard.s3.filebase.io',
   database: {
     seed: true,

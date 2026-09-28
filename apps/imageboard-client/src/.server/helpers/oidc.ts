@@ -18,10 +18,10 @@ const config: client.Configuration = await client.discovery(
   () => {
     /* empty */
   },
-  {
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
-    execute: [client.allowInsecureRequests],
-  },
+  appConfig.allowInsecureOidcRequests
+    ? // eslint-disable-next-line @typescript-eslint/no-deprecated
+      { execute: [client.allowInsecureRequests] }
+    : undefined,
 );
 
 /**
@@ -72,9 +72,12 @@ async function buildAuthorizationUrl(): Promise<OidcAuthState & { url: URL }> {
 }
 
 async function authorizationCodeGrant(url: URL, state: OidcAuthState) {
+  const callbackUrl = new URL(redirectUri);
+  callbackUrl.search = url.search;
+
   const result = await client.authorizationCodeGrant(
     config,
-    url,
+    callbackUrl,
     {
       pkceCodeVerifier: state.codeVerifier,
       expectedState: state.state,

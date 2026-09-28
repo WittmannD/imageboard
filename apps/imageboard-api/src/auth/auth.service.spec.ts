@@ -46,6 +46,7 @@ describe('AuthService', () => {
       if (key === 'urls.auth') return ISSUER;
       if (key === 'urls.api') return AUDIENCE;
       if (key === 'identityProvider.oidc.client.id') return 'client-id';
+      if (key === 'allowInsecureOidcRequests') return false;
       throw new Error(`unexpected config key: ${key}`);
     }),
   };
@@ -63,6 +64,7 @@ describe('AuthService', () => {
       if (key === 'urls.auth') return ISSUER;
       if (key === 'urls.api') return AUDIENCE;
       if (key === 'identityProvider.oidc.client.id') return 'client-id';
+      if (key === 'allowInsecureOidcRequests') return false;
       throw new Error(`unexpected config key: ${key}`);
     });
     vi.mocked(jwtVerify).mockResolvedValue({

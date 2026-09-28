@@ -64,6 +64,7 @@ export class AuthService implements OnModuleInit {
   private readonly issuer: string;
   private readonly issuerUrl: string;
   private readonly audience: string;
+  private readonly allowInsecureOidcRequests: boolean;
   private jwks: RemoteJWKSet | null = null;
   private jwksDiscovery: Promise<RemoteJWKSet> | null = null;
 
@@ -76,6 +77,9 @@ export class AuthService implements OnModuleInit {
     this.issuer = this.configService.getOrThrow<string>('urls.auth');
     this.issuerUrl = this.configService.getOrThrow<string>('urls.auth');
     this.audience = this.configService.getOrThrow<string>('urls.api');
+    this.allowInsecureOidcRequests = this.configService.getOrThrow<boolean>(
+      'allowInsecureOidcRequests',
+    );
   }
 
   private async discoverJwks(): Promise<RemoteJWKSet> {
@@ -93,11 +97,10 @@ export class AuthService implements OnModuleInit {
         () => {
           /* empty */
         },
-        {
-          // todo: remove in prod
-          // eslint-disable-next-line @typescript-eslint/no-deprecated
-          execute: [oidcClient.allowInsecureRequests],
-        },
+        this.allowInsecureOidcRequests
+          ? // eslint-disable-next-line @typescript-eslint/no-deprecated
+            { execute: [oidcClient.allowInsecureRequests] }
+          : undefined,
       );
       jwksUri = config.serverMetadata().jwks_uri;
     } catch (error) {

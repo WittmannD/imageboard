@@ -10,6 +10,8 @@ const s3Port = 9000;
 export const e2e: ProfileOverrides = {
   env: 'e2e',
   domain,
+  // The issuer is served over plain http.
+  allowInsecureOidcRequests: true,
   // Public-read MinIO bucket the client renders <img> tags from.
   imageServerUrl: `http://s3.${domain}:${s3Port}/imageboard`,
 

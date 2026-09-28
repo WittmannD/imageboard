@@ -14,6 +14,7 @@ const DAY_IN_SEC = 24 * HOUR_IN_SEC;
  */
 export const base: Omit<Profile, 'env' | 'domain' | 'imageServerUrl' | 'e2e'> = {
   scheme: 'http',
+  allowInsecureOidcRequests: false,
 
   throttle: { enabled: true },
 
