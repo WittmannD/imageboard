@@ -11,6 +11,7 @@ transform:
     - operation: save
       args:
         key: ${{file.name}}_avatar.jpeg
+        contentType: image/jpeg
         metadata:
           variant: avatar
 
@@ -25,6 +26,7 @@ transform:
     - operation: save
       args:
         key: ${{file.name}}_icon_large.jpeg
+        contentType: image/jpeg
         metadata:
           variant: icon_large
 
@@ -39,6 +41,7 @@ transform:
     - operation: save
       args:
         key: ${{file.name}}_icon_medium.jpeg
+        contentType: image/jpeg
         metadata:
           variant: icon_medium
 
@@ -53,5 +56,6 @@ transform:
     - operation: save
       args:
         key: ${{file.name}}_icon_small.jpeg
+        contentType: image/jpeg
         metadata:
           variant: icon_small

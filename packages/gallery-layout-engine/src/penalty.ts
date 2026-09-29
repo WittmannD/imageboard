@@ -90,9 +90,19 @@ export const galleryAspectPenalty: TemplatePenaltyFactory =
     const { idealAspect = context.IDEAL_GALLERY_ASPECT } = options;
 
     const width = context.CONTAINER_WIDTH;
-    const height = layout.getTotalHeight();
+    const height = layout.getTotalHeight(context.GAP);
 
     const r = width / height;
 
     return -Math.abs(Math.log(r / idealAspect));
+  };
+
+// Penalize galleries taller than the allowed height, growing linearly with overflow
+export const galleryHeightPenalty: TemplatePenaltyFactory =
+  (options: { maxHeightRatio?: number } = {}) =>
+  (layout, context) => {
+    const { maxHeightRatio = 1.25 } = options;
+    const width = context.CONTAINER_WIDTH;
+    const height = layout.getTotalHeight(context.GAP);
+    return -Math.max(0, height / width - maxHeightRatio);
   };

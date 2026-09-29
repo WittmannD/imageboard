@@ -2,11 +2,13 @@ import type { Provider } from '@nestjs/common';
 
 import {
   aspectPenalty,
+  balancedPairLayoutTemplate,
   balancePenalty,
   cropPenalty,
   featuredLandscapeTileLayoutTemplate,
   featuredPortraitTileLayoutTemplate,
   galleryAspectPenalty,
+  galleryHeightPenalty,
   landscapeTilesLayoutTemplate,
   LayoutEngine,
   portraitTilesLayoutTemplate,
@@ -31,11 +33,14 @@ export const GalleryLayoutEngineProvider = {
       .registerTemplate(portraitTilesLayoutTemplate)
       .registerTemplate(landscapeTilesLayoutTemplate)
       .registerTemplate(featuredPortraitTileLayoutTemplate)
-      .registerTemplate(featuredLandscapeTileLayoutTemplate);
+      .registerTemplate(featuredLandscapeTileLayoutTemplate)
+      .registerTemplate(balancedPairLayoutTemplate(0.85))
+      .registerTemplate(balancedPairLayoutTemplate(0.75));
 
     layoutEngine
       .registerPenalty(cropPenalty(), 100)
       .registerPenalty(galleryAspectPenalty(), 50)
+      .registerPenalty(galleryHeightPenalty(), 200)
       .registerPenalty(balancePenalty(), 20)
       .registerPenalty(sizePenalty(), 10)
       .registerPenalty(aspectPenalty(), 10);

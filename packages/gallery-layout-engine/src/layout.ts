@@ -28,15 +28,10 @@ class Layout {
       return 0;
     }
 
-    let last: Tile = tiles[0];
-    let i = 1;
+    // Prefer a tile that occupies exactly this column
+    const tile = tiles.find((t) => t.columnSpan === 1) ?? tiles[0];
 
-    while (last.columnSpan !== 1 || i < tiles.length) {
-      last = tiles[i];
-      i++;
-    }
-
-    return last.width / last.columnSpan;
+    return tile.width / tile.columnSpan;
   }
 
   getRowHeight(n: number): number {
@@ -46,15 +41,10 @@ class Layout {
       return 0;
     }
 
-    let last: Tile = tiles[0];
-    let i = 1;
+    // Prefer a tile that occupies exactly this row
+    const tile = tiles.find((t) => t.rowSpan === 1) ?? tiles[0];
 
-    while (last.rowSpan !== 1 || i < tiles.length) {
-      last = tiles[i];
-      i++;
-    }
-
-    return last.height / last.rowSpan;
+    return tile.height / tile.rowSpan;
   }
 
   getRows(): Tile[][] {
@@ -79,7 +69,7 @@ class Layout {
     return columns;
   }
 
-  getTotalHeight() {
+  getTotalHeight(gap = 0) {
     let i = 1;
     let rowHeight = 0;
     let result = 0;
@@ -88,6 +78,7 @@ class Layout {
       result += rowHeight;
     }
 
-    return result;
+    // Gaps between the i - 1 rows
+    return result + Math.max(0, i - 2) * gap;
   }
 }

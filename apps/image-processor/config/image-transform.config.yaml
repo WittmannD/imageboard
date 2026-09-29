@@ -12,6 +12,7 @@ transform:
     - operation: save
       args:
         key: ${{file.name}}_lightbox.jpeg
+        contentType: image/jpeg
         metadata:
           variant: lightbox
 
@@ -26,6 +27,7 @@ transform:
     - operation: save
       args:
         key: ${{file.name}}_tile.jpeg
+        contentType: image/jpeg
         metadata:
           variant: tile
           tile:

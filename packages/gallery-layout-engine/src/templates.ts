@@ -212,19 +212,16 @@ export const landscapeTilesLayoutTemplate = {
   name: 'landscape-tiles',
   minImages: 2,
   solve(images, context): Layout {
-    const r = images.reduce(
-      (acc, im) => acc + context.getEffectiveAspect(im.width / im.height),
-      0,
-    );
-    const commonHeight = context.CONTAINER_WIDTH / r;
-
     return Layout.from(
       images.map((image, i) => {
-        const width = commonHeight * r;
+        // Each row spans the full width, so its height follows its own aspect ratio
+        const height =
+          context.CONTAINER_WIDTH /
+          context.getEffectiveAspect(image.width / image.height);
         return Tile.from({
           key: image.key,
-          width: Math.round(width),
-          height: Math.round(commonHeight),
+          width: Math.round(context.CONTAINER_WIDTH),
+          height: Math.round(height),
           originalWidth: image.width,
           originalHeight: image.height,
           column: 1,
@@ -235,3 +232,64 @@ export const landscapeTilesLayoutTemplate = {
     );
   },
 } satisfies Template;
+
+/**
+ * ```
+ * +----------+----------------+
+ * |          |                |
+ * |   img1   |      img2      |
+ * |          |                |
+ * +----------+----------------+
+ * ```
+ *
+ * A row of two images whose tiles are pulled towards a common aspect ratio,
+ * so that a portrait next to a landscape does not collapse into a thin strip.
+ * Each image is cropped by at most `1 - minVisibleFraction` of its area; the
+ * cropped area is split between both images in log space.
+ */
+export const balancedPairLayoutTemplate = (minVisibleFraction: number) =>
+  ({
+    name: `balanced-pair-${Math.round(minVisibleFraction * 100).toString()}`,
+    minImages: 2,
+    solve(images, context): Layout | null {
+      if (images.length !== 2) {
+        return null;
+      }
+
+      const aspects = images.map((im) => im.width / im.height);
+
+      // Equal tile widths are reached at the geometric mean of the aspects
+      const target = Math.sqrt(aspects[0] * aspects[1]);
+
+      // Move each tile towards the target, within its crop budget
+      const tileAspects = aspects.map((aspect) =>
+        context.getEffectiveAspect(
+          Math.min(
+            Math.max(target, aspect * minVisibleFraction),
+            aspect / minVisibleFraction,
+          ),
+        ),
+      );
+
+      const availableWidth = context.CONTAINER_WIDTH - context.GAP;
+      const height = availableWidth / (tileAspects[0] + tileAspects[1]);
+
+      // Round the first width and derive the second, so the row fills the container exactly
+      const firstWidth = Math.round(height * tileAspects[0]);
+      const widths = [firstWidth, availableWidth - firstWidth];
+
+      return Layout.from(
+        images.map((image, i) =>
+          Tile.from({
+            key: image.key,
+            width: widths[i],
+            height: Math.round(height),
+            originalWidth: image.width,
+            originalHeight: image.height,
+            column: i + 1,
+            row: 1,
+          }),
+        ),
+      );
+    },
+  }) satisfies Template;

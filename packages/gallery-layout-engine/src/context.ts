@@ -38,7 +38,7 @@ export class LayoutContext implements LayoutPreferences {
     return ratio < this.MIN_ASPECT
       ? this.MIN_ASPECT
       : ratio > this.MAX_ASPECT
-        ? this.MIN_ASPECT
+        ? this.MAX_ASPECT
         : ratio;
   }
 }

@@ -1,12 +1,13 @@
 import { basename } from 'node:path';
 import type { OutputInfo, Sharp } from 'sharp';
 
-import { BeforeOutputEvent, ErrorEvent,OutputEvent } from '../events.js';
+import { BeforeOutputEvent, ErrorEvent, OutputEvent } from '../events.js';
 import type { Operation } from './operation.js';
 import type { OperationContext } from './operation-context.js';
 
 export interface ImageSaveOperationArgs {
   key: string;
+  contentType?: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -34,7 +35,7 @@ export const SaveOperation: Operation<'save'> = {
       );
     });
     context.storage
-      .upload({ key: args.key, body: pipeline })
+      .upload({ key: args.key, body: pipeline, contentType: args.contentType })
       .then()
       .catch((error: unknown) => {
         context.eventEmitter.emit(
