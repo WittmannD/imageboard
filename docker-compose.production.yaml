@@ -185,6 +185,25 @@ services:
       - letsencrypt:/etc/letsencrypt
       - certbot-www:/var/www/certbot
 
+  # Terminal UI for the database. Not part of `up`: run it on the server with
+  #   compose run --rm rainfrog
+  # and pick another database with RAINFROG_DB=<name>.
+  rainfrog:
+    image: achristmascarl/rainfrog:latest
+    profiles: ['tools']
+    depends_on:
+      postgres:
+        condition: service_healthy
+    stdin_open: true
+    tty: true
+    environment:
+      db_driver: postgres
+      username: ${DB_USER}
+      password: ${DB_PASS}
+      hostname: postgres
+      db_port: 5432
+      db_name: ${RAINFROG_DB:-${DB_NAME_API}}
+
 volumes:
   pg-data:
   redis-data:

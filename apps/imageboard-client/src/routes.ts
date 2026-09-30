@@ -26,6 +26,7 @@ export default [
       ]),
       route(':id', './routes/users/$id/index.tsx'),
     ]),
+    route('*', './routes/not-found/index.tsx'),
   ]),
   ...prefix('auth', [
     layout('./routes/auth/layout.tsx', [

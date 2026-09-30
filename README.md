@@ -362,6 +362,19 @@ compose start imageboard-identity-provider imageboard-api
 `pg_dumpall` output recreates objects that already exist, so restore into a fresh volume (or
 drop the databases first) to avoid errors.
 
+Postgres is not published on the server, so to browse the database open
+[rainfrog](https://github.com/achristmascarl/rainfrog) (a terminal UI) inside the compose
+network over SSH. It is behind the `tools` profile, so deploys never start it:
+
+```sh
+cd /opt/imageboard-production
+compose() { docker compose --env-file .env --env-file config.env -f docker-compose.yaml "$@"; }
+compose run --rm rainfrog                                   # the API database
+RAINFROG_DB=imageboard_identity compose run --rm rainfrog   # the identity database
+```
+
+It connects as the same role the services use, with full write access to live data.
+
 One-time setup, as for staging:
 
 - DNS A records for `spottish.website`, `api.spottish.website` and `auth.spottish.website`
