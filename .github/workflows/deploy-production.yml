@@ -1,0 +1,23 @@
+name: Deploy Production
+
+# Builds every image for the production profile and starts that exact commit
+# on the production server; see deploy-reusable.yml. Add required reviewers
+# to the `production` environment to gate it.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/deploy-reusable.yml
+    with:
+      environment: production
+      url: https://spottish.website
+    secrets: inherit

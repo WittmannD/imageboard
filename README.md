@@ -289,7 +289,7 @@ come from the environment.
 - **Compose and nginx.** They can't import TypeScript, so `npm run config:env -- <profile>` writes
   `.generated/config.<profile>.env` with `DOMAIN`, internal service URLs, database names and
   ports. Compose loads it with `--env-file`. `stack:dev`, the e2e `stack:*` scripts and the
-  deploy workflow run this step for you.
+  deploy workflows run this step for you.
 
 ### Database migrations
 
@@ -335,6 +335,45 @@ One-time setup:
   `VPS_USER`, `VPS_SSH_KEY` and `APP_ENV` (the whole secrets `.env`, see `.env.example`; use
   fresh values rather than the production ones). Optionally add the variable `LETSENCRYPT_EMAIL`
   to receive certificate expiry notices.
+
+### Production
+
+`https://spottish.website` (plus `api.` and `auth.`) runs on its own server with the same
+wiring as staging: `docker-compose.production.yaml` with the `production` profile. The
+database is never seeded, and images go to the `imageboard` bucket. Deploy it by running
+**Deploy Production** (`.github/workflows/deploy-production.yml`) from the Actions tab. Both
+deploy workflows call `.github/workflows/deploy-reusable.yml`, so staging and production go
+through the same build, deploy and certificate steps. Production images are tagged `production`
+and `production-<sha>`.
+
+Before the new images start, every deploy dumps all databases to
+`/opt/imageboard-production/backups/<timestamp>.sql.gz` (the newest 14 are kept), because the
+services apply pending migrations on boot. To restore a dump, stop the apps and feed it back
+through `psql`:
+
+```sh
+cd /opt/imageboard-production
+compose() { docker compose --env-file .env --env-file config.env -f docker-compose.yaml "$@"; }
+compose stop imageboard-api imageboard-identity-provider
+gunzip -c backups/<timestamp>.sql.gz | compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d postgres'
+compose start imageboard-identity-provider imageboard-api
+```
+
+`pg_dumpall` output recreates objects that already exist, so restore into a fresh volume (or
+drop the databases first) to avoid errors.
+
+One-time setup, as for staging:
+
+- DNS A records for `spottish.website`, `api.spottish.website` and `auth.spottish.website`
+  pointing at the server.
+- Docker with the compose plugin, and ports 22, 80 and 443 open. If the GHCR packages are
+  private, also `docker login ghcr.io`.
+- A public-read Filebase bucket named `imageboard`.
+- `spottish.website` verified as a sending domain in Resend (its SPF and DKIM DNS records). The
+  identity provider sends from `no-reply@spottish.website`.
+- A `production` environment in the GitHub repository settings with the secrets `VPS_HOST`,
+  `VPS_USER`, `VPS_SSH_KEY` and `APP_ENV` (fresh values, not the staging ones), optionally the
+  variable `LETSENCRYPT_EMAIL`, and ideally required reviewers so a deploy needs an approval.
 
 ---
 

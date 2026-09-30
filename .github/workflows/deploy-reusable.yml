@@ -1,0 +1,200 @@
+name: Deploy
+
+# Shared by deploy-staging.yml and deploy-production.yml, so both environments
+# run the same pipeline. For environment <env> it:
+#   - generates config.env from the <env> profile in packages/config,
+#   - builds every image with APP_ENV=<env> and pushes it to
+#     ghcr.io/<owner>/<repo>/<app>, tagged <env> and <env>-<sha>,
+#   - starts docker-compose.<env>.yaml of that commit in /opt/imageboard-<env>
+#     on the server of the <env> GitHub environment.
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Configuration profile and GitHub environment: staging or production'
+        required: true
+        type: string
+      url:
+        description: 'Public URL shown on the GitHub environment'
+        required: true
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+  REPO: ${{ github.repository }}
+  IMAGE_TAG: ${{ inputs.environment }}-${{ github.sha }}
+
+jobs:
+  # Non-secret settings come from the profile in packages/config; compose on
+  # the server reads them from a generated env file.
+  config:
+    runs-on: ubuntu-latest
+
+    outputs:
+      env: ${{ steps.generate.outputs.env }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate ${{ inputs.environment }} config env
+        id: generate
+        run: |
+          {
+            echo 'env<<CONFIG_ENV'
+            npx tsx bin/config-env.ts '${{ inputs.environment }}' -
+            echo 'CONFIG_ENV'
+          } >> "$GITHUB_OUTPUT"
+
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      matrix:
+        app:
+          - image-processor
+          - imageboard-api
+          - imageboard-identity-provider
+          - imageboard-client
+          - imageboard-web
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The app Dockerfiles copy the built packages from the build context.
+      - name: Build packages
+        run: npx nx run-many -t build --projects="packages/*"
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare Docker metadata
+        id: meta
+        run: |
+          echo "image=${{ env.REGISTRY }}/$(echo '${{ env.REPO }}' | tr '[:upper:]' '[:lower:]')/${{ matrix.app }}" >> "$GITHUB_OUTPUT"
+
+      - name: Build & push ${{ matrix.app }}
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: apps/${{ matrix.app }}/Dockerfile
+          # Only the client has stages to pick from; its browser bundle inlines
+          # the profile, so it is built for one environment.
+          target: ${{ matrix.app == 'imageboard-client' && 'production' || '' }}
+          build-args: |
+            APP_ENV=${{ inputs.environment }}
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image }}:${{ inputs.environment }}
+            ${{ steps.meta.outputs.image }}:${{ env.IMAGE_TAG }}
+          cache-from: type=gha,scope=${{ inputs.environment }}-${{ matrix.app }}
+          cache-to: type=gha,mode=max,scope=${{ inputs.environment }}-${{ matrix.app }}
+
+  deploy:
+    needs: [config, build-and-push]
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ inputs.url }}
+
+    steps:
+      - name: Deploy on the ${{ inputs.environment }} server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+
+            mkdir -p /opt/imageboard-${{ inputs.environment }}/sh /opt/imageboard-${{ inputs.environment }}/backups
+            cd /opt/imageboard-${{ inputs.environment }}
+
+            RAW_URL="https://raw.githubusercontent.com/${{ env.REPO }}/${{ github.sha }}"
+            wget -q -O docker-compose.yaml "$RAW_URL/docker-compose.${{ inputs.environment }}.yaml"
+            wget -q -O sh/multiple-databases.sh "$RAW_URL/sh/multiple-databases.sh"
+            chmod +x sh/multiple-databases.sh
+
+            # Secrets only; every other setting is in config.env.
+            echo "${{ secrets.APP_ENV }}" > .env
+            cat > config.env <<'CONFIG_ENV'
+            ${{ needs.config.outputs.env }}
+            CONFIG_ENV
+            echo 'IMAGE_TAG="${{ env.IMAGE_TAG }}"' >> config.env
+
+            compose() {
+              docker compose --env-file .env --env-file config.env -f docker-compose.yaml "$@"
+            }
+
+            # The services apply pending migrations on boot, so dump every
+            # database before the new images start. Skipped on the first
+            # deploy, when there is no Postgres yet. Keeps the newest 14.
+            if [ -n "$(compose ps -q --status running postgres)" ]; then
+              BACKUP="backups/$(date -u +%Y%m%dT%H%M%SZ).sql"
+              compose exec -T postgres sh -c 'pg_dumpall -U "$POSTGRES_USER"' > "$BACKUP"
+              gzip "$BACKUP"
+              echo "Backed up to $BACKUP.gz"
+              ls -1t backups/*.sql.gz | tail -n +15 | xargs -r rm --
+            fi
+
+            compose pull
+            compose up -d --remove-orphans
+
+            # Issue the certificate on the first deploy (a no-op afterwards
+            # until it is close to expiry).
+            set -a; . ./config.env; set +a
+            CERT="/etc/letsencrypt/live/$DOMAIN/fullchain.pem"
+            HAD_CERT=true
+            compose run --rm --no-deps --entrypoint test certbot -f "$CERT" || HAD_CERT=false
+
+            LETSENCRYPT_EMAIL="${{ vars.LETSENCRYPT_EMAIL }}"
+            if [ -n "$LETSENCRYPT_EMAIL" ]; then
+              ACCOUNT="--email $LETSENCRYPT_EMAIL"
+            else
+              ACCOUNT="--register-unsafely-without-email"
+            fi
+            compose run --rm --no-deps --entrypoint certbot certbot certonly \
+              --webroot -w /var/www/certbot \
+              -d "$DOMAIN" -d "api.$DOMAIN" -d "auth.$DOMAIN" \
+              --cert-name "$DOMAIN" \
+              $ACCOUNT --agree-tos --non-interactive --keep-until-expiring
+
+            if [ "$HAD_CERT" = true ]; then
+              # Picks up a certificate renewed just now.
+              compose exec -T web nginx -s reload
+            else
+              # nginx picks its HTTPS mode at startup; the API and client
+              # discover the https:// issuer at boot, which failed until now.
+              compose restart web
+              compose restart imageboard-api imageboard-client
+            fi
+
+            docker image prune -f

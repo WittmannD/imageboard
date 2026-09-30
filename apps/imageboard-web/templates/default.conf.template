@@ -4,14 +4,22 @@
 # NGINX_MODE (http or tls) is set by docker-entrypoint.d/15-select-mode.envsh;
 # modes/<mode>/ holds everything that differs between plain HTTP and HTTPS.
 
-resolver 127.0.0.11 valid=10s;
+access_log /var/log/nginx/access.log;
+error_log  /var/log/nginx/error.log warn;
 
+resolver 127.0.0.11 valid=10s;
+resolver_timeout 30s;
 # Inherited by every location below.
 client_max_body_size 1m;
+add_header X-Request-ID $request_id always;
 proxy_set_header Host $host;
+proxy_set_header X-Request-ID $request_id;
 proxy_set_header X-Real-IP $remote_addr;
 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 proxy_set_header X-Forwarded-Proto $scheme;
+proxy_connect_timeout 15s;
+proxy_send_timeout 60s;
+proxy_read_timeout 60s;
 
 include /etc/nginx/conf.d/modes/${NGINX_MODE}/main.conf;
 
@@ -47,7 +55,12 @@ server {
         proxy_pass $upstream;
     }
 
-    location /api {
+    location = /api {
+        client_max_body_size 50m;
+        proxy_pass $upstream;
+    }
+
+    location ^~ /api/ {
         client_max_body_size 50m;
         proxy_pass $upstream;
     }
@@ -63,6 +76,21 @@ server {
     }
 
     location /posts {
+        if ($request_method !~ ^(POST|PUT)$) {
+            # Bypasses the body size limit below and proxies normally
+            proxy_pass $upstream;
+        }
+
+        client_max_body_size 50m;
+        proxy_pass $upstream;
+    }
+
+    location /user/me/avatar {
+        if ($request_method !~ ^(POST|PUT)$) {
+            # Bypasses the body size limit below and proxies normally
+            proxy_pass $upstream;
+        }
+
         client_max_body_size 50m;
         proxy_pass $upstream;
     }

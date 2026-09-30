@@ -27,5 +27,6 @@ async function bootstrap() {
 try {
   await bootstrap();
 } catch (error) {
-  Logger.log(error, 'Bootstrap');
+  Logger.error(error, 'Bootstrap');
+  process.exitCode = 1;
 }

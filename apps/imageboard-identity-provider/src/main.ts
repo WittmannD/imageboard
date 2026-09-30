@@ -25,4 +25,5 @@ try {
   Logger.log(url, 'Bootstrap');
 } catch (error) {
   Logger.error(error, 'Bootstrap');
+  process.exitCode = 1;
 }

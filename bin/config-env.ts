@@ -2,7 +2,7 @@
  * Writes the flat env view of a configuration profile for consumers that
  * cannot import TypeScript (docker compose interpolation, the nginx template):
  *
- *   tsx bin/config-env.ts <development|e2e|production> [out-file]
+ *   tsx bin/config-env.ts <development|e2e|staging|production> [out-file]
  *
  * The default output is .generated/config.<profile>.env; pass `-` to print to
  * stdout instead. Imports the package source, so no build is needed first.
