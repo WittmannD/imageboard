@@ -1,4 +1,4 @@
-# Imageboard
+# Imageboard [spottish.website](https://spottish.website/)
 
 A full-stack image board: users sign up, upload photo sets, and browse a feed where every
 post is rendered as an automatically composed photo collage.
