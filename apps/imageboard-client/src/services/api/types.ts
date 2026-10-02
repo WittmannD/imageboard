@@ -6,6 +6,7 @@ export interface LayoutTile {
   width: number;
   height: number;
   column: number;
+  fit: 'cover' | 'contain';
   row: number;
   columnSpan: number;
   rowSpan: number;
