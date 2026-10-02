@@ -83,7 +83,7 @@ function Post({ data: post }: { data: PostDto }) {
         </div>
       )}
       <CardHeader>
-        <CardTitle className="font-normal">
+        <CardTitle className="font-normal flex items-center">
           <UserBadge
             user={post.user}
             render={<Link to={`/users/${post.user.id}`} />}
@@ -91,7 +91,7 @@ function Post({ data: post }: { data: PostDto }) {
             <UserAvatar size="sm" />
             <UserTag />
           </UserBadge>
-          <span className="ml-2 text-sm text-muted-foreground/50">
+          <span className="ml-2 text-sm text-muted-foreground/50 tabular-nums">
             {formatPostDate(post.createdAt)}
           </span>
         </CardTitle>
