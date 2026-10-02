@@ -3,7 +3,7 @@ import type { ProfileOverrides } from '../schema.js';
 /** The local Docker stack (docker-compose.yaml). */
 export const development: ProfileOverrides = {
   env: 'development',
-  domain: 'spottish.website',
+  domain: 'dev.spottish.website',
   // The issuer is served over plain http.
   allowInsecureOidcRequests: true,
   imageServerUrl: 'https://imageboard.s3.filebase.io',
