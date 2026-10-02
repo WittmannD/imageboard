@@ -1,3 +1,7 @@
+import {
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+} from '@hdotu1/config/credentials';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircleIcon } from 'lucide-react';
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form';
@@ -158,6 +162,7 @@ export function ResetPasswordForm(props: React.ComponentProps<typeof Card>) {
             )}
             <Controller
               name="password"
+              rules={{ deps: ['confirmPassword'] }}
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
@@ -174,7 +179,7 @@ export function ResetPasswordForm(props: React.ComponentProps<typeof Card>) {
                     <FieldError errors={[fieldState.error]} />
                   ) : (
                     <FieldDescription>
-                      Must be at least 8 characters long.
+                      {PASSWORD_MIN_LENGTH}-{PASSWORD_MAX_LENGTH} characters.
                     </FieldDescription>
                   )}
                 </Field>

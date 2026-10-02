@@ -15,9 +15,9 @@
       "types": "./src/public.ts",
       "import": "./dist/public.js"
     },
-    "./username": {
-      "types": "./src/username.ts",
-      "import": "./dist/username.js"
+    "./credentials": {
+      "types": "./src/credentials.ts",
+      "import": "./dist/credentials.js"
     }
   },
   "scripts": {

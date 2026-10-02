@@ -4,10 +4,11 @@ import {
   Length,
   Matches,
   MaxLength,
-  MinLength,
 } from 'class-validator';
 
 import {
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
   USERNAME_MAX_LENGTH,
   USERNAME_MIN_LENGTH,
   USERNAME_PATTERN,
@@ -22,8 +23,7 @@ export class RegistrationDto implements CreateUser {
   email!: string;
 
   @IsString()
-  @MinLength(8)
-  @MaxLength(80)
+  @Length(PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH)
   password!: string;
 
   @IsString()

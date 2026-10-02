@@ -1,4 +1,6 @@
-import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsNotEmpty, IsString, Length, MaxLength } from 'class-validator';
+
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '@hdotu1/config';
 
 export class CompletePasswordResetDto {
   @IsString()
@@ -7,7 +9,6 @@ export class CompletePasswordResetDto {
   token!: string;
 
   @IsString()
-  @MinLength(8)
-  @MaxLength(80)
+  @Length(PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH)
   password!: string;
 }
