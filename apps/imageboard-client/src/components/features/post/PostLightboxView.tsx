@@ -23,6 +23,7 @@ import {
 } from 'src/components/features/user/UserBadge.tsx';
 import { Link } from 'react-router';
 import LikeButton from '../like-button/LikeButton';
+import { formatPostDate } from 'src/lib/utils/date.ts';
 
 function PostLightboxView({
   post,
@@ -119,15 +120,17 @@ function PostLightboxView({
           className="w-full max-w-lg bg-popover/90 backdrop-blur-xs"
         >
           <CardHeader>
-            <CardTitle>
+            <CardTitle className="font-normal">
               <UserBadge
                 user={post.user}
                 render={<Link to={`/users/${post.user.id}`} />}
-                className="font-normal"
               >
                 <UserAvatar size="sm" />
                 <UserTag />
               </UserBadge>
+              <span className="ml-2 text-sm text-muted-foreground/50">
+                {formatPostDate(post.createdAt)}
+              </span>
             </CardTitle>
             <CardAction>
               <LikeButton post={post} />

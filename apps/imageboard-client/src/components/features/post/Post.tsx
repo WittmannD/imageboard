@@ -20,6 +20,7 @@ import {
   UserTag,
 } from 'src/components/features/user/UserBadge.tsx';
 import LikeButton from '../like-button/LikeButton';
+import { formatPostDate } from 'src/lib/utils/date.ts';
 
 const getImageCellStyle = (tile: LayoutTile): React.CSSProperties => ({
   gridColumn: `${tile.column.toString()} / span ${tile.columnSpan.toString()}`,
@@ -75,7 +76,7 @@ function Post({ data: post }: { data: PostDto }) {
         </div>
       )}
       <CardHeader>
-        <CardTitle>
+        <CardTitle className="font-normal">
           <UserBadge
             user={post.user}
             render={<Link to={`/users/${post.user.id}`} />}
@@ -83,6 +84,7 @@ function Post({ data: post }: { data: PostDto }) {
             <UserAvatar size="sm" />
             <UserTag />
           </UserBadge>
+          <span className="ml-2 text-sm text-muted-foreground/50">{formatPostDate(post.createdAt)}</span>
         </CardTitle>
         <CardAction>
           <LikeButton post={post} />

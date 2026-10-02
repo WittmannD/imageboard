@@ -114,7 +114,7 @@ export function UserBadge({
     props: {
       ...props,
       className: cn(
-        'inline-flex items-center has-data-[slot=avatar]:gap-1',
+        'inline-flex items-center has-data-[slot=avatar]:gap-1.5',
         className,
       ),
       children,
