@@ -1,4 +1,4 @@
-import type React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   Carousel,
   CarouselContent,
@@ -35,22 +35,40 @@ function PostLightboxView({
   onBackgroundClick?: () => void;
   setCarouselApi: (api: CarouselApi) => void;
 }) {
-  const handleBackgroundClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if ((event.target as HTMLElement).closest('[data-lightbox-stop]')) {
-      return;
-    }
-    onBackgroundClick?.();
-  };
+  const handleBackgroundClick = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if ((event.target as HTMLElement).closest('[data-lightbox-stop]')) {
+        return;
+      }
+      onBackgroundClick?.();
+    },
+    [onBackgroundClick],
+  );
 
-  const slides = post.photos
-    .map((photo) => ({ photo, image: getImageByVariant<PhotoSource>(photo.sourceSet, 'lightbox') }))
-    .filter(
-      (slide): slide is { photo: PhotoDto; image: PhotoSource } =>
-        !!slide.image,
-    );
-  const startIndex = Math.max(
-    0,
-    slides.findIndex((slide) => String(slide.photo.id) === initialPhotoId),
+  const slides = useMemo(
+    () =>
+      post.photos
+        .map((photo) => ({
+          photo,
+          image: getImageByVariant<PhotoSource>(photo.sourceSet, 'lightbox'),
+        }))
+        .filter(
+          (slide): slide is { photo: PhotoDto; image: PhotoSource } =>
+            !!slide.image,
+        ),
+    [post.photos],
+  );
+  const startIndex = useMemo(
+    () =>
+      Math.max(
+        0,
+        slides.findIndex((slide) => String(slide.photo.id) === initialPhotoId),
+      ),
+    [initialPhotoId, slides.length],
+  );
+  const opts = useMemo(
+    () => ({ duration: 0, watchDrag: slides.length > 1, startIndex }),
+    [slides.length, startIndex],
   );
 
   return (
@@ -58,7 +76,7 @@ function PostLightboxView({
       className="group relative h-dvh w-full overflow-hidden"
       onClick={handleBackgroundClick}
     >
-      <Carousel opts={{ duration: 0, startIndex }} setApi={setCarouselApi}>
+      <Carousel opts={opts} setApi={setCarouselApi}>
         <CarouselContent className="ml-0 h-dvh">
           {slides.map(({ photo, image }) => (
             <CarouselItem
@@ -75,18 +93,22 @@ function PostLightboxView({
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious
-          data-lightbox-stop
-          variant="ghost"
-          size="icon-lg"
-          className="left-4"
-        />
-        <CarouselNext
-          data-lightbox-stop
-          variant="ghost"
-          size="icon-lg"
-          className="right-4"
-        />
+        {slides.length > 1 && (
+          <>
+            <CarouselPrevious
+              data-lightbox-stop
+              variant="ghost"
+              size="icon-lg"
+              className="left-4"
+            />
+            <CarouselNext
+              data-lightbox-stop
+              variant="ghost"
+              size="icon-lg"
+              className="right-4"
+            />
+          </>
+        )}
       </Carousel>
       <div
         data-lightbox-stop
