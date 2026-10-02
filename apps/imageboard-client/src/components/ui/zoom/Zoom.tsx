@@ -78,12 +78,18 @@ interface Point {
   y: number;
 }
 
-/** The container's viewport and the content's box, in unscaled layer px. */
+/**
+ * The container's viewport and the content's box, in the container's own
+ * px: free of the zoom and of any ancestor's transform.
+ */
 interface Measurements {
-  left: number;
-  top: number;
   width: number;
   height: number;
+  /** The ancestors' scale: client px per container px. */
+  scaleX: number;
+  scaleY: number;
+  /** Converts a client point (e.g. a pointer's) to container px. */
+  toLocal: (point: Point) => Point;
   content: { x: number; y: number; width: number; height: number };
 }
 
@@ -201,32 +207,47 @@ function Zoom({
       return null;
     }
 
-    const viewport = container.getBoundingClientRect();
+    const rect = container.getBoundingClientRect();
 
-    if (!viewport.width || !viewport.height) {
+    if (!rect.width || !rect.height || !container.clientWidth) {
       return null;
     }
+
+    // getBoundingClientRect includes ancestors' transforms - such as a
+    // dialog's zoom-in animation - while the layer's translate is in the
+    // container's own px. Divide them out, or the content is centred for the
+    // mid-animation size and stays off-centre once it ends.
+    const scaleX = rect.width / container.offsetWidth;
+    const scaleY = rect.height / container.offsetHeight;
 
     const layerRect = layer.getBoundingClientRect();
     const contentRect = (
       layer.firstElementChild ?? layer
     ).getBoundingClientRect();
-    // The scale actually on screen, which differs from transformRef while a
-    // zoom animation is running.
-    const visualScale = layer.offsetWidth
+    // The layer's scale on screen: the ancestors' times the zoom actually
+    // rendered, which differs from transformRef while a zoom animation runs.
+    const layerScaleX = layer.offsetWidth
       ? layerRect.width / layer.offsetWidth
-      : transformRef.current.scale;
+      : scaleX * transformRef.current.scale;
+    const layerScaleY = layer.offsetHeight
+      ? layerRect.height / layer.offsetHeight
+      : scaleY * transformRef.current.scale;
 
     return {
-      left: viewport.left,
-      top: viewport.top,
-      width: viewport.width,
-      height: viewport.height,
+      width: container.clientWidth,
+      height: container.clientHeight,
+      scaleX,
+      scaleY,
+      // The layer sits in the padding box, inside any border.
+      toLocal: (point) => ({
+        x: (point.x - rect.left) / scaleX - container.clientLeft,
+        y: (point.y - rect.top) / scaleY - container.clientTop,
+      }),
       content: {
-        x: (contentRect.left - layerRect.left) / visualScale,
-        y: (contentRect.top - layerRect.top) / visualScale,
-        width: contentRect.width / visualScale,
-        height: contentRect.height / visualScale,
+        x: (contentRect.left - layerRect.left) / layerScaleX,
+        y: (contentRect.top - layerRect.top) / layerScaleY,
+        width: contentRect.width / layerScaleX,
+        height: contentRect.height / layerScaleY,
       },
     };
   }, []);
@@ -257,8 +278,9 @@ function Zoom({
 
       const from = transformRef.current;
       const next = clampScale(scale);
-      const px = origin ? origin.x - m.left : m.width / 2;
-      const py = origin ? origin.y - m.top : m.height / 2;
+      const { x: px, y: py } = origin
+        ? m.toLocal(origin)
+        : { x: m.width / 2, y: m.height / 2 };
       const ratio = next / from.scale;
 
       apply(
@@ -382,8 +404,8 @@ function Zoom({
         constrain(
           {
             scale: gesture.from.scale,
-            x: gesture.from.x + point.x - gesture.start.x,
-            y: gesture.from.y + point.y - gesture.start.y,
+            x: gesture.from.x + (point.x - gesture.start.x) / m.scaleX,
+            y: gesture.from.y + (point.y - gesture.start.y) / m.scaleY,
           },
           m,
         ),
@@ -395,17 +417,18 @@ function Zoom({
       const scale = clampScale(
         (from.scale * distance(a, b)) / gesture.distance,
       );
-      const current = midpoint(a, b);
+      const start = m.toLocal(gesture.midpoint);
+      const current = m.toLocal(midpoint(a, b));
       // The content point that was under the fingers stays under them.
-      const contentX = (gesture.midpoint.x - m.left - from.x) / from.scale;
-      const contentY = (gesture.midpoint.y - m.top - from.y) / from.scale;
+      const contentX = (start.x - from.x) / from.scale;
+      const contentY = (start.y - from.y) / from.scale;
 
       apply(
         constrain(
           {
             scale,
-            x: current.x - m.left - contentX * scale,
-            y: current.y - m.top - contentY * scale,
+            x: current.x - contentX * scale,
+            y: current.y - contentY * scale,
           },
           m,
         ),
