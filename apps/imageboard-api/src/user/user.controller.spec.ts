@@ -89,7 +89,7 @@ describe('UserController errors', () => {
 
     const res = await request('/me', {
       method: 'PATCH',
-      body: JSON.stringify({ username: 'bob' }),
+      body: JSON.stringify({ username: 'akamegakiru' }),
     });
 
     expect(res.status).toBe(409);

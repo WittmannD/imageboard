@@ -1,3 +1,7 @@
+import {
+  USERNAME_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
+} from '@hdotu1/config/username';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircleIcon } from 'lucide-react';
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form';
@@ -104,7 +108,14 @@ export function SignUpForm({
                     aria-invalid={fieldState.invalid}
                     data-testid="signup-username-input"
                   />
-                  <FieldError errors={[fieldState.error]} />
+                  {fieldState.invalid ? (
+                    <FieldError errors={[fieldState.error]} />
+                  ) : (
+                    <FieldDescription>
+                      {USERNAME_MIN_LENGTH}-{USERNAME_MAX_LENGTH} characters:
+                      letters, numbers and underscores.
+                    </FieldDescription>
+                  )}
                 </Field>
               )}
             />

@@ -4,3 +4,4 @@ export * from './get-config.js';
 export * from './public.js';
 export * from './schema.js';
 export * from './secrets.js';
+export * from './username.js';
