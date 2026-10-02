@@ -1,4 +1,5 @@
 export * from './compose-env.js';
+export * from './credentials.js';
 export * from './env-file.js';
 export * from './get-config.js';
 export * from './public.js';

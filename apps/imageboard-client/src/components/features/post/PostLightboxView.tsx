@@ -1,4 +1,10 @@
-import type React from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   Carousel,
   CarouselContent,
@@ -23,6 +29,8 @@ import {
 } from 'src/components/features/user/UserBadge.tsx';
 import { Link } from 'react-router';
 import LikeButton from '../like-button/LikeButton';
+import { formatPostDate } from 'src/lib/utils/date.ts';
+import Zoom from 'src/components/ui/zoom/Zoom.tsx';
 
 function PostLightboxView({
   post,
@@ -35,22 +43,82 @@ function PostLightboxView({
   onBackgroundClick?: () => void;
   setCarouselApi: (api: CarouselApi) => void;
 }) {
-  const handleBackgroundClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if ((event.target as HTMLElement).closest('[data-lightbox-stop]')) {
+  const handleBackgroundClick = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if ((event.target as HTMLElement).closest('[data-lightbox-stop]')) {
+        return;
+      }
+      onBackgroundClick?.();
+    },
+    [onBackgroundClick],
+  );
+
+  const slides = useMemo(
+    () =>
+      post.photos
+        .map((photo) => ({
+          photo,
+          image: getImageByVariant<PhotoSource>(photo.sourceSet, 'lightbox'),
+        }))
+        .filter(
+          (slide): slide is { photo: PhotoDto; image: PhotoSource } =>
+            !!slide.image,
+        ),
+    [post.photos],
+  );
+  const startIndex = useMemo(
+    () =>
+      Math.max(
+        0,
+        slides.findIndex((slide) => String(slide.photo.id) === initialPhotoId),
+      ),
+    [initialPhotoId, slides.length],
+  );
+  const [api, setApi] = useState<CarouselApi>();
+  const [selectedIndex, setSelectedIndex] = useState(startIndex);
+  // Read by watchDrag at the start of each drag; a ref, so zooming does not
+  // change opts and re-initialise the carousel.
+  const isZoomedInRef = useRef(false);
+
+  const handleSetApi = useCallback(
+    (carouselApi: CarouselApi) => {
+      setApi(carouselApi);
+      setCarouselApi(carouselApi);
+    },
+    [setCarouselApi],
+  );
+
+  useEffect(() => {
+    if (!api) {
       return;
     }
-    onBackgroundClick?.();
-  };
 
-  const slides = post.photos
-    .map((photo) => ({ photo, image: getImageByVariant<PhotoSource>(photo.sourceSet, 'lightbox') }))
-    .filter(
-      (slide): slide is { photo: PhotoDto; image: PhotoSource } =>
-        !!slide.image,
-    );
-  const startIndex = Math.max(
-    0,
-    slides.findIndex((slide) => String(slide.photo.id) === initialPhotoId),
+    const onSelect = () => {
+      // Each slide's Zoom resets itself when this changes.
+      setSelectedIndex(api.selectedScrollSnap());
+      isZoomedInRef.current = false;
+    };
+
+    onSelect();
+    api.on('select', onSelect);
+
+    return () => {
+      api.off('select', onSelect);
+    };
+  }, [api]);
+
+  const handleZoomChange = useCallback((multiplier: number) => {
+    isZoomedInRef.current = multiplier > 1;
+  }, []);
+
+  const opts = useMemo(
+    () => ({
+      duration: 0,
+      // A drag on a zoomed-in image pans it instead of swiping.
+      watchDrag: slides.length > 1 ? () => !isZoomedInRef.current : false,
+      startIndex,
+    }),
+    [slides.length, startIndex],
   );
 
   return (
@@ -58,35 +126,52 @@ function PostLightboxView({
       className="group relative h-dvh w-full overflow-hidden"
       onClick={handleBackgroundClick}
     >
-      <Carousel opts={{ duration: 0, startIndex }} setApi={setCarouselApi}>
+      <Carousel opts={opts} setApi={handleSetApi}>
         <CarouselContent className="ml-0 h-dvh">
-          {slides.map(({ photo, image }) => (
+          {slides.map(({ photo, image }, index) => (
             <CarouselItem
               key={photo.id}
               className="flex h-dvh items-center justify-center pl-0"
             >
-              <img
-                data-lightbox-stop
-                src={getImageUrl(image.key)}
-                loading="eager"
-                alt=""
-                className="block max-h-full w-auto bg-muted/50 max-w-full object-contain"
-              />
+              <Zoom
+                toggleOn={null}
+                resetKey={selectedIndex}
+                onZoomChange={
+                  index === selectedIndex ? handleZoomChange : undefined
+                }
+                wheelStartsZoom={false}
+                className="h-full w-full"
+              >
+                {({ toggle }) => (
+                  <img
+                    data-lightbox-stop
+                    src={getImageUrl(image.key)}
+                    onClick={toggle}
+                    loading="eager"
+                    alt=""
+                    className="block max-h-full max-w-full bg-muted/50 object-contain"
+                  />
+                )}
+              </Zoom>
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious
-          data-lightbox-stop
-          variant="ghost"
-          size="icon-lg"
-          className="left-4"
-        />
-        <CarouselNext
-          data-lightbox-stop
-          variant="ghost"
-          size="icon-lg"
-          className="right-4"
-        />
+        {slides.length > 1 && (
+          <>
+            <CarouselPrevious
+              data-lightbox-stop
+              variant="ghost"
+              size="icon-lg"
+              className="left-4"
+            />
+            <CarouselNext
+              data-lightbox-stop
+              variant="ghost"
+              size="icon-lg"
+              className="right-4"
+            />
+          </>
+        )}
       </Carousel>
       <div
         data-lightbox-stop
@@ -97,15 +182,17 @@ function PostLightboxView({
           className="w-full max-w-lg bg-popover/90 backdrop-blur-xs"
         >
           <CardHeader>
-            <CardTitle>
+            <CardTitle className="font-normal">
               <UserBadge
                 user={post.user}
                 render={<Link to={`/users/${post.user.id}`} />}
-                className="font-normal"
               >
                 <UserAvatar size="sm" />
                 <UserTag />
               </UserBadge>
+              <span className="ml-2 text-sm text-muted-foreground/50">
+                {formatPostDate(post.createdAt)}
+              </span>
             </CardTitle>
             <CardAction>
               <LikeButton post={post} />

@@ -14,6 +14,10 @@
     "./public": {
       "types": "./src/public.ts",
       "import": "./dist/public.js"
+    },
+    "./credentials": {
+      "types": "./src/credentials.ts",
+      "import": "./dist/credentials.js"
     }
   },
   "scripts": {

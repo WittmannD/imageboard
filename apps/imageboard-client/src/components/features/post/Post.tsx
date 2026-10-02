@@ -20,10 +20,13 @@ import {
   UserTag,
 } from 'src/components/features/user/UserBadge.tsx';
 import LikeButton from '../like-button/LikeButton';
+import { formatPostDate } from 'src/lib/utils/date.ts';
+import { cn } from 'src/lib/utils/cn.ts';
 
 const getImageCellStyle = (tile: LayoutTile): React.CSSProperties => ({
   gridColumn: `${tile.column.toString()} / span ${tile.columnSpan.toString()}`,
   gridRow: `${tile.row.toString()} / span ${tile.rowSpan.toString()}`,
+  aspectRatio: `${tile.width} / ${tile.height}`,
 });
 
 function PostGalleryTiles({ post }: { post: PostDto }) {
@@ -54,7 +57,12 @@ function PostGalleryTiles({ post }: { post: PostDto }) {
           loading="lazy"
           fetchPriority="auto"
           alt=""
-          className="block bg-muted/50"
+          className={cn(
+            'block bg-muted/50',
+            tile.metadata.tile.fit === 'cover'
+              ? 'object-cover'
+              : 'object-contain',
+          )}
         />
       </Link>
     );
@@ -75,7 +83,7 @@ function Post({ data: post }: { data: PostDto }) {
         </div>
       )}
       <CardHeader>
-        <CardTitle>
+        <CardTitle className="font-normal">
           <UserBadge
             user={post.user}
             render={<Link to={`/users/${post.user.id}`} />}
@@ -83,6 +91,9 @@ function Post({ data: post }: { data: PostDto }) {
             <UserAvatar size="sm" />
             <UserTag />
           </UserBadge>
+          <span className="ml-2 text-sm text-muted-foreground/50">
+            {formatPostDate(post.createdAt)}
+          </span>
         </CardTitle>
         <CardAction>
           <LikeButton post={post} />

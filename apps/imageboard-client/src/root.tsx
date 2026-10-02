@@ -45,9 +45,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>My App</title>
+        <title>spottish.website</title>
         <script
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: Sets correct theme on initial load
           dangerouslySetInnerHTML={{
             __html: `
              (function () {
@@ -60,7 +59,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                document.documentElement.classList.add(theme);
               } catch (_) {}
              })();
-           `,
+            `,
           }}
         />
         <Meta />

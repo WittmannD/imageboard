@@ -42,6 +42,40 @@ const galleries = [
           variant: 'lightbox',
         },
       },
+    ]
+  ],
+  [
+    [
+      {
+        key: 'eebe27d5-1d1e-46fc-90bd-9753e1a36a42_tile.jpeg',
+        size: 18654,
+        width: 241,
+        format: 'jpeg',
+        height: 393,
+        metadata: {
+          tile: {
+            fit: 'contain',
+            key: 'eebe27d5-1d1e-46fc-90bd-9753e1a36a42',
+            row: 1,
+            width: 241,
+            column: 1,
+            height: 393,
+            rowSpan: 1,
+            columnSpan: 1,
+          },
+          variant: 'tile',
+        },
+      },
+      {
+        key: 'eebe27d5-1d1e-46fc-90bd-9753e1a36a42_lightbox.jpeg',
+        size: 81880,
+        width: 661,
+        format: 'jpeg',
+        height: 1080,
+        metadata: {
+          variant: 'lightbox',
+        },
+      },
     ],
     [
       {
@@ -243,7 +277,7 @@ const galleries = [
 ];
 
 const photoGalleryFactory = (): ImageOutput[][] => {
-  const index = faker.number.int({ min: 0, max: 2 });
+  const index = faker.number.int({ min: 0, max: galleries.length - 1 });
   const gallery = galleries[index];
 
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
