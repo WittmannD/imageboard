@@ -5,9 +5,9 @@ import { APP_PIPE } from '@nestjs/core';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import configuration from './config/configuration.js';
-import { ImageTransformConfigLoaderProvider } from './providers/image-transform-config.js';
 import { SourceStorageProvider } from './providers/storage/source-storage.provider.js';
 import { TransformStorageProvider } from './providers/storage/transform-storage.provider.js';
+import { TransformConfigService } from './transform/transform-config.service.js';
 
 @Module({
   imports: [
@@ -25,7 +25,7 @@ import { TransformStorageProvider } from './providers/storage/transform-storage.
     },
     SourceStorageProvider,
     TransformStorageProvider,
-    ImageTransformConfigLoaderProvider,
+    TransformConfigService,
     AppService,
   ],
 })
