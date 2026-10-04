@@ -15,7 +15,7 @@ import {
 import type { StorageDriver } from '@hdotu1/media-storage/drivers';
 
 import { SOURCE_STORAGE } from './providers/storage/source-storage.provider.js';
-import { TRANSFORM_STORAGE } from './providers/storage/transform-storage.provider.js';
+import { MEDIA_STORAGE } from './providers/storage/transform-storage.provider.js';
 import { type FileOutputInfo, OutputEvent } from './transform/events.js';
 import { ImageTransformer } from './transform/image-transformer.js';
 import type { OperationNestedConfigs } from './transform/operation/operation-map.js';
@@ -29,7 +29,7 @@ export const DEFAULT_IMAGE_TRANSFORM_CONFIG = 'image-transform.config.yaml';
 export class AppService {
   constructor(
     @Inject(SOURCE_STORAGE) private sourceStorage: StorageDriver,
-    @Inject(TRANSFORM_STORAGE) private outputStorage: StorageDriver,
+    @Inject(MEDIA_STORAGE) private outputStorage: StorageDriver,
     private readonly transformConfigService: TransformConfigService,
   ) {}
 

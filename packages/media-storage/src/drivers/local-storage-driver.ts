@@ -4,8 +4,8 @@ import * as fsPromises from 'node:fs/promises';
 import * as path from 'node:path';
 import * as streamPromises from 'node:stream/promises';
 
-import type { FileMetadata, StoredFile, UploadFile } from '../common/file.js';
-import type { UploadFileOptions } from '../common/options.js';
+import type { ObjectMetadata, StoredObject, UploadObject } from '../common/object.js';
+import type { UploadObjectOptions } from '../common/options.js';
 import type { ReadableStorage, WritableStorage } from '../common/storage.js';
 import { AlreadyExistsError } from '../errors/already-exists-error.js';
 import { StorageError } from '../errors/storage-error.js';
@@ -24,9 +24,9 @@ export class LocalStorageDriver implements ReadableStorage, WritableStorage {
   }
 
   async upload(
-    file: UploadFile,
-    options: UploadFileOptions = {},
-  ): Promise<StoredFile> {
+    file: UploadObject,
+    options: UploadObjectOptions = {},
+  ): Promise<StoredObject> {
     const { overwrite = true } = options;
     const originalPath = this.resolve(file.key);
     const tmpPath = this.getTempPath(originalPath);
@@ -97,7 +97,7 @@ export class LocalStorageDriver implements ReadableStorage, WritableStorage {
     }
   }
 
-  async stat(key: string): Promise<FileMetadata> {
+  async stat(key: string): Promise<ObjectMetadata> {
     try {
       const info = await fsPromises.stat(this.resolve(key));
       return {

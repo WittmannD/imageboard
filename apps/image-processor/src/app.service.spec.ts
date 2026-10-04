@@ -14,7 +14,7 @@ import { YamlTemplate } from '@hdotu1/yaml-template';
 
 import { AppService, DEFAULT_IMAGE_TRANSFORM_CONFIG } from './app.service.js';
 import { SOURCE_STORAGE } from './providers/storage/source-storage.provider.js';
-import { TRANSFORM_STORAGE } from './providers/storage/transform-storage.provider.js';
+import { MEDIA_STORAGE } from './providers/storage/transform-storage.provider.js';
 import type { OperationNestedConfigs } from './transform/operation/operation-map.js';
 import {
   type ImageTransformConfig,
@@ -72,7 +72,7 @@ describe('AppService', () => {
           useValue: new LocalStorageDriver({ root: sourceRoot }),
         },
         {
-          provide: TRANSFORM_STORAGE,
+          provide: MEDIA_STORAGE,
           useValue: new LocalStorageDriver({ root }),
         },
         AppService,
