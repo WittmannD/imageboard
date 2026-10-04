@@ -12,6 +12,7 @@ import type { CreatePostDto } from '../dto/create-post.dto.js';
 import type { PostEntity } from '../entities/post.entity.js';
 import { PhotoProcessingStatus } from '../enums/photo-status.enum.js';
 import { PostStatus } from '../enums/post-status.enum.js';
+import { PostAccessForbiddenError } from '../errors/post-service-error.js';
 import { PhotoRepository } from '../repositories/photo.repository.js';
 import {
   type PostPage,
@@ -139,11 +140,58 @@ export class PostService {
     viewer?: UserEntity,
     em?: EntityManager,
   ): Promise<PostPage> {
+    return await this.getPaginatedPosts(
+      { status: PostStatus.Published },
+      cursor,
+      options,
+      viewer,
+      em,
+    );
+  }
+
+  /**
+   * Posts of the user `authorId` in `status`; `viewer` fills `likedByMe`.
+   * Only the author may list posts that aren't Published.
+   */
+  async getPaginatedPostsByAuthor(
+    authorId: UserEntity['id'],
+    status: PostStatus = PostStatus.Published,
+    cursor?: KeySetCursor<PostEntity>,
+    options: PaginateOptions = {},
+    viewer?: UserEntity,
+    em?: EntityManager,
+  ): Promise<PostPage> {
+    if (status !== PostStatus.Published && viewer?.id !== authorId) {
+      throw new PostAccessForbiddenError();
+    }
+
+    return await this.getPaginatedPosts(
+      { status, authorId },
+      cursor,
+      options,
+      viewer,
+      em,
+    );
+  }
+
+  private async getPaginatedPosts(
+    filter: { status: PostStatus; authorId?: UserEntity['id'] },
+    cursor?: KeySetCursor<PostEntity>,
+    options: PaginateOptions = {},
+    viewer?: UserEntity,
+    em?: EntityManager,
+  ): Promise<PostPage> {
+    const { status, authorId } = filter;
+
     return await this.tx.withManager(em, async (entityManager) => {
       const postRepository = entityManager.withRepository(this.postRepository);
       const query = postRepository
         .createQueryBuilder('post')
-        .where('post.status = :status', { status: PostStatus.Published });
+        .where('post.status = :status', { status });
+
+      if (authorId !== undefined) {
+        query.andWhere('post.user = :authorId', { authorId });
+      }
 
       const page = await paginate(query, cursor, {
         ...options,
@@ -168,12 +216,18 @@ export class PostService {
       // preserve the same order as ids
       const byId = new Map<number, PostEntity>(posts.map((p) => [p.id, p]));
       const likedIds = viewer
-        ? await this.likeService.getLikedPostIds(viewer, page.ids, entityManager)
+        ? await this.likeService.getLikedPostIds(
+            viewer,
+            page.ids,
+            entityManager,
+          )
         : new Set<number>();
       const items = page.ids
         .map((id) => byId.get(id))
         .filter((post): post is PostEntity => post !== undefined)
-        .map((post) => Object.assign(post, { likedByMe: likedIds.has(post.id) }));
+        .map((post) =>
+          Object.assign(post, { likedByMe: likedIds.has(post.id) }),
+        );
 
       return {
         items,

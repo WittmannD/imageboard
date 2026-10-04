@@ -1,8 +1,8 @@
 import { faker } from '@faker-js/faker';
 import { setSeederFactory } from 'typeorm-extension';
 
-import { PostEntity } from '../../art/entities/post.entity.js';
-import { PostStatus } from '../../art/enums/post-status.enum.js';
+import { PostEntity } from '../../post/entities/post.entity.js';
+import { PostStatus } from '../../post/enums/post-status.enum.js';
 import type { UserEntity } from '../../user/entities/user.entity.js';
 
 export default setSeederFactory(PostEntity, (meta?: { user: UserEntity }) => {

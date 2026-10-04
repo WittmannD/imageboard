@@ -4,8 +4,8 @@ import { type Seeder, SeederFactoryManager } from 'typeorm-extension';
 
 import type { ImageOutput } from '@hdotu1/image-processor-contract';
 
-import { PhotoEntity } from '../../art/entities/photo.entity.js';
-import { PostEntity } from '../../art/entities/post.entity.js';
+import { PhotoEntity } from '../../post/entities/photo.entity.js';
+import { PostEntity } from '../../post/entities/post.entity.js';
 import { FederatedCredentialsEntity } from '../../federated-credentials/entities/federated-credentials.entity.js';
 import { UserEntity } from '../../user/entities/user.entity.js';
 

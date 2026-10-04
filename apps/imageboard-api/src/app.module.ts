@@ -7,7 +7,7 @@ import type { DataSourceOptions } from 'typeorm';
 
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
-import { PublicationsModule } from './art/publications.module.js';
+import { PostModule } from './post/post.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { HttpErrorFilter } from './common/filters/http-error.filter.js';
 import configuration from './config/configuration.js';
@@ -36,7 +36,7 @@ import { SeederModule } from './seeds/seeder.module.js';
         autoLoadEntities: true,
       }),
     }),
-    PublicationsModule,
+    PostModule,
     UserModule,
     AuthModule,
     FederatedCredentialsModule,

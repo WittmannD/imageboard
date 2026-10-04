@@ -8,7 +8,11 @@ import { TransactionService } from '@hdotu1/database-common';
 import type { FileUpload } from '../../multer/file-upload.js';
 import type { UserEntity } from '../../user/entities/user.entity.js';
 import { PhotoProcessingStatus } from '../enums/photo-status.enum.js';
-import { GalleryLayoutError } from '../errors/post-service-error.js';
+import { PostStatus } from '../enums/post-status.enum.js';
+import {
+  GalleryLayoutError,
+  PostAccessForbiddenError,
+} from '../errors/post-service-error.js';
 import { PhotoRepository } from '../repositories/photo.repository.js';
 import { PostRepository } from '../repositories/post.repository.js';
 import { LikeService } from './like.service.js';
@@ -97,5 +101,92 @@ describe('PostService.createUserPost gallery failures', () => {
 
     expect(photoRepository.update).toHaveBeenCalled();
     expect(uncaught).not.toHaveBeenCalled();
+  });
+});
+
+describe('PostService.getPaginatedPostsByAuthor access', () => {
+  let service: PostService;
+  const author = { id: 42 } as UserEntity;
+  const query = {
+    alias: 'post',
+    where: vi.fn(),
+    andWhere: vi.fn(),
+    addSelect: vi.fn(),
+    orderBy: vi.fn(),
+    take: vi.fn(),
+    getMany: vi.fn(),
+  };
+  const postRepository = { createQueryBuilder: vi.fn() };
+  const tx = {
+    withManager: (_: unknown, cb: (m: unknown) => unknown) =>
+      cb({ withRepository: <T>(repository: T) => repository }),
+  };
+
+  beforeEach(async () => {
+    vi.resetAllMocks();
+    for (const method of ['where', 'andWhere', 'addSelect', 'orderBy', 'take']) {
+      query[method as 'where'].mockReturnValue(query);
+    }
+    query.getMany.mockResolvedValue([]);
+    postRepository.createQueryBuilder.mockReturnValue(query);
+
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        PostService,
+        { provide: PostRepository, useValue: postRepository },
+        { provide: PhotoRepository, useValue: {} },
+        { provide: PhotoService, useValue: {} },
+        { provide: LikeService, useValue: {} },
+        { provide: TransactionService, useValue: tx },
+      ],
+    }).compile();
+
+    service = moduleRef.get(PostService);
+  });
+
+  it.each([PostStatus.Draft, PostStatus.Unpublished])(
+    'forbids %s posts to an anonymous viewer',
+    async (status) => {
+      await expect(
+        service.getPaginatedPostsByAuthor(author.id, status),
+      ).rejects.toBeInstanceOf(PostAccessForbiddenError);
+      expect(postRepository.createQueryBuilder).not.toHaveBeenCalled();
+    },
+  );
+
+  it('forbids unpublished posts to a viewer who is not the author', async () => {
+    await expect(
+      service.getPaginatedPostsByAuthor(
+        author.id,
+        PostStatus.Unpublished,
+        undefined,
+        {},
+        { id: 7 } as UserEntity,
+      ),
+    ).rejects.toBeInstanceOf(PostAccessForbiddenError);
+  });
+
+  it('lets the author list their own unpublished posts', async () => {
+    const page = await service.getPaginatedPostsByAuthor(
+      author.id,
+      PostStatus.Unpublished,
+      undefined,
+      {},
+      author,
+    );
+
+    expect(page).toEqual({ items: [], nextCursor: null, hasNextPage: false });
+    expect(query.where).toHaveBeenCalledWith('post.status = :status', {
+      status: PostStatus.Unpublished,
+    });
+    expect(query.andWhere).toHaveBeenCalledWith('post.user = :authorId', {
+      authorId: author.id,
+    });
+  });
+
+  it('lets anyone list published posts', async () => {
+    await expect(
+      service.getPaginatedPostsByAuthor(author.id, PostStatus.Published),
+    ).resolves.toMatchObject({ items: [] });
   });
 });

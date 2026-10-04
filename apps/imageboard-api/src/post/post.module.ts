@@ -45,4 +45,4 @@ import { PhotoService } from './services/photo.service.js';
     GalleryLayoutEngineProvider,
   ],
 })
-export class PublicationsModule {}
+export class PostModule {}

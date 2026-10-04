@@ -7,7 +7,10 @@ import { AuthService } from '../auth/auth.service.js';
 import { InvalidCursorError } from '../common/errors/common-errors.js';
 import { HttpErrorFilter } from '../common/filters/http-error.filter.js';
 import { encodeBase64Json } from '../common/utils/base64-json.js';
-import { PostNotFoundError } from './errors/post-service-error.js';
+import {
+  PostAccessForbiddenError,
+  PostNotFoundError,
+} from './errors/post-service-error.js';
 import { PostController } from './post.controller.js';
 import { LikeService } from './services/like.service.js';
 import { PostService } from './services/post.service.js';
@@ -15,15 +18,16 @@ import { PostService } from './services/post.service.js';
 describe('PostController pagination', () => {
   let app: INestApplication;
   let base: string;
-  const postService = { getPaginatedPublishedPostsWithUser: vi.fn() };
+  const postService = {
+    getPaginatedPublishedPostsWithUser: vi.fn(),
+    getPaginatedPostsByAuthor: vi.fn(),
+  };
 
   beforeEach(async () => {
     vi.resetAllMocks();
-    postService.getPaginatedPublishedPostsWithUser.mockResolvedValue({
-      items: [],
-      nextCursor: null,
-      hasNextPage: false,
-    });
+    const emptyPage = { items: [], nextCursor: null, hasNextPage: false };
+    postService.getPaginatedPublishedPostsWithUser.mockResolvedValue(emptyPage);
+    postService.getPaginatedPostsByAuthor.mockResolvedValue(emptyPage);
 
     const moduleRef = await Test.createTestingModule({
       controllers: [PostController],
@@ -94,6 +98,66 @@ describe('PostController pagination', () => {
     expect(((await res.json()) as { errorCode: string }).errorCode).toBe(
       'invalid_input',
     );
+  });
+
+  it('pages a user\'s posts by the user id from the path', async () => {
+    const cursor = { id: 10, createdAt: '2026-01-01T00:00:00.000Z' };
+
+    const res = await fetch(
+      `${base}/posts/user/42?cursor=${encodeBase64Json(cursor)}&limit=5&order=asc`,
+    );
+
+    expect(res.status).toBe(200);
+    expect(postService.getPaginatedPostsByAuthor).toHaveBeenCalledWith(
+      42,
+      'Published',
+      cursor,
+      { limit: 5, order: 'ASC' },
+      undefined,
+    );
+  });
+
+  it('passes the requested status through to the service', async () => {
+    const res = await fetch(`${base}/posts/user/42?status=Draft`);
+
+    expect(res.status).toBe(200);
+    expect(postService.getPaginatedPostsByAuthor).toHaveBeenCalledWith(
+      42,
+      'Draft',
+      undefined,
+      expect.anything(),
+      undefined,
+    );
+  });
+
+  it('rejects an unknown status with invalid_input', async () => {
+    const res = await fetch(`${base}/posts/user/42?status=Deleted`);
+
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { errorCode: string }).errorCode).toBe(
+      'invalid_input',
+    );
+    expect(postService.getPaginatedPostsByAuthor).not.toHaveBeenCalled();
+  });
+
+  it('maps PostAccessForbiddenError to 403 forbidden', async () => {
+    postService.getPaginatedPostsByAuthor.mockRejectedValue(
+      new PostAccessForbiddenError(),
+    );
+
+    const res = await fetch(`${base}/posts/user/42?status=Unpublished`);
+
+    expect(res.status).toBe(403);
+    expect(((await res.json()) as { errorCode: string }).errorCode).toBe(
+      'forbidden',
+    );
+  });
+
+  it('rejects a non-integer user id', async () => {
+    const res = await fetch(`${base}/posts/user/abc`);
+
+    expect(res.status).toBe(400);
+    expect(postService.getPaginatedPostsByAuthor).not.toHaveBeenCalled();
   });
 });
 

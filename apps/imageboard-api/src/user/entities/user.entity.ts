@@ -2,7 +2,7 @@ import { Column, Entity, OneToMany } from 'typeorm';
 
 import type { ImageOutput } from '@hdotu1/image-processor-contract';
 
-import { PostEntity } from '../../art/entities/post.entity.js';
+import { PostEntity } from '../../post/entities/post.entity.js';
 import { BaseEntity } from '../../common/entity/base.entity.js';
 import { FederatedCredentialsEntity } from '../../federated-credentials/entities/federated-credentials.entity.js';
 

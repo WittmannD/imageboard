@@ -9,6 +9,13 @@ export class PostNotFoundError extends PostServiceError {
   }
 }
 
+/** A user other than the author asked for the author's non-published posts. */
+export class PostAccessForbiddenError extends PostServiceError {
+  constructor(message = 'Only the author can see their unpublished posts') {
+    super(message);
+  }
+}
+
 /** An uploaded file couldn't be read as an image (e.g. to get its dimensions). */
 export class InvalidImageError extends PostServiceError {
   constructor(cause?: unknown) {
