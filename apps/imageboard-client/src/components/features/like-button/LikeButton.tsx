@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { HeartIcon } from 'lucide-react';
 import {
   useLikePostMutation,
@@ -24,10 +24,13 @@ function LikeButton({
     compactDisplay: 'short',
   });
 
+  const isDisabled = useMemo(() => !isLoggedIn || post.status !== 'Published', [isLoggedIn, post.status]);
+
   const onLikeClick = useCallback(() => {
-    if (!isLoggedIn) {
+    if (isDisabled) {
       return;
     }
+
     if (post.likedByMe) {
       setAnimate(false);
       unlikePost(post.id).unwrap().catch();
@@ -44,7 +47,7 @@ function LikeButton({
       {...props}
       className={cn(className)}
       onClick={onLikeClick}
-      disabled={!isLoggedIn}
+      disabled={isDisabled}
     >
       <span className="relative size-5" data-icon="inline-start">
         {post.likedByMe && animate && (

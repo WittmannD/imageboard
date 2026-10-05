@@ -9,11 +9,15 @@ import type {
   CreatePostBody,
   GetPostsQuery,
   GetPostsResponse,
+  GetUserPostsQuery,
   LikeStatusDto,
+  PageQuery,
   PostDraftDto,
   PostDto,
+  PostWithAuthorDto,
+  UpdatePostStatusBody,
 } from '../types.ts';
-import { POST_LIST_TAG, POST_TAG_TYPE } from './constants.ts';
+import { POST_LIST_TAG, POST_TAG_TYPE, userPostListTag } from './constants.ts';
 
 const DEFAULT_PAGE_SIZE = 10;
 const MAX_CACHE_PAGES = 10;
@@ -28,7 +32,7 @@ export const postsApi = createApi({
     getPosts: builder.infiniteQuery<
       GetPostsResponse,
       GetPostsQuery,
-      GetPostsQuery['cursor']
+      PageQuery['cursor']
     >({
       query: ({ queryArg, pageParam: cursor }) => ({
         url: '/posts',
@@ -42,34 +46,51 @@ export const postsApi = createApi({
         initialPageParam: undefined,
         getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
         getPreviousPageParam: () => undefined,
-        maxPages: MAX_CACHE_PAGES
+        maxPages: MAX_CACHE_PAGES,
       },
       providesTags: (result) =>
         result?.pages
           ? [
-            ...result.pages.flatMap(({ items }) =>
-              items.map(({ id }) => ({
-                type: POST_TAG_TYPE,
-                id,
-              }))
-            ),
-            { type: POST_TAG_TYPE, id: POST_LIST_TAG },
-          ]
+              ...result.pages.flatMap(({ items }) =>
+                items.map(({ id }) => ({
+                  type: POST_TAG_TYPE,
+                  id,
+                })),
+              ),
+              { type: POST_TAG_TYPE, id: POST_LIST_TAG },
+            ]
           : [{ type: POST_TAG_TYPE, id: POST_LIST_TAG }],
     }),
-    getPost: builder.query<PostDto, number>({
-      query: (_id) => ({
-        url: `/posts`,
+    getUserPosts: builder.infiniteQuery<
+      GetPostsResponse,
+      GetUserPostsQuery,
+      PageQuery['cursor']
+    >({
+      query: ({ queryArg: { userId, ...params }, pageParam: cursor }) => ({
+        url: `/posts/user/${userId}`,
+        params: {
+          limit: DEFAULT_PAGE_SIZE,
+          ...params,
+          cursor,
+        },
       }),
-      transformResponse: (response: GetPostsResponse, _, id) => {
-        const item = response.items.find((i) => i.id === id);
-
-        if (!item) {
-          throw new Error();
-        }
-
-        return item;
+      infiniteQueryOptions: {
+        initialPageParam: undefined,
+        getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+        getPreviousPageParam: () => undefined,
+        maxPages: MAX_CACHE_PAGES,
       },
+      providesTags: (result, _, { userId }) => [
+        ...(result?.pages ?? []).flatMap(({ items }) =>
+          items.map(({ id }) => ({ type: POST_TAG_TYPE, id })),
+        ),
+        { type: POST_TAG_TYPE, id: userPostListTag(userId) },
+      ],
+    }),
+    getPost: builder.query<PostDto, number>({
+      query: (id) => ({
+        url: `/posts/${id}`,
+      }),
       providesTags: (_, __, id) => [{ type: POST_TAG_TYPE, id }],
     }),
     createPost: builder.mutation<PostDraftDto, CreatePostBody>({
@@ -90,8 +111,47 @@ export const postsApi = createApi({
           data: formData,
         };
       },
-      invalidatesTags: [{ type: POST_TAG_TYPE, id: POST_LIST_TAG }],
+      invalidatesTags: (result) => [
+        { type: POST_TAG_TYPE, id: POST_LIST_TAG },
+        ...(result
+          ? [{ type: POST_TAG_TYPE, id: userPostListTag(result.user.id) }]
+          : []),
+      ],
     }),
+    // Unpublished deletes the post, Published restores it; author only
+    updatePostStatus: builder.mutation<PostWithAuthorDto, UpdatePostStatusBody>(
+      {
+        query: ({ id, status }) => ({
+          url: `/posts/${id}/status`,
+          method: 'PATCH',
+          data: { status },
+        }),
+        // refetch everything that may list the post, so it leaves or rejoins
+        // the feeds and the author's per-status lists
+        invalidatesTags: (result, _, { id }) =>
+          result
+            ? [
+                { type: POST_TAG_TYPE, id },
+                { type: POST_TAG_TYPE, id: POST_LIST_TAG },
+                { type: POST_TAG_TYPE, id: userPostListTag(result.user.id) },
+              ]
+            : [],
+        onQueryStarted: async (_, { dispatch, queryFulfilled }) => {
+          try {
+            const { data } = await queryFulfilled;
+
+            // only Published posts count towards postsCount and likesReceived
+            dispatch(
+              userApi.util.invalidateTags([
+                { type: USER_STATS_TAG_TYPE, id: data.user.id },
+              ]),
+            );
+          } catch {
+            // the failed mutation's error is surfaced by its hook
+          }
+        },
+      },
+    ),
     // PUT likes, DELETE unlikes; both are idempotent on the server
     likePost: builder.mutation<LikeStatusDto, PostDto['id']>({
       query: (id) => ({
@@ -112,8 +172,10 @@ export const postsApi = createApi({
 
 export const {
   useGetPostsInfiniteQuery,
+  useGetUserPostsInfiniteQuery,
   useGetPostQuery,
   useCreatePostMutation,
+  useUpdatePostStatusMutation,
   useLikePostMutation,
   useUnlikePostMutation,
 } = postsApi;
@@ -153,23 +215,30 @@ async function syncLikeState(
       update(post);
     };
 
+    const applyToPages = (draft: { pages: GetPostsResponse[] }) => {
+      for (const page of draft.pages) {
+        page.items.filter((post) => post.id === id).forEach(apply);
+      }
+    };
+
+    // find all cached instances of post and apply patch to them
     const feedPatches = postsApi.util
-      // find all cached instances of post and apply patch to them
       .selectCachedArgsForQuery(api.getState(), 'getPosts')
       .map((arg) =>
+        dispatch(postsApi.util.updateQueryData('getPosts', arg, applyToPages)),
+      );
+    const userFeedPatches = postsApi.util
+      .selectCachedArgsForQuery(api.getState(), 'getUserPosts')
+      .map((arg) =>
         dispatch(
-          postsApi.util.updateQueryData('getPosts', arg, (draft) => {
-            for (const page of draft.pages) {
-              page.items.filter((post) => post.id === id).forEach(apply);
-            }
-          }),
+          postsApi.util.updateQueryData('getUserPosts', arg, applyToPages),
         ),
       );
     const postPatch = dispatch(
       postsApi.util.updateQueryData('getPost', id, apply),
     );
 
-    return [...feedPatches, postPatch];
+    return [...feedPatches, ...userFeedPatches, postPatch];
   };
 
   const optimisticPatches = updatePost((post) => {

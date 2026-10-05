@@ -31,6 +31,7 @@ import { Link } from 'react-router';
 import LikeButton from '../like-button/LikeButton';
 import { formatPostDate } from 'src/lib/utils/date.ts';
 import Zoom from 'src/components/ui/zoom/Zoom.tsx';
+import { PostActionMenu } from 'src/components/features/post/PostActionMenu.tsx';
 
 function PostLightboxView({
   post,
@@ -196,6 +197,7 @@ function PostLightboxView({
             </CardTitle>
             <CardAction>
               <LikeButton post={post} />
+              <PostActionMenu post={post} />
             </CardAction>
             {post.caption && <CardDescription>{post.caption}</CardDescription>}
           </CardHeader>

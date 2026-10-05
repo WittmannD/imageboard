@@ -22,6 +22,7 @@ import {
 import LikeButton from '../like-button/LikeButton';
 import { formatPostDate } from 'src/lib/utils/date.ts';
 import { cn } from 'src/lib/utils/cn.ts';
+import { PostActionMenu } from './PostActionMenu';
 
 const getImageCellStyle = (tile: LayoutTile): React.CSSProperties => ({
   gridColumn: `${tile.column.toString()} / span ${tile.columnSpan.toString()}`,
@@ -97,6 +98,7 @@ function Post({ data: post }: { data: PostDto }) {
         </CardTitle>
         <CardAction>
           <LikeButton post={post} />
+          <PostActionMenu post={post} />
         </CardAction>
         {post.caption && (
           <CardDescription className="line-clamp-2">

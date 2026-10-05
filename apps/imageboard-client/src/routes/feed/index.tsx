@@ -30,16 +30,18 @@ function FeedPage() {
     [data],
   );
 
-  return <div>
-    <Feed
-      posts={posts}
-      isFetching={isFetching}
-      isLoading={isLoading}
-      isFetchingNextPage={isFetchingNextPage}
-      hasNextPage={hasNextPage}
-      fetchNextPage={fetchNextPage}
-    />
-  </div>
+  return (
+    <div className="py-8">
+      <Feed
+        posts={posts}
+        isFetching={isFetching}
+        isLoading={isLoading}
+        isFetchingNextPage={isFetchingNextPage}
+        hasNextPage={hasNextPage}
+        fetchNextPage={fetchNextPage}
+      />
+    </div>
+  );
 }
 
 export default FeedPage;
