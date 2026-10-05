@@ -26,17 +26,20 @@ export const OidcProvider = {
     const jwks = await jwksStore.getJwks();
     const findAccount = createFindAccount(userService);
 
-    const provider = new IdProvider(configService.getOrThrow<string>('urls.auth'), {
-      ...oidcConfiguration(),
-      jwks,
-      adapter,
-      findAccount,
-      extraTokenClaims: extraTokenClaims(findAccount),
-      clientBasedCORS: clientBasedCors(),
-      pairwiseIdentifier: pairwiseIdentifier(),
-      renderError: renderError(),
-      rotateRefreshToken: rotateRefreshToken(),
-    });
+    const provider = new IdProvider(
+      configService.getOrThrow<string>('urls.auth'),
+      {
+        ...oidcConfiguration(),
+        jwks,
+        adapter,
+        findAccount,
+        extraTokenClaims: extraTokenClaims(findAccount),
+        clientBasedCORS: clientBasedCors(),
+        pairwiseIdentifier: pairwiseIdentifier(),
+        renderError: renderError(),
+        rotateRefreshToken: rotateRefreshToken(),
+      },
+    );
 
     // nginx terminates TLS; trust its X-Forwarded-Proto so secure cookies work.
     provider.proxy = true;

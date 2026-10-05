@@ -32,7 +32,10 @@ export function getCors(config: AppConfig = getConfig()): CorsOptions {
         return;
       }
 
-      callback(new ForbiddenException(`Origin ${origin} is not allowed`), false);
+      callback(
+        new ForbiddenException(`Origin ${origin} is not allowed`),
+        false,
+      );
     },
     credentials: true,
   };

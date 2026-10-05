@@ -9,12 +9,7 @@ import { InteractionController } from './interaction.contoller.js';
 import { InteractionService } from './interaction.service.js';
 
 @Module({
-  imports: [
-    OidcModule,
-    CredentialsModule,
-    UserModule,
-    TransactionModule,
-  ],
+  imports: [OidcModule, CredentialsModule, UserModule, TransactionModule],
   controllers: [InteractionController],
   providers: [InteractionService],
 })

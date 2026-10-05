@@ -5,7 +5,9 @@ interface ConsentPageLoaderData {
   uid: string;
 }
 
-export const loader: LoaderFunction = ({ request }): ConsentPageLoaderData | Response => {
+export const loader: LoaderFunction = ({
+  request,
+}): ConsentPageLoaderData | Response => {
   const uid = new URL(request.url).searchParams.get('uid');
 
   if (!uid) {

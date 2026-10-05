@@ -46,7 +46,7 @@ export class InteractionController {
     private readonly configService: ConfigService,
     private readonly credentialsService: CredentialsService,
 
-    private readonly interactionService: InteractionService
+    private readonly interactionService: InteractionService,
   ) {}
 
   @Get(':uid')
@@ -110,8 +110,9 @@ export class InteractionController {
     // The grant is what the tokens are later filtered against: without it
     // (or with fewer scopes) the client gets less than it asked for.
     const grant =
-      (details.grantId && (await this.oidc.Grant.find(details.grantId))) ||
-      new this.oidc.Grant({ accountId, clientId });
+      (details.grantId
+        ? await this.oidc.Grant.find(details.grantId)
+        : undefined) ?? new this.oidc.Grant({ accountId, clientId });
     grant.addOIDCScope(scopes);
     // also grant the same scopes on the default resource so the JWT access
     // token issued for it (see resource-indicators.ts) carries them

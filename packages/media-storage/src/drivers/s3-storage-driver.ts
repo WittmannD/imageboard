@@ -4,24 +4,26 @@ import {
   GetObjectCommand,
   HeadObjectCommand,
   NotFound,
-  S3Client} from '@aws-sdk/client-s3';
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 import type {
-  FileMetadata,
+  ObjectMetadata,
   ReadableStorage,
   SignedUrlOptions,
   SignedUrlStorage,
-  StoredFile,
-  UploadFile,
-  UploadFileOptions,
+  StoredObject,
+  UploadObject,
+  UploadObjectOptions,
   WritableStorage,
 } from '../common/index.js';
 
 export interface S3StorageDriverOptions {
   client: S3Client;
   bucket: string;
+  prefix?: string;
 }
 
 export class S3StorageDriver
@@ -29,26 +31,32 @@ export class S3StorageDriver
 {
   private readonly client: S3Client;
   private readonly bucket: string;
+  private readonly prefix: string | undefined;
 
-  constructor(options: S3StorageDriverOptions) {
-    this.client = options.client;
-    this.bucket = options.bucket;
+  constructor({ client, bucket, prefix }: S3StorageDriverOptions) {
+    this.client = client;
+    this.bucket = bucket;
+    this.prefix = prefix;
+  }
+
+  private getKey(key: string): string {
+    return `${this.prefix ?? ''}${key}`;
   }
 
   async upload(
-    file: UploadFile,
-    options: UploadFileOptions = {},
-  ): Promise<StoredFile> {
+    object: UploadObject,
+    options: UploadObjectOptions = {},
+  ): Promise<StoredObject> {
     const { overwrite = true } = options;
 
     const parallelUpload = new Upload({
       client: this.client,
       params: {
         Bucket: this.bucket,
-        Key: file.key,
-        Body: file.body,
-        ContentType: file.contentType,
-        Metadata: file.metadata,
+        Key: this.getKey(object.key),
+        Body: object.body,
+        ContentType: object.contentType,
+        Metadata: object.metadata,
         IfNoneMatch: overwrite ? undefined : '*',
       },
     });
@@ -63,7 +71,7 @@ export class S3StorageDriver
     const result = await parallelUpload.done();
 
     return {
-      key: file.key,
+      key: this.getKey(object.key),
       etag: result.ETag,
       size: finalSizeInBytes,
     };
@@ -73,7 +81,7 @@ export class S3StorageDriver
     const result = await this.client.send(
       new GetObjectCommand({
         Bucket: this.bucket,
-        Key: key,
+        Key: this.getKey(key),
       }),
     );
 
@@ -84,7 +92,7 @@ export class S3StorageDriver
     await this.client.send(
       new DeleteObjectCommand({
         Bucket: this.bucket,
-        Key: key,
+        Key: this.getKey(key),
       }),
     );
   }
@@ -94,7 +102,7 @@ export class S3StorageDriver
       await this.client.send(
         new HeadObjectCommand({
           Bucket: this.bucket,
-          Key: key,
+          Key: this.getKey(key),
         }),
       );
 
@@ -108,16 +116,16 @@ export class S3StorageDriver
     }
   }
 
-  async stat(key: string): Promise<FileMetadata> {
+  async stat(key: string): Promise<ObjectMetadata> {
     const result = await this.client.send(
       new HeadObjectCommand({
         Bucket: this.bucket,
-        Key: key,
+        Key: this.getKey(key),
       }),
     );
 
     return {
-      key,
+      key: this.getKey(key),
       size: result.ContentLength ?? 0,
       contentType: result.ContentType,
       lastModified: result.LastModified,
@@ -130,12 +138,10 @@ export class S3StorageDriver
     options: SignedUrlOptions = {},
   ): Promise<string> {
     return getSignedUrl(
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       this.client,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       new GetObjectCommand({
         Bucket: this.bucket,
-        Key: key,
+        Key: this.getKey(key),
       }),
       {
         expiresIn: options.expiresIn,

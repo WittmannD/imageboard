@@ -45,11 +45,22 @@ function build({ ttl = 60_000, cooldown = 60_000 } = {}) {
       link: string;
     };
     const link = new URL(variables.link);
+    const token = new URLSearchParams(link.hash.slice(1)).get('token');
 
-    return { link, token: new URLSearchParams(link.hash.slice(1)).get('token')! };
+    if (token === null) {
+      throw new Error(`Reset link has no token: ${variables.link}`);
+    }
+
+    return { link, token };
   };
 
-  return { service, userService, credentialsService, emailService, tokenFromEmail };
+  return {
+    service,
+    userService,
+    credentialsService,
+    emailService,
+    tokenFromEmail,
+  };
 }
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -86,13 +97,20 @@ describe('PasswordResetService', () => {
     const { service, userService, emailService } = build();
     userService.findOneByEmail.mockResolvedValue(null);
 
-    await expect(service.requestReset('nobody@example.test')).resolves.toBeUndefined();
+    await expect(
+      service.requestReset('nobody@example.test'),
+    ).resolves.toBeUndefined();
     expect(emailService.sendFromTemplate).not.toHaveBeenCalled();
   });
 
   it('resets the password, verifies the email and confirms by email', async () => {
-    const { service, credentialsService, userService, emailService, tokenFromEmail } =
-      build();
+    const {
+      service,
+      credentialsService,
+      userService,
+      emailService,
+      tokenFromEmail,
+    } = build();
 
     await service.requestReset(USER.email);
     await service.completeReset(tokenFromEmail().token, 'a-new-password');
@@ -120,9 +138,9 @@ describe('PasswordResetService', () => {
     const { token } = tokenFromEmail();
 
     await service.completeReset(token, 'a-new-password');
-    await expect(service.completeReset(token, 'another-password')).rejects.toBeInstanceOf(
-      InvalidResetTokenError,
-    );
+    await expect(
+      service.completeReset(token, 'another-password'),
+    ).rejects.toBeInstanceOf(InvalidResetTokenError);
     expect(credentialsService.updatePasswordForUser).toHaveBeenCalledOnce();
   });
 
@@ -144,9 +162,9 @@ describe('PasswordResetService', () => {
   it('rejects an unknown token', async () => {
     const { service } = build();
 
-    await expect(service.completeReset('nope', 'a-new-password')).rejects.toBeInstanceOf(
-      InvalidResetTokenError,
-    );
+    await expect(
+      service.completeReset('nope', 'a-new-password'),
+    ).rejects.toBeInstanceOf(InvalidResetTokenError);
   });
 
   it('rejects an expired token', async () => {

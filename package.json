@@ -18,10 +18,12 @@
     "lint": "nx run-many -t=lint",
     "release": "tsx ./bin/nx-release.ts",
     "config:env": "tsx ./bin/config-env.ts",
+    "config:upload-transforms": "tsx ./bin/upload-transform-configs.ts",
     "stack:dev": "npm run config:env -- development && docker compose --env-file .env --env-file .generated/config.development.env up --build",
     "stack:dev:watch": "npm run config:env -- development && docker compose --env-file .env --env-file .generated/config.development.env watch"
   },
   "devDependencies": {
+    "@aws-sdk/client-s3": "^3.1079.0",
     "@eslint/js": "^9.39.4",
     "@nx/docker": "^22.4.4",
     "@nx/js": "^21.1.2",

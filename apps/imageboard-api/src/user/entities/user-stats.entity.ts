@@ -1,8 +1,8 @@
 import { ViewColumn, ViewEntity } from 'typeorm';
 
-import { LikeEntity } from '../../art/entities/like.entity.js';
-import { PostEntity } from '../../art/entities/post.entity.js';
-import { PostStatus } from '../../art/enums/post-status.enum.js';
+import { LikeEntity } from '../../post/entities/like.entity.js';
+import { PostEntity } from '../../post/entities/post.entity.js';
+import { PostStatus } from '../../post/enums/post-status.enum.js';
 import { UserEntity } from './user.entity.js';
 
 @ViewEntity({

@@ -59,7 +59,10 @@ test.describe('login', () => {
     await page.goto('/auth/login');
     await expect(loginHeading(page)).toBeVisible();
 
-    await submitLoginForm(page, { email: 'not-an-email', password: 'whatever' });
+    await submitLoginForm(page, {
+      email: 'not-an-email',
+      password: 'whatever',
+    });
 
     await expect(page.getByText('Enter a valid email address')).toBeVisible();
     await expect(page).toHaveURL(LOGIN_URL);

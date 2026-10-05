@@ -21,7 +21,7 @@ function Stats({ userId }: { userId: number }) {
         />
       </div>
     </div>
-  )
+  );
 }
 
 export { Stats };

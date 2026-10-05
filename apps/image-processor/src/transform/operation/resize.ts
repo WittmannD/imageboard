@@ -7,5 +7,5 @@ export type ImageResizeOperationArgs = ResizeOptions;
 export const ResizeOperation: Operation<'resize'> = {
   process(pipeline: Sharp, args: ImageResizeOperationArgs): Sharp {
     return pipeline.resize(args);
-  }
-}
+  },
+};

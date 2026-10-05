@@ -13,9 +13,7 @@ import type { EntityManager } from 'typeorm';
 
 import { TransactionService } from '@hdotu1/database-common';
 
-import type {
-  UnvalidatedOidcClaims,
-} from '../common/types/oidc.js';
+import type { UnvalidatedOidcClaims } from '../common/types/oidc.js';
 import { FederatedCredentialsService } from '../federated-credentials/federated-credentials.service.js';
 import type { UserEntity } from '../user/entities/user.entity.js';
 import { UserServiceError } from '../user/errors/user-service-error.js';

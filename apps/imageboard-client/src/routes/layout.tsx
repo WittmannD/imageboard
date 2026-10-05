@@ -1,4 +1,5 @@
 import { type LoaderFunction, Outlet, useLoaderData } from 'react-router';
+import { Footer } from 'src/components/features/footer/Footer.tsx';
 import { Header } from 'src/components/features/header/Header.tsx';
 import { DialogManagerProvider } from 'src/lib/dialog-manager/context.tsx';
 import { getModal, type ModalData } from 'src/.server/helpers/modal.ts';
@@ -26,6 +27,7 @@ function RootLayout() {
         <main className="min-h-[calc(100svh-var(--header-height))]">
           <Outlet />
         </main>
+        <Footer />
       </DialogManagerProvider>
     </AuthProvider>
   );

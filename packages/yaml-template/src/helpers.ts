@@ -1,126 +1,149 @@
-import { createReadStream } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
-import { cwd } from 'node:process';
-import * as process from 'node:process';
-import readline from 'node:readline';
+import process from 'node:process';
 import { Readable } from 'node:stream';
+import { text } from 'node:stream/consumers';
+import { pathToFileURL } from 'node:url';
 import type { AnySchema } from 'ajv';
+import yaml, { JSON_SCHEMA } from 'js-yaml';
+
+export type YamlSource = string | Readable | Buffer;
 
 export function isDev() {
   return process.env['NODE_ENV'] !== 'production';
 }
 
-export function createSourceStream(
-  input: string | Readable | Buffer,
+/**
+ * Reads the whole source once. A string input is treated as a file path,
+ * relative schema paths are then resolved against its directory.
+ */
+export async function readSource(
+  input: YamlSource,
   encoding: BufferEncoding = 'utf-8',
-): Readable {
+): Promise<{ raw: string; baseDir: string }> {
   if (input instanceof Readable) {
-    return input;
+    return { raw: await text(input), baseDir: process.cwd() };
   }
 
-  if (input instanceof Buffer) {
-    return Readable.from(input, { encoding });
+  if (Buffer.isBuffer(input)) {
+    return { raw: input.toString(encoding), baseDir: process.cwd() };
   }
 
-  return createReadStream(input, { encoding });
+  const filePath = resolve(input);
+  return {
+    raw: await readFile(filePath, encoding),
+    baseDir: dirname(filePath),
+  };
 }
 
-export async function getFirstYamlProperty(stream: Readable) {
-  const PROPERTY_REGEX = /^\s*([^:\s]+)\s*:\s*(.+)$/;
-  const rl = readline.createInterface({
-    input: stream,
-    crlfDelay: Infinity,
-  });
+function parseScalar(rawValue: string): string {
+  const value = rawValue.trim();
+  const quote = value[0];
 
-  for await (const line of rl) {
+  if (quote === '"' || quote === "'") {
+    const end = value.indexOf(quote, 1);
+    return end === -1 ? value.slice(1) : value.slice(1, end);
+  }
+
+  // strip trailing inline comment
+  return value.replace(/\s+#.*$/, '');
+}
+
+/**
+ * Returns the first top-level property of a YAML document without parsing it
+ * (the template may not be valid YAML until it is interpolated).
+ */
+export function getFirstYamlProperty(
+  raw: string,
+): { key: string; value: string } | null {
+  const PROPERTY_REGEX = /^([^:\s#][^:\s]*)\s*:(?:\s+(.*))?$/;
+
+  for (const line of raw.split(/\r?\n/)) {
     const trimmed = line.trim();
 
-    if (!trimmed || trimmed.startsWith('#')) continue;
-
-    const match = PROPERTY_REGEX.exec(line);
-    if (match) {
-      rl.close();
-      stream.destroy();
-
-      const [, key, rawValue] = match;
-
-      return {
-        key,
-        value: rawValue.replace(/^['"]|['"]$/g, ''),
-      };
+    if (
+      !trimmed ||
+      trimmed.startsWith('#') ||
+      trimmed.startsWith('%') ||
+      trimmed === '---'
+    ) {
+      continue;
     }
 
-    break;
+    const match = PROPERTY_REGEX.exec(line.replace(/^\uFEFF/, ''));
+    if (!match) {
+      return null;
+    }
+
+    const [, key, rawValue = ''] = match;
+    return { key: parseScalar(key), value: parseScalar(rawValue) };
   }
 
   return null;
 }
 
-export async function resolveSchemaPathFromYaml(
-  input: string | Readable | Buffer,
-) {
-  const source = createSourceStream(input);
-
-  let baseDir: string;
-  if (typeof input === 'string') {
-    baseDir = dirname(resolve(input));
-  } else {
-    baseDir = cwd();
+/**
+ * Resolves a schema reference (http(s)/file URL or a file path) to a URL.
+ * Relative paths are resolved against baseDir.
+ */
+export function resolveSchemaUrl(
+  ref: string | URL,
+  baseDir: string = process.cwd(),
+): URL {
+  if (ref instanceof URL) {
+    return ref;
   }
 
-  const property = await getFirstYamlProperty(source);
-
-  if (property?.key !== '$schema') {
-    throw new Error('JSON schema must be on top of the YAML file');
-  }
-
-  const schemaPath = property.value;
-
-  // If it's an actual URL (https://..., etc.)
   try {
-    const url = new URL(schemaPath);
-    if (['http:', 'https:'].includes(url.protocol)) {
-      return { kind: 'url', url };
+    const url = new URL(ref);
+    // windows drive letters ("C:\...") are parsed as a protocol
+    if (['http:', 'https:', 'file:'].includes(url.protocol)) {
+      return url;
     }
   } catch {
     // not a URL → treat as path
   }
 
-  // If "$schema" is a file:// URL
-  if (schemaPath.startsWith('file://')) {
-    const { fileURLToPath } = await import('node:url');
-
-    const url = new URL(schemaPath);
-    return { kind: 'file', path: fileURLToPath(url), url };
-  }
-
-  const { pathToFileURL } = await import('node:url');
-  const absSchemaPath = resolve(baseDir, schemaPath);
-
-  return {
-    kind: 'file',
-    path: absSchemaPath,
-    url: pathToFileURL(absSchemaPath),
-  };
+  return pathToFileURL(resolve(baseDir, ref));
 }
 
+export function resolveSchemaUrlFromYaml(raw: string, baseDir: string): URL {
+  const property = getFirstYamlProperty(raw);
+
+  if (property?.key !== '$schema' || !property.value) {
+    throw new Error('JSON schema must be on top of the YAML file');
+  }
+
+  return resolveSchemaUrl(property.value, baseDir);
+}
+
+/**
+ * Loads a JSON or YAML schema from a http(s) or file URL.
+ */
 export async function loadSchema(url: URL): Promise<AnySchema> {
+  let content: string;
+
   if (url.protocol === 'http:' || url.protocol === 'https:') {
     const res = await fetch(url);
     if (!res.ok) {
-      throw new Error(`Failed to fetch schema: ${url}`);
+      throw new Error(`Failed to fetch schema: ${url} (${res.status})`);
     }
-    return (await res.json()) as AnySchema;
+    content = await res.text();
+  } else if (url.protocol === 'file:') {
+    content = await readFile(url, 'utf8');
+  } else {
+    throw new Error(`Invalid schema URL protocol: ${url.protocol}`);
   }
 
-  if (url.protocol === 'file:') {
-    const { readFile } = await import('node:fs/promises');
-    const { fileURLToPath } = await import('node:url');
+  // YAML is a superset of JSON, so this handles both formats
+  const schema = yaml.load(content, { schema: JSON_SCHEMA });
 
-    const filePath = fileURLToPath(url);
-    const content = await readFile(filePath, 'utf8');
-    return JSON.parse(content) as AnySchema;
+  if (
+    typeof schema !== 'boolean' &&
+    (typeof schema !== 'object' || schema === null || Array.isArray(schema))
+  ) {
+    throw new Error(`Schema is not an object: ${url}`);
   }
 
-  throw new Error('Invalid schema URL protocol');
+  return schema;
 }

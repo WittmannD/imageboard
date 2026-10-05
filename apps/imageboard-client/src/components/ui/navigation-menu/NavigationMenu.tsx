@@ -2,7 +2,7 @@ import { NavigationMenu as NavigationMenuPrimitive } from '@base-ui/react/naviga
 import { ChevronDownIcon } from 'lucide-react';
 
 import { navigationMenuTriggerStyle } from 'src/components/ui/navigation-menu/navigation-menu-style.ts';
-import { cn } from "src/lib/utils/cn.ts";
+import { cn } from 'src/lib/utils/cn.ts';
 
 function NavigationMenu({
   align = 'start',

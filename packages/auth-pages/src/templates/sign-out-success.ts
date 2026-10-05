@@ -2,7 +2,9 @@ import { escapeHtml } from '../html.js';
 import { pageLayout } from './layout.js';
 
 export function signOutSuccessPage(params: { clientName?: string }): string {
-  const scoped = params.clientName ? ` with ${escapeHtml(params.clientName)}` : '';
+  const scoped = params.clientName
+    ? ` with ${escapeHtml(params.clientName)}`
+    : '';
 
   return pageLayout({
     title: 'Signed out',

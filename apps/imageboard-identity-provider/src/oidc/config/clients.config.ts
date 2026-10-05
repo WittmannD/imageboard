@@ -23,4 +23,5 @@ const imageboardClient = (): ClientMetadata => {
   };
 };
 
-export default () => [imageboardClient()] satisfies OIDCDefinedConfig<'clients'>;
+export default () =>
+  [imageboardClient()] satisfies OIDCDefinedConfig<'clients'>;

@@ -34,6 +34,7 @@ export const ErrorCode = {
 
   // post
   PostNotFound: 'post_not_found',
+  InvalidStatusTransition: 'invalid_status_transition',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];

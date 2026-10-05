@@ -7,7 +7,12 @@ import { AuthService } from '../auth/auth.service.js';
 import { InvalidCursorError } from '../common/errors/common-errors.js';
 import { HttpErrorFilter } from '../common/filters/http-error.filter.js';
 import { encodeBase64Json } from '../common/utils/base64-json.js';
-import { PostNotFoundError } from './errors/post-service-error.js';
+import { PostStatus } from './enums/post-status.enum.js';
+import {
+  InvalidPostStatusTransitionError,
+  PostAccessForbiddenError,
+  PostNotFoundError,
+} from './errors/post-service-error.js';
 import { PostController } from './post.controller.js';
 import { LikeService } from './services/like.service.js';
 import { PostService } from './services/post.service.js';
@@ -15,15 +20,16 @@ import { PostService } from './services/post.service.js';
 describe('PostController pagination', () => {
   let app: INestApplication;
   let base: string;
-  const postService = { getPaginatedPublishedPostsWithUser: vi.fn() };
+  const postService = {
+    getPaginatedPublishedPostsWithUser: vi.fn(),
+    getPaginatedPostsByAuthor: vi.fn(),
+  };
 
   beforeEach(async () => {
     vi.resetAllMocks();
-    postService.getPaginatedPublishedPostsWithUser.mockResolvedValue({
-      items: [],
-      nextCursor: null,
-      hasNextPage: false,
-    });
+    const emptyPage = { items: [], nextCursor: null, hasNextPage: false };
+    postService.getPaginatedPublishedPostsWithUser.mockResolvedValue(emptyPage);
+    postService.getPaginatedPostsByAuthor.mockResolvedValue(emptyPage);
 
     const moduleRef = await Test.createTestingModule({
       controllers: [PostController],
@@ -95,13 +101,77 @@ describe('PostController pagination', () => {
       'invalid_input',
     );
   });
+
+  it("pages a user's posts by the user id from the path", async () => {
+    const cursor = { id: 10, createdAt: '2026-01-01T00:00:00.000Z' };
+
+    const res = await fetch(
+      `${base}/posts/user/42?cursor=${encodeBase64Json(cursor)}&limit=5&order=asc`,
+    );
+
+    expect(res.status).toBe(200);
+    expect(postService.getPaginatedPostsByAuthor).toHaveBeenCalledWith(
+      42,
+      'Published',
+      cursor,
+      { limit: 5, order: 'ASC' },
+      undefined,
+    );
+  });
+
+  it('passes the requested status through to the service', async () => {
+    const res = await fetch(`${base}/posts/user/42?status=Draft`);
+
+    expect(res.status).toBe(200);
+    expect(postService.getPaginatedPostsByAuthor).toHaveBeenCalledWith(
+      42,
+      'Draft',
+      undefined,
+      expect.anything(),
+      undefined,
+    );
+  });
+
+  it('rejects an unknown status with invalid_input', async () => {
+    const res = await fetch(`${base}/posts/user/42?status=Deleted`);
+
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { errorCode: string }).errorCode).toBe(
+      'invalid_input',
+    );
+    expect(postService.getPaginatedPostsByAuthor).not.toHaveBeenCalled();
+  });
+
+  it('maps PostAccessForbiddenError to 403 forbidden', async () => {
+    postService.getPaginatedPostsByAuthor.mockRejectedValue(
+      new PostAccessForbiddenError(),
+    );
+
+    const res = await fetch(`${base}/posts/user/42?status=Unpublished`);
+
+    expect(res.status).toBe(403);
+    expect(((await res.json()) as { errorCode: string }).errorCode).toBe(
+      'forbidden',
+    );
+  });
+
+  it('rejects a non-integer user id', async () => {
+    const res = await fetch(`${base}/posts/user/abc`);
+
+    expect(res.status).toBe(400);
+    expect(postService.getPaginatedPostsByAuthor).not.toHaveBeenCalled();
+  });
 });
 
-describe('PostController likes', () => {
+describe('PostController authenticated actions', () => {
   let app: INestApplication;
   let base: string;
   const user = { id: 1, username: 'alice' };
-  const postService = { getPaginatedPublishedPostsWithUser: vi.fn() };
+  const postService = {
+    getPaginatedPublishedPostsWithUser: vi.fn(),
+    changePostStatus: vi.fn(),
+    getPost: vi.fn(),
+  };
   const likeService = { likePost: vi.fn(), unlikePost: vi.fn() };
   const authService = { validateAccessToken: vi.fn() };
 
@@ -235,5 +305,135 @@ describe('PostController likes', () => {
 
     expect(res.status).toBe(400);
     expect(likeService.likePost).not.toHaveBeenCalled();
+  });
+
+  const changeStatus = (body: unknown, init: { auth?: boolean } = {}) =>
+    request('/7/status', {
+      ...init,
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+  it('changes the status of a post for the signed-in user', async () => {
+    postService.changePostStatus.mockResolvedValue({
+      id: 7,
+      status: 'Unpublished',
+      photos: [],
+      user: { ...user, credentials: [{ secret: 'x' }] },
+    });
+
+    const res = await changeStatus({ status: 'Unpublished' });
+
+    expect(res.status).toBe(200);
+    expect(postService.changePostStatus).toHaveBeenCalledWith(
+      user,
+      7,
+      'Unpublished',
+    );
+    const body = (await res.json()) as { status: string; user: object };
+    expect(body.status).toBe('Unpublished');
+    expect(body.user).not.toHaveProperty('credentials');
+  });
+
+  it('requires authentication to change the status', async () => {
+    const res = await changeStatus({ status: 'Unpublished' }, { auth: false });
+
+    expect(res.status).toBe(401);
+    expect(postService.changePostStatus).not.toHaveBeenCalled();
+  });
+
+  it.each([{ status: 'Draft' }, { status: 'Deleted' }, {}])(
+    'rejects the body %j with invalid_input',
+    async (body) => {
+      const res = await changeStatus(body);
+
+      expect(res.status).toBe(400);
+      expect(((await res.json()) as { errorCode: string }).errorCode).toBe(
+        'invalid_input',
+      );
+      expect(postService.changePostStatus).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    [new PostNotFoundError(), 404, 'post_not_found'],
+    [new PostAccessForbiddenError(), 403, 'forbidden'],
+    [
+      new InvalidPostStatusTransitionError(
+        PostStatus.Published,
+        PostStatus.Published,
+      ),
+      409,
+      'invalid_status_transition',
+    ],
+  ])('maps %o to %i %s', async (error, status, errorCode) => {
+    postService.changePostStatus.mockRejectedValue(error);
+
+    const res = await changeStatus({ status: 'Published' });
+
+    expect(res.status).toBe(status);
+    expect(((await res.json()) as { errorCode: string }).errorCode).toBe(
+      errorCode,
+    );
+  });
+
+  it('serves a single post anonymously without a viewer', async () => {
+    postService.getPost.mockResolvedValue({
+      id: 7,
+      status: 'Published',
+      likedByMe: false,
+      photos: [],
+      user: { ...user, credentials: [{ secret: 'x' }] },
+    });
+
+    const res = await request('/7', { auth: false });
+
+    expect(res.status).toBe(200);
+    expect(authService.validateAccessToken).not.toHaveBeenCalled();
+    expect(postService.getPost).toHaveBeenCalledWith(7, undefined);
+    const body = (await res.json()) as { id: number; user: object };
+    expect(body).toMatchObject({ id: 7, likedByMe: false });
+    expect(body.user).not.toHaveProperty('credentials');
+  });
+
+  it('passes the signed-in viewer when getting a single post', async () => {
+    postService.getPost.mockResolvedValue({
+      id: 7,
+      likedByMe: true,
+      photos: [],
+      user,
+    });
+
+    const res = await request('/7');
+
+    expect(res.status).toBe(200);
+    expect(postService.getPost).toHaveBeenCalledWith(7, user);
+  });
+
+  it('maps PostAccessForbiddenError on a single post to 403 forbidden', async () => {
+    postService.getPost.mockRejectedValue(new PostAccessForbiddenError());
+
+    const res = await request('/7', { auth: false });
+
+    expect(res.status).toBe(403);
+    expect(((await res.json()) as { errorCode: string }).errorCode).toBe(
+      'forbidden',
+    );
+  });
+
+  it('maps PostNotFoundError on a single post to 404 post_not_found', async () => {
+    postService.getPost.mockRejectedValue(new PostNotFoundError());
+
+    const res = await request('/7', { auth: false });
+
+    expect(res.status).toBe(404);
+  });
+
+  it('rejects a non-integer post id when getting a single post', async () => {
+    const res = await request('/abc', { auth: false });
+
+    expect(res.status).toBe(400);
+    expect(postService.getPost).not.toHaveBeenCalled();
   });
 });

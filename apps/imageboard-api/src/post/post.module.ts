@@ -32,7 +32,7 @@ import { PhotoService } from './services/photo.service.js';
       }),
       inject: [ConfigService],
     }),
-    AuthModule
+    AuthModule,
   ],
   controllers: [PostController],
   providers: [
@@ -45,4 +45,4 @@ import { PhotoService } from './services/photo.service.js';
     GalleryLayoutEngineProvider,
   ],
 })
-export class PublicationsModule {}
+export class PostModule {}

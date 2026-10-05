@@ -139,8 +139,8 @@ export function SignUpForm({
                     <FieldError errors={[fieldState.error]} />
                   ) : (
                     <FieldDescription>
-                      We&apos;ll use this to contact you. We will not share
-                      your email with anyone else.
+                      We&apos;ll use this to contact you. We will not share your
+                      email with anyone else.
                     </FieldDescription>
                   )}
                 </Field>

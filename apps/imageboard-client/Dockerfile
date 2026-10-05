@@ -41,6 +41,9 @@ COPY . .
 # time (see vite.config.ts), so an image is built for one environment.
 ARG APP_ENV=production
 ENV APP_ENV=$APP_ENV
+# The commit shown in the footer (see vite.config.ts); this image has no git.
+ARG GIT_COMMIT_SHA
+ENV GIT_COMMIT_SHA=$GIT_COMMIT_SHA
 
 RUN npm -w @hdotu1/config run build && npm -w ${APP} run build && npm prune --omit=dev
 

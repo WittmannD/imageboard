@@ -1,4 +1,9 @@
-import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from 'src/components/ui/navigation-menu/NavigationMenu.tsx';
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+} from 'src/components/ui/navigation-menu/NavigationMenu.tsx';
 import { navigationMenuTriggerStyle } from 'src/components/ui/navigation-menu/navigation-menu-style.ts';
 import { Form, NavLink, Outlet } from 'react-router';
 import { SettingsIcon, UserIcon } from 'lucide-react';
@@ -34,7 +39,7 @@ function MyProfileLayout() {
             </NavigationMenuLink>
           </NavigationMenuItem>
           <NavigationMenuItem className="ml-auto">
-            { isLoggedIn &&
+            {isLoggedIn && (
               <Form method="post" action="/auth/logout">
                 <NavigationMenuLink
                   className={navigationMenuTriggerStyle({
@@ -46,7 +51,7 @@ function MyProfileLayout() {
                   Log Out
                 </NavigationMenuLink>
               </Form>
-            }
+            )}
           </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>

@@ -14,7 +14,10 @@ export default () => {
       function BackchannelAuthenticationRequestTTL(context, _request, _client) {
         if (context.oidc.params?.['requested_expiry']) {
           // requested_expiry or the configured TTL, whichever is shorter
-          return Math.min(ttl.backchannelAuthenticationRequest, +context.oidc.params['requested_expiry']);
+          return Math.min(
+            ttl.backchannelAuthenticationRequest,
+            +context.oidc.params['requested_expiry'],
+          );
         }
 
         return ttl.backchannelAuthenticationRequest;

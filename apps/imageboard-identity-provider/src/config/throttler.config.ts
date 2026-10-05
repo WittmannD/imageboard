@@ -18,9 +18,17 @@ export default (): { throttler: ThrottlerModuleOptions } => ({
 
 export const LOGIN_THROTTLE = { default: throttle.login };
 export const REGISTRATION_THROTTLE = { default: throttle.registration };
-export const EMAIL_VERIFICATION_THROTTLE = { default: throttle.emailVerification };
-export const VERIFICATION_COMPLETE_THROTTLE = { default: throttle.verificationComplete };
-export const PASSWORD_RESET_REQUEST_THROTTLE = { default: throttle.passwordResetRequest };
-export const PASSWORD_RESET_COMPLETE_THROTTLE = { default: throttle.passwordResetComplete };
+export const EMAIL_VERIFICATION_THROTTLE = {
+  default: throttle.emailVerification,
+};
+export const VERIFICATION_COMPLETE_THROTTLE = {
+  default: throttle.verificationComplete,
+};
+export const PASSWORD_RESET_REQUEST_THROTTLE = {
+  default: throttle.passwordResetRequest,
+};
+export const PASSWORD_RESET_COMPLETE_THROTTLE = {
+  default: throttle.passwordResetComplete,
+};
 export const OIDC_THROTTLE = { default: throttle.oidc };
 export const CONSENT_THROTTLE = { default: throttle.consent };

@@ -12,8 +12,14 @@ import type { CreatePostDto } from '../dto/create-post.dto.js';
 import type { PostEntity } from '../entities/post.entity.js';
 import { PhotoProcessingStatus } from '../enums/photo-status.enum.js';
 import { PostStatus } from '../enums/post-status.enum.js';
+import {
+  InvalidPostStatusTransitionError,
+  PostAccessForbiddenError,
+  PostNotFoundError,
+} from '../errors/post-service-error.js';
 import { PhotoRepository } from '../repositories/photo.repository.js';
 import {
+  type PostFeedItem,
   type PostPage,
   PostRepository,
 } from '../repositories/post.repository.js';
@@ -23,6 +29,15 @@ import { PhotoService } from './photo.service.js';
 // cursor fields a client may paginate posts by
 const POST_SORTABLE_FIELDS = ['createdAt'] as const;
 
+// status changes an author may make; Unpublished means deleted, and
+// Draft -> Published belongs to the gallery pipeline
+const AUTHOR_STATUS_TRANSITIONS: Record<PostStatus, readonly PostStatus[]> = {
+  [PostStatus.Draft]: [PostStatus.Unpublished],
+  [PostStatus.Published]: [PostStatus.Unpublished],
+  [PostStatus.Unpublished]: [PostStatus.Published],
+};
+
+// TODO: Refactoring: move image processing logic from both PostService and PhotoService to a separate service
 @Injectable()
 export class PostService {
   private readonly logger = new Logger(PostService.name);
@@ -52,8 +67,12 @@ export class PostService {
                 this.postRepository,
               );
 
-              post.status = PostStatus.Published;
-              await postRepository.save(post);
+              // only a post still in Draft: the author may have discarded
+              // the draft, setting Unpublished, while the gallery was processing
+              await postRepository.update(
+                { id: post.id, status: PostStatus.Draft },
+                { status: PostStatus.Published },
+              );
             }),
           ),
         ),
@@ -132,6 +151,113 @@ export class PostService {
     }
   }
 
+  /**
+   * Moves the author's own post to `status`. Unpublished is how a post is
+   * deleted; restoring it to Published needs all its photos Ready.
+   */
+  async changePostStatus(
+    user: UserEntity,
+    postId: PostEntity['id'],
+    status: PostStatus,
+    em?: EntityManager,
+  ): Promise<PostEntity> {
+    return await this.tx.withManager(em, async (entityManager) => {
+      const postRepository = entityManager.withRepository(this.postRepository);
+
+      const post = await postRepository.findOne({
+        relations: { user: true, photos: true },
+        where: { id: postId },
+      });
+
+      if (!post) {
+        throw new PostNotFoundError();
+      }
+
+      if (post.user.id !== user.id) {
+        throw new PostAccessForbiddenError(
+          'Only the author can change the status of a post',
+        );
+      }
+
+      const from = post.status;
+
+      if (!AUTHOR_STATUS_TRANSITIONS[from].includes(status)) {
+        throw new InvalidPostStatusTransitionError(from, status);
+      }
+
+      if (
+        status === PostStatus.Published &&
+        post.photos.some(
+          (photo) => photo.status !== PhotoProcessingStatus.Ready,
+        )
+      ) {
+        throw new InvalidPostStatusTransitionError(
+          from,
+          status,
+          'Cannot publish a post whose photos are not all processed',
+        );
+      }
+
+      // conditional on the status read above, so a concurrent change (e.g.
+      // the gallery pipeline publishing a draft) can't be overwritten
+      const { affected } = await postRepository.update(
+        { id: post.id, status: from },
+        { status },
+      );
+
+      if (!affected) {
+        throw new InvalidPostStatusTransitionError(
+          from,
+          status,
+          'The post status changed concurrently',
+        );
+      }
+
+      post.status = status;
+
+      return post;
+    });
+  }
+
+  /**
+   * One post with its photos and author; `viewer` fills `likedByMe`.
+   * Only the author may get a post that isn't Published.
+   */
+  async getPost(
+    postId: PostEntity['id'],
+    viewer?: UserEntity,
+    em?: EntityManager,
+  ): Promise<PostFeedItem> {
+    return await this.tx.withManager(em, async (entityManager) => {
+      const post = await entityManager
+        .withRepository(this.postRepository)
+        .findOne({
+          relations: { user: true, photos: true },
+          where: { id: postId },
+        });
+
+      if (!post) {
+        throw new PostNotFoundError();
+      }
+
+      if (post.status !== PostStatus.Published && viewer?.id !== post.user.id) {
+        throw new PostAccessForbiddenError(
+          'Only the author can see an unpublished post',
+        );
+      }
+
+      const likedIds = viewer
+        ? await this.likeService.getLikedPostIds(
+            viewer,
+            [post.id],
+            entityManager,
+          )
+        : new Set<number>();
+
+      return Object.assign(post, { likedByMe: likedIds.has(post.id) });
+    });
+  }
+
   /** `viewer` is the requesting user, used to fill `likedByMe`. */
   async getPaginatedPublishedPostsWithUser(
     cursor?: KeySetCursor<PostEntity>,
@@ -139,11 +265,58 @@ export class PostService {
     viewer?: UserEntity,
     em?: EntityManager,
   ): Promise<PostPage> {
+    return await this.getPaginatedPosts(
+      { status: PostStatus.Published },
+      cursor,
+      options,
+      viewer,
+      em,
+    );
+  }
+
+  /**
+   * Posts of the user `authorId` in `status`; `viewer` fills `likedByMe`.
+   * Only the author may list posts that aren't Published.
+   */
+  async getPaginatedPostsByAuthor(
+    authorId: UserEntity['id'],
+    status: PostStatus = PostStatus.Published,
+    cursor?: KeySetCursor<PostEntity>,
+    options: PaginateOptions = {},
+    viewer?: UserEntity,
+    em?: EntityManager,
+  ): Promise<PostPage> {
+    if (status !== PostStatus.Published && viewer?.id !== authorId) {
+      throw new PostAccessForbiddenError();
+    }
+
+    return await this.getPaginatedPosts(
+      { status, authorId },
+      cursor,
+      options,
+      viewer,
+      em,
+    );
+  }
+
+  private async getPaginatedPosts(
+    filter: { status: PostStatus; authorId?: UserEntity['id'] },
+    cursor?: KeySetCursor<PostEntity>,
+    options: PaginateOptions = {},
+    viewer?: UserEntity,
+    em?: EntityManager,
+  ): Promise<PostPage> {
+    const { status, authorId } = filter;
+
     return await this.tx.withManager(em, async (entityManager) => {
       const postRepository = entityManager.withRepository(this.postRepository);
       const query = postRepository
         .createQueryBuilder('post')
-        .where('post.status = :status', { status: PostStatus.Published });
+        .where('post.status = :status', { status });
+
+      if (authorId !== undefined) {
+        query.andWhere('post.user = :authorId', { authorId });
+      }
 
       const page = await paginate(query, cursor, {
         ...options,
@@ -168,12 +341,18 @@ export class PostService {
       // preserve the same order as ids
       const byId = new Map<number, PostEntity>(posts.map((p) => [p.id, p]));
       const likedIds = viewer
-        ? await this.likeService.getLikedPostIds(viewer, page.ids, entityManager)
+        ? await this.likeService.getLikedPostIds(
+            viewer,
+            page.ids,
+            entityManager,
+          )
         : new Set<number>();
       const items = page.ids
         .map((id) => byId.get(id))
         .filter((post): post is PostEntity => post !== undefined)
-        .map((post) => Object.assign(post, { likedByMe: likedIds.has(post.id) }));
+        .map((post) =>
+          Object.assign(post, { likedByMe: likedIds.has(post.id) }),
+        );
 
       return {
         items,

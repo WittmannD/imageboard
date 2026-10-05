@@ -1,6 +1,4 @@
-export function prototypeToObject(
-  prototype: object,
-): Record<string, unknown> {
+export function prototypeToObject(prototype: object): Record<string, unknown> {
   const methods: Record<string, unknown> = {};
 
   for (const key of Object.getOwnPropertyNames(prototype)) {

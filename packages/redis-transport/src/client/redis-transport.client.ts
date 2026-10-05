@@ -115,9 +115,7 @@ export class RedisTransportClient extends ClientProxy {
 
     try {
       const packet = this.assignPacketId(partialPacket);
-      const pattern = this.normalizePattern(
-        partialPacket.pattern as MsPattern,
-      );
+      const pattern = this.normalizePattern(partialPacket.pattern as MsPattern);
       const serializedPacket = this.serializer.serialize(packet);
       const responseChannel = this.getReplyPattern(pattern);
 

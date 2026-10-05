@@ -28,8 +28,7 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   server_error: 'Something went wrong on our end. Please try again shortly.',
 };
 
-const DEFAULT_MESSAGE =
-  "We couldn't complete that request. Please try again.";
+const DEFAULT_MESSAGE = "We couldn't complete that request. Please try again.";
 
 export const loader: LoaderFunction = async ({ request, url }) => {
   const oidc = await getOidcSessionFromCookie(request);
@@ -45,9 +44,15 @@ export const loader: LoaderFunction = async ({ request, url }) => {
   return data<AuthErrorPageLoaderData>({ error }, { headers });
 };
 
-function AuthErrorPage({ loaderData }: { loaderData: AuthErrorPageLoaderData }) {
+function AuthErrorPage({
+  loaderData,
+}: {
+  loaderData: AuthErrorPageLoaderData;
+}) {
   const { error } = loaderData;
-  const message = error ? (AUTH_ERROR_MESSAGES[error.error] ?? DEFAULT_MESSAGE) : DEFAULT_MESSAGE;
+  const message = error
+    ? (AUTH_ERROR_MESSAGES[error.error] ?? DEFAULT_MESSAGE)
+    : DEFAULT_MESSAGE;
 
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">

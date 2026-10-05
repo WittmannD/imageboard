@@ -14,7 +14,7 @@ export class TransformConfigContext {
   private constructor(
     public readonly file: ParsedKey,
     public readonly metadata: Metadata,
-    public readonly variables: Record<string, unknown>
+    public readonly variables: Record<string, unknown>,
   ) {
     this.uuid = randomUUID();
   }
@@ -23,7 +23,7 @@ export class TransformConfigContext {
     return new TransformConfigContext(
       parse(params.key),
       params.metadata,
-      params.variables ?? {}
+      params.variables ?? {},
     );
   }
 }

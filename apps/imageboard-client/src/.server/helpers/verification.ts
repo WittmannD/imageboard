@@ -10,14 +10,11 @@ interface VerificationCompleteResult {
 }
 
 async function requestEmailVerification(userId: string) {
-  const response = await fetch(
-    new URL('/verification', config.urls.auth),
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId }),
-    },
-  );
+  const response = await fetch(new URL('/verification', config.urls.auth), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId }),
+  });
 
   if (!response.ok) {
     throw new Error('Failed to request email verification');

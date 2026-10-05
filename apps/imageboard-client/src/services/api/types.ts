@@ -1,5 +1,5 @@
 export type PhotoStatus = 'Pending' | 'Processing' | 'Ready' | 'Failed';
-export type PostStatus = 'Draft' | 'Published';
+export type PostStatus = 'Draft' | 'Published' | 'Unpublished';
 
 export interface LayoutTile {
   key: string;
@@ -80,17 +80,33 @@ export interface LikeStatusDto {
   likedByMe: boolean;
 }
 
-export interface GetPostsQuery {
+export interface PageQuery {
   cursor?: string;
   order?: 'ASC' | 'DESC';
   limit?: number;
 }
+
+export type GetPostsQuery = Omit<PageQuery, 'cursor'>;
 
 export interface GetPostsResponse {
   nextCursor: string | null;
   hasNextPage: boolean;
   items: PostDto[];
 }
+
+// a user's feed; statuses other than Published are served only to the author
+export interface GetUserPostsQuery extends Omit<PageQuery, 'cursor'> {
+  userId: number;
+  status?: PostStatus;
+}
+
+// Unpublished deletes the post, Published restores it
+export interface UpdatePostStatusBody {
+  id: number;
+  status: Extract<PostStatus, 'Published' | 'Unpublished'>;
+}
+
+export type PostWithAuthorDto = Omit<PostDto, 'likedByMe'>;
 
 export interface CreatePostBody {
   caption?: string;

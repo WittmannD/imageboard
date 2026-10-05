@@ -1,21 +1,25 @@
-import { Buffer } from 'node:buffer';
 import { randomUUID } from 'node:crypto';
-import { Readable } from 'node:stream';
-import { text } from 'node:stream/consumers';
 import { type AnySchema, type ValidateFunction } from 'ajv';
 import { Ajv2020 as Ajv } from 'ajv/dist/2020.js';
 import yaml, { JSON_SCHEMA } from 'js-yaml';
 import Mustache from 'mustache';
 
 import {
-  createSourceStream,
   isDev,
   loadSchema,
-  resolveSchemaPathFromYaml,
+  readSource,
+  resolveSchemaUrl,
+  resolveSchemaUrlFromYaml,
+  type YamlSource,
 } from './helpers.js';
 
 export interface YamlTemplateOptions {
-  schema?: AnySchema;
+  /**
+   * Schema used instead of the `$schema` property of the YAML file.
+   * Either a schema object, a http(s)/file URL, or a path to a JSON/YAML
+   * schema file (relative paths are resolved against the cwd).
+   */
+  overrideSchema?: AnySchema | string | URL;
 }
 
 interface WithSchema {
@@ -36,11 +40,11 @@ export class YamlTemplate<T extends AnyObject> {
   ) {}
 
   static async create<T extends AnyObject>(
-    input: string | Readable | Buffer,
+    input: YamlSource,
     options: YamlTemplateOptions = {},
   ): Promise<YamlTemplate<T>> {
-    const source = createSourceStream(input);
-    const { schema } = options;
+    const { overrideSchema } = options;
+    const { raw, baseDir } = await readSource(input);
     const ajv = new Ajv({
       coerceTypes: true,
       schemaId: '$id',
@@ -48,24 +52,23 @@ export class YamlTemplate<T extends AnyObject> {
     });
     const uuid = randomUUID();
 
-    if (schema) {
-      ajv.addSchema(schema, uuid);
-    }
-
-    if (!schema) {
-      const { url } = await resolveSchemaPathFromYaml(input);
-      let jsonSchema;
+    let schema: AnySchema;
+    if (overrideSchema !== undefined && !isSchemaRef(overrideSchema)) {
+      schema = overrideSchema;
+    } else {
+      const url =
+        overrideSchema !== undefined
+          ? resolveSchemaUrl(overrideSchema)
+          : resolveSchemaUrlFromYaml(raw, baseDir);
 
       try {
-        jsonSchema = await loadSchema(url);
+        schema = await loadSchema(url);
       } catch (error) {
-        throw new Error('Failed to load schema', { cause: error });
+        throw new Error(`Failed to load schema: ${url}`, { cause: error });
       }
-
-      ajv.addSchema(jsonSchema, uuid);
     }
 
-    const raw = await text(source);
+    ajv.addSchema(schema, uuid);
     const validate = ajv.getSchema<T>(uuid);
 
     if (!validate) {
@@ -79,26 +82,42 @@ export class YamlTemplate<T extends AnyObject> {
    * Interpolates the yaml config with the given context.
    */
   public resolve(context: AnyObject): T {
-    const resolved = Mustache.render(this.raw, context, {}, this.tags);
+    const resolved = Mustache.render(
+      this.raw,
+      context,
+      {},
+      // values are interpolated into YAML, not HTML
+      { tags: this.tags, escape: String },
+    );
     const parsed = yaml.load(resolved, {
       schema: JSON_SCHEMA,
-    }) as AnyObjectWithSchema;
+    }) as AnyObjectWithSchema | null;
 
     // do not validate $schema property and exclude it from the result object
-    delete parsed.$schema;
+    if (isObject(parsed)) {
+      delete parsed.$schema;
+    }
+
     const valid = this.validate(parsed);
 
     if (!valid) {
+      const message = this.ajv.errorsText(this.validate.errors);
+
       if (isDev()) {
-        console.error(
-          'YamlTemplate validation failed:',
-          this.ajv.errorsText(this.validate.errors),
-        );
+        console.error('YamlTemplate validation failed:', message);
       }
 
-      throw new Error(this.ajv.errorsText(this.validate.errors));
+      throw new Error(message);
     }
 
     return parsed;
   }
+}
+
+function isSchemaRef(value: AnySchema | string | URL): value is string | URL {
+  return typeof value === 'string' || value instanceof URL;
+}
+
+function isObject(value: unknown): value is AnyObject {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

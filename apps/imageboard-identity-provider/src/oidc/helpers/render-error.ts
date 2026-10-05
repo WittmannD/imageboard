@@ -7,4 +7,4 @@ export default (): OIDCDefinedConfig<'renderError'> => (context, out) => {
   context.response.redirect(
     buildErrorRedirect(getConfig().urls.interactions, out),
   );
-}
+};

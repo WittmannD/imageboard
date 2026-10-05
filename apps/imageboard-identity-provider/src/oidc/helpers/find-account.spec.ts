@@ -31,7 +31,9 @@ describe('findAccount password-change watermark', () => {
   it('honors everything when the password was never changed', async () => {
     const { findAccount, makeCtx } = setup(user(null));
 
-    const account = await findAccount(makeCtx(1).ctx, 'u1', { iat: 1 } as never);
+    const account = await findAccount(makeCtx(1).ctx, 'u1', {
+      iat: 1,
+    } as never);
 
     expect(account?.accountId).toBe('u1');
   });
@@ -39,11 +41,9 @@ describe('findAccount password-change watermark', () => {
   it('rejects a token issued before the change', async () => {
     const { findAccount, makeCtx } = setup(user(CHANGED_AT));
 
-    const account = await findAccount(
-      makeCtx().ctx,
-      'u1',
-      { iat: CHANGED_SECONDS - 10 } as never,
-    );
+    const account = await findAccount(makeCtx().ctx, 'u1', {
+      iat: CHANGED_SECONDS - 10,
+    } as never);
 
     expect(account).toBeUndefined();
   });
@@ -51,11 +51,9 @@ describe('findAccount password-change watermark', () => {
   it('accepts a token issued after the change', async () => {
     const { findAccount, makeCtx } = setup(user(CHANGED_AT));
 
-    const account = await findAccount(
-      makeCtx().ctx,
-      'u1',
-      { iat: CHANGED_SECONDS + 1 } as never,
-    );
+    const account = await findAccount(makeCtx().ctx, 'u1', {
+      iat: CHANGED_SECONDS + 1,
+    } as never);
 
     expect(account?.accountId).toBe('u1');
   });
@@ -63,11 +61,9 @@ describe('findAccount password-change watermark', () => {
   it('accepts a login made in the same second as the change', async () => {
     const { findAccount, makeCtx } = setup(user(CHANGED_AT));
 
-    const account = await findAccount(
-      makeCtx().ctx,
-      'u1',
-      { iat: CHANGED_SECONDS } as never,
-    );
+    const account = await findAccount(makeCtx().ctx, 'u1', {
+      iat: CHANGED_SECONDS,
+    } as never);
 
     expect(account?.accountId).toBe('u1');
   });

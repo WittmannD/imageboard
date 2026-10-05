@@ -5,9 +5,7 @@ import { DataSource, Repository } from 'typeorm';
 import { prototypeToObject } from '../common/utils/object.js';
 import { UserEntity } from './user.entity.js';
 
-export class UserRepository extends Repository<UserEntity> {
-
-}
+export class UserRepository extends Repository<UserEntity> {}
 
 export const UserRepositoryProvider = {
   provide: UserRepository,

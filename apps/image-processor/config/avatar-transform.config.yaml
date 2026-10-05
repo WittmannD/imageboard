@@ -10,7 +10,7 @@ transform:
         quality: 85
     - operation: save
       args:
-        key: ${{file.name}}_avatar.jpeg
+        key: ${{file.name}}/avatar.jpeg
         contentType: image/jpeg
         metadata:
           variant: avatar
@@ -25,7 +25,7 @@ transform:
         quality: 85
     - operation: save
       args:
-        key: ${{file.name}}_icon_large.jpeg
+        key: ${{file.name}}/icon_large.jpeg
         contentType: image/jpeg
         metadata:
           variant: icon_large
@@ -40,7 +40,7 @@ transform:
         quality: 85
     - operation: save
       args:
-        key: ${{file.name}}_icon_medium.jpeg
+        key: ${{file.name}}/icon_medium.jpeg
         contentType: image/jpeg
         metadata:
           variant: icon_medium
@@ -55,7 +55,7 @@ transform:
         quality: 85
     - operation: save
       args:
-        key: ${{file.name}}_icon_small.jpeg
+        key: ${{file.name}}/icon_small.jpeg
         contentType: image/jpeg
         metadata:
           variant: icon_small

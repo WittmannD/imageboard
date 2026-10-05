@@ -10,7 +10,8 @@ import {
 import { BaseEntity } from '../../common/entity/base.entity.js';
 import { UserEntity } from '../../user/entities/user.entity.js';
 
-export const ISSUER_SUBJECT_UNIQUE_CONSTRAINT = 'issuer_subject_unique_constraint'
+export const ISSUER_SUBJECT_UNIQUE_CONSTRAINT =
+  'issuer_subject_unique_constraint';
 
 @Unique(ISSUER_SUBJECT_UNIQUE_CONSTRAINT, ['issuer', 'subject'])
 @Entity('federated_credentials')

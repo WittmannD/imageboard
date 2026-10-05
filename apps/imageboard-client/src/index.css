@@ -1,68 +1,68 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
-@import "@fontsource-variable/roboto";
-@import "@fontsource-variable/manrope";
-@import "@hdotu1/design-tokens/theme.css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+@import '@fontsource-variable/roboto';
+@import '@fontsource-variable/manrope';
+@import '@hdotu1/design-tokens/theme.css';
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-    --header-height: 3rem;
+  --header-height: 3rem;
 
-    --animate-like-pop: like-pop 450ms cubic-bezier(.34, 1.56, .64, 1);
-    --animate-like-ping: like-ping 500ms ease-out;
+  --animate-like-pop: like-pop 450ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  --animate-like-ping: like-ping 500ms ease-out;
 
-    @keyframes like-pop {
-        0% {
-            transform: scale(0.5) rotate(-10deg);
-        }
-
-        35% {
-            transform: scale(1.35) rotate(5deg);
-        }
-
-        55% {
-            transform: scale(0.85) rotate(-2deg);
-        }
-
-        75% {
-            transform: scale(1.1) rotate(1deg);
-        }
-
-        100% {
-            transform: scale(1) rotate(0);
-        }
+  @keyframes like-pop {
+    0% {
+      transform: scale(0.5) rotate(-10deg);
     }
 
-    @keyframes like-ping {
-        0% {
-            opacity: 0.9;
-            transform: scale(0.8);
-        }
-
-        45% {
-            opacity: 0.45;
-            transform: scale(1.4);
-        }
-
-        100% {
-            opacity: 0;
-            transform: scale(2.1);
-        }
+    35% {
+      transform: scale(1.35) rotate(5deg);
     }
+
+    55% {
+      transform: scale(0.85) rotate(-2deg);
+    }
+
+    75% {
+      transform: scale(1.1) rotate(1deg);
+    }
+
+    100% {
+      transform: scale(1) rotate(0);
+    }
+  }
+
+  @keyframes like-ping {
+    0% {
+      opacity: 0.9;
+      transform: scale(0.8);
+    }
+
+    45% {
+      opacity: 0.45;
+      transform: scale(1.4);
+    }
+
+    100% {
+      opacity: 0;
+      transform: scale(2.1);
+    }
+  }
 }
 
 @layer base {
-    * {
-        @apply border-border outline-ring/50;
-    }
+  * {
+    @apply border-border outline-ring/50;
+  }
 
-    body {
-        @apply bg-background text-foreground;
-    }
+  body {
+    @apply bg-background text-foreground;
+  }
 
-    html {
-        @apply font-sans;
-    }
+  html {
+    @apply font-sans;
+  }
 }

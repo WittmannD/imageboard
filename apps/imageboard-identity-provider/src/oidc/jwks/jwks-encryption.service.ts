@@ -18,7 +18,9 @@ export class JwksEncryptionService {
   private readonly masterKey: Buffer;
 
   constructor(configService: ConfigService) {
-    const encoded = configService.getOrThrow<string>('secrets.JWKS_ENCRYPTION_KEY');
+    const encoded = configService.getOrThrow<string>(
+      'secrets.JWKS_ENCRYPTION_KEY',
+    );
     const key = Buffer.from(encoded, 'base64');
 
     if (key.length !== KEY_LENGTH) {
@@ -51,7 +53,10 @@ export class JwksEncryptionService {
     const decipher = createDecipheriv(ALGORITHM, this.masterKey, iv);
     decipher.setAuthTag(authTag);
 
-    const plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+    const plaintext = Buffer.concat([
+      decipher.update(ciphertext),
+      decipher.final(),
+    ]);
 
     return JSON.parse(plaintext.toString('utf8')) as JWK;
   }

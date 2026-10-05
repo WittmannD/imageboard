@@ -1,4 +1,5 @@
 import { ServiceError } from '../../common/errors/service-error.js';
+import type { PostStatus } from '../enums/post-status.enum.js';
 
 export class PostServiceError extends ServiceError {}
 
@@ -6,6 +7,20 @@ export class PostServiceError extends ServiceError {}
 export class PostNotFoundError extends PostServiceError {
   constructor(message = 'Post not found') {
     super(message);
+  }
+}
+
+/** A user other than the author asked for the author's non-published posts. */
+export class PostAccessForbiddenError extends PostServiceError {
+  constructor(message = 'Only the author can see their unpublished posts') {
+    super(message);
+  }
+}
+
+/** The author asked for a status change the post can't make. */
+export class InvalidPostStatusTransitionError extends PostServiceError {
+  constructor(from: PostStatus, to: PostStatus, reason?: string) {
+    super(reason ?? `Cannot change post status from ${from} to ${to}`);
   }
 }
 

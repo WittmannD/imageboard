@@ -8,18 +8,21 @@ import {
   type StorageDriver,
 } from '@hdotu1/media-storage/drivers';
 
-export const TRANSFORM_STORAGE = 'TRANSFORM_STORAGE';
+export const MEDIA_STORAGE = 'MEDIA_STORAGE';
 
 export const TransformStorageProvider: Provider<StorageDriver> = {
-  provide: TRANSFORM_STORAGE,
+  provide: MEDIA_STORAGE,
   useFactory: (configService: ConfigService) => {
-    const { bucket, ...s3 } = configService.getOrThrow<
-      AppConfig['imageProcessor']['s3']
-    >('imageProcessor.s3');
+    const { bucket, ...s3 } =
+      configService.getOrThrow<AppConfig['imageProcessor']['s3']>(
+        'imageProcessor.s3',
+      );
     const config: S3ClientConfig = {
       ...s3,
       credentials: {
-        accessKeyId: configService.getOrThrow<string>('secrets.S3_ACCESS_KEY_ID'),
+        accessKeyId: configService.getOrThrow<string>(
+          'secrets.S3_ACCESS_KEY_ID',
+        ),
         secretAccessKey: configService.getOrThrow<string>(
           'secrets.S3_SECRET_ACCESS_KEY',
         ),

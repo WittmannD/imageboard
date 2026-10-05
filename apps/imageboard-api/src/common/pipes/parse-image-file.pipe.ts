@@ -26,7 +26,10 @@ function toImageFileException(error: string) {
   );
 }
 
-export const ParseImageFilePipe = (allowedFormats: string[], sizeLimit: number) =>
+export const ParseImageFilePipe = (
+  allowedFormats: string[],
+  sizeLimit: number,
+) =>
   new ParseFilePipeBuilder()
     .addFileTypeValidator({
       fallbackToMimetype: true,

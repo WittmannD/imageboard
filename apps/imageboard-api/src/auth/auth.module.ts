@@ -10,14 +10,10 @@ import { AuthService } from './auth.service.js';
   imports: [
     forwardRef(() => UserModule),
     TransactionModule,
-    FederatedCredentialsModule
+    FederatedCredentialsModule,
   ],
   controllers: [],
-  providers: [
-    AuthService
-  ],
-  exports: [
-    AuthService
-  ]
+  providers: [AuthService],
+  exports: [AuthService],
 })
 export class AuthModule {}

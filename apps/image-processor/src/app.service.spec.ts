@@ -12,15 +12,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LocalStorageDriver } from '@hdotu1/media-storage/drivers';
 import { YamlTemplate } from '@hdotu1/yaml-template';
 
-import { AppService } from './app.service.js';
-import {
-  DEFAULT_IMAGE_TRANSFORM_CONFIG,
-  IMAGE_TRANSFORM_CONFIG_LOADER,
-  type ImageTransformConfig,
-} from './providers/image-transform-config.js';
+import { AppService, DEFAULT_IMAGE_TRANSFORM_CONFIG } from './app.service.js';
 import { SOURCE_STORAGE } from './providers/storage/source-storage.provider.js';
-import { TRANSFORM_STORAGE } from './providers/storage/transform-storage.provider.js';
+import { MEDIA_STORAGE } from './providers/storage/transform-storage.provider.js';
 import type { OperationNestedConfigs } from './transform/operation/operation-map.js';
+import {
+  type ImageTransformConfig,
+  TransformConfigService,
+} from './transform/transform-config.service.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const schemaPath = resolve(
@@ -43,8 +42,8 @@ describe('AppService', () => {
   let service: AppService;
   let root: string;
   let configYaml: string;
-  let mockImageTransformConfigLoader: {
-    get: ReturnType<typeof vi.fn>;
+  let mockTransformConfigService: {
+    getOrThrow: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(async () => {
@@ -54,8 +53,8 @@ describe('AppService', () => {
     root = await fsPromises.mkdtemp(path.join(sourceRoot, 'app-service-'));
     configYaml = DEFAULT_CONFIG_YAML;
 
-    mockImageTransformConfigLoader = {
-      get: vi.fn((): Promise<YamlTemplate<ImageTransformConfig>> =>
+    mockTransformConfigService = {
+      getOrThrow: vi.fn((): Promise<YamlTemplate<ImageTransformConfig>> =>
         YamlTemplate.create<ImageTransformConfig>(
           Buffer.from(configYaml, 'utf-8'),
         ),
@@ -65,15 +64,15 @@ describe('AppService', () => {
     const moduleRef = await Test.createTestingModule({
       providers: [
         {
-          provide: IMAGE_TRANSFORM_CONFIG_LOADER,
-          useValue: mockImageTransformConfigLoader,
+          provide: TransformConfigService,
+          useValue: mockTransformConfigService,
         },
         {
           provide: SOURCE_STORAGE,
           useValue: new LocalStorageDriver({ root: sourceRoot }),
         },
         {
-          provide: TRANSFORM_STORAGE,
+          provide: MEDIA_STORAGE,
           useValue: new LocalStorageDriver({ root }),
         },
         AppService,
@@ -292,7 +291,7 @@ describe('AppService', () => {
     it('loads the default config when no config key is given', async () => {
       await firstValueFrom(service.processFromConfig('original.jpeg'));
 
-      expect(mockImageTransformConfigLoader.get).toHaveBeenCalledWith(
+      expect(mockTransformConfigService.getOrThrow).toHaveBeenCalledWith(
         DEFAULT_IMAGE_TRANSFORM_CONFIG,
       );
     });
@@ -306,7 +305,7 @@ describe('AppService', () => {
         ),
       );
 
-      expect(mockImageTransformConfigLoader.get).toHaveBeenCalledWith(
+      expect(mockTransformConfigService.getOrThrow).toHaveBeenCalledWith(
         'avatar-transform.config.yaml',
       );
     });

@@ -6,6 +6,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
   Query,
@@ -38,9 +39,12 @@ import { CreatePostDto } from './dto/create-post.dto.js';
 import { LikeStatusDto } from './dto/like-status.dto.js';
 import { PostDraftDto } from './dto/post-draft.dto.js';
 import { PostFeedItemDto } from './dto/post-feed-item.dto.js';
+import { PostWithAuthorDto } from './dto/post-with-author.dto.js';
+import { UpdatePostStatusDto } from './dto/update-post-status.dto.js';
+import { UserPostsQueryDto } from './dto/user-posts-query.dto.js';
 import type { PostEntity } from './entities/post.entity.js';
 import { PostErrorFilter } from './post-error.filter.js';
-import type { PostPage } from './repositories/post.repository.js';
+import type { PostFeedItem, PostPage } from './repositories/post.repository.js';
 import { LikeService } from './services/like.service.js';
 import { PostService } from './services/post.service.js';
 
@@ -60,7 +64,9 @@ export class PostController {
   @SerializeOptions({ type: PostDraftDto })
   public async create(
     @User() user: UserEntity,
-    @UploadedFiles(ParseImageFilePipe(ALLOWED_POST_IMAGE_FORMATS, POST_IMAGE_SIZE_LIMIT))
+    @UploadedFiles(
+      ParseImageFilePipe(ALLOWED_POST_IMAGE_FORMATS, POST_IMAGE_SIZE_LIMIT),
+    )
     images: FileUpload[],
     @Body() body: CreatePostDto,
   ): Promise<PostDraftDto> {
@@ -90,6 +96,59 @@ export class PostController {
       },
       viewer,
     );
+  }
+
+  // One user's posts, Published by default and public; any other ?status is
+  // served only to the author. A signed-in viewer also gets likedByMe
+  @UseGuards(OptionalAuthGuard)
+  @SkipEmailVerification()
+  @Get('user/:userId')
+  @SerializeOptions({ type: PageDto<PostFeedItemDto>(PostFeedItemDto) })
+  public async getPaginatedByUser(
+    @User() viewer: UserEntity | undefined,
+    @Param('userId', ParseIntPipe) userId: number,
+    @Query(new ValidationPipe({ transform: true }))
+    queryParams: UserPostsQueryDto,
+  ): Promise<PostPage> {
+    return await this.postService.getPaginatedPostsByAuthor(
+      userId,
+      queryParams.status,
+      queryParams.cursor,
+      {
+        limit: queryParams.limit,
+        order: queryParams.order,
+      },
+      viewer,
+    );
+  }
+
+  // A Published post is public; any other status is served only to the
+  // author. A signed-in viewer also gets likedByMe
+  @UseGuards(OptionalAuthGuard)
+  @SkipEmailVerification()
+  @Get(':id')
+  @SerializeOptions({ type: PostFeedItemDto })
+  public async getOne(
+    @User() viewer: UserEntity | undefined,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<PostFeedItem> {
+    return await this.postService.getPost(id, viewer);
+  }
+
+  // The author deletes (Unpublished) or restores (Published) their own post
+  @UseGuards(AuthGuard)
+  @Patch(':id/status')
+  @SerializeOptions({ type: PostWithAuthorDto })
+  public async changeStatus(
+    @User() user: UserEntity,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdatePostStatusDto,
+  ): Promise<PostWithAuthorDto> {
+    return (await this.postService.changePostStatus(
+      user,
+      id,
+      body.status,
+    )) as PostWithAuthorDto;
   }
 
   @UseGuards(AuthGuard)

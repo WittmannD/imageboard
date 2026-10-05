@@ -5,7 +5,9 @@ interface LoginPageLoaderData {
   uid: string;
 }
 
-export const loader: LoaderFunction = ({ request }): LoginPageLoaderData | Response => {
+export const loader: LoaderFunction = ({
+  request,
+}): LoginPageLoaderData | Response => {
   const uid = new URL(request.url).searchParams.get('uid');
 
   if (!uid) {
