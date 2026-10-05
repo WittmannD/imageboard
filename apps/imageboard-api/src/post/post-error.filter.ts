@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
@@ -9,6 +10,7 @@ import { ErrorCode } from '../common/errors/error-code.js';
 import { httpError, mapping } from '../common/errors/error-mapping.js';
 import { ServiceErrorFilter } from '../common/filters/service-error.filter.js';
 import {
+  InvalidPostStatusTransitionError,
   PostAccessForbiddenError,
   PostNotFoundError,
 } from './errors/post-service-error.js';
@@ -25,6 +27,13 @@ export class PostErrorFilter extends ServiceErrorFilter {
     ),
     mapping(PostAccessForbiddenError, (e) =>
       httpError(ForbiddenException, ErrorCode.Forbidden, e.message),
+    ),
+    mapping(InvalidPostStatusTransitionError, (e) =>
+      httpError(
+        ConflictException,
+        ErrorCode.InvalidStatusTransition,
+        e.message,
+      ),
     ),
   ];
 }

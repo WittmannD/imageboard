@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   ParseIntPipe,
   Post,
   Put,
@@ -38,6 +39,8 @@ import { CreatePostDto } from './dto/create-post.dto.js';
 import { LikeStatusDto } from './dto/like-status.dto.js';
 import { PostDraftDto } from './dto/post-draft.dto.js';
 import { PostFeedItemDto } from './dto/post-feed-item.dto.js';
+import { PostWithAuthorDto } from './dto/post-with-author.dto.js';
+import { UpdatePostStatusDto } from './dto/update-post-status.dto.js';
 import { UserPostsQueryDto } from './dto/user-posts-query.dto.js';
 import type { PostEntity } from './entities/post.entity.js';
 import { PostErrorFilter } from './post-error.filter.js';
@@ -117,6 +120,22 @@ export class PostController {
       },
       viewer,
     );
+  }
+
+  // The author deletes (Unpublished) or restores (Published) their own post
+  @UseGuards(AuthGuard)
+  @Patch(':id/status')
+  @SerializeOptions({ type: PostWithAuthorDto })
+  public async changeStatus(
+    @User() user: UserEntity,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdatePostStatusDto,
+  ): Promise<PostWithAuthorDto> {
+    return (await this.postService.changePostStatus(
+      user,
+      id,
+      body.status,
+    )) as PostWithAuthorDto;
   }
 
   @UseGuards(AuthGuard)

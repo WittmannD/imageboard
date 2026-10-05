@@ -12,7 +12,11 @@ import type { CreatePostDto } from '../dto/create-post.dto.js';
 import type { PostEntity } from '../entities/post.entity.js';
 import { PhotoProcessingStatus } from '../enums/photo-status.enum.js';
 import { PostStatus } from '../enums/post-status.enum.js';
-import { PostAccessForbiddenError } from '../errors/post-service-error.js';
+import {
+  InvalidPostStatusTransitionError,
+  PostAccessForbiddenError,
+  PostNotFoundError,
+} from '../errors/post-service-error.js';
 import { PhotoRepository } from '../repositories/photo.repository.js';
 import {
   type PostPage,
@@ -23,6 +27,14 @@ import { PhotoService } from './photo.service.js';
 
 // cursor fields a client may paginate posts by
 const POST_SORTABLE_FIELDS = ['createdAt'] as const;
+
+// status changes an author may make; Unpublished means deleted, and
+// Draft -> Published belongs to the gallery pipeline
+const AUTHOR_STATUS_TRANSITIONS: Record<PostStatus, readonly PostStatus[]> = {
+  [PostStatus.Draft]: [PostStatus.Unpublished],
+  [PostStatus.Published]: [PostStatus.Unpublished],
+  [PostStatus.Unpublished]: [PostStatus.Published],
+};
 
 @Injectable()
 export class PostService {
@@ -53,8 +65,12 @@ export class PostService {
                 this.postRepository,
               );
 
-              post.status = PostStatus.Published;
-              await postRepository.save(post);
+              // only a post still in Draft: the author may have discarded
+              // the draft, setting Unpublished, while the gallery was processing
+              await postRepository.update(
+                { id: post.id, status: PostStatus.Draft },
+                { status: PostStatus.Published },
+              );
             }),
           ),
         ),
@@ -131,6 +147,74 @@ export class PostService {
         error instanceof Error ? error.stack : String(error),
       );
     }
+  }
+
+  /**
+   * Moves the author's own post to `status`. Unpublished is how a post is
+   * deleted; restoring it to Published needs all its photos Ready.
+   */
+  async changePostStatus(
+    user: UserEntity,
+    postId: PostEntity['id'],
+    status: PostStatus,
+    em?: EntityManager,
+  ): Promise<PostEntity> {
+    return await this.tx.withManager(em, async (entityManager) => {
+      const postRepository = entityManager.withRepository(this.postRepository);
+
+      const post = await postRepository.findOne({
+        relations: { user: true, photos: true },
+        where: { id: postId },
+      });
+
+      if (!post) {
+        throw new PostNotFoundError();
+      }
+
+      if (post.user.id !== user.id) {
+        throw new PostAccessForbiddenError(
+          'Only the author can change the status of a post',
+        );
+      }
+
+      const from = post.status;
+
+      if (!AUTHOR_STATUS_TRANSITIONS[from].includes(status)) {
+        throw new InvalidPostStatusTransitionError(from, status);
+      }
+
+      if (
+        status === PostStatus.Published &&
+        post.photos.some(
+          (photo) => photo.status !== PhotoProcessingStatus.Ready,
+        )
+      ) {
+        throw new InvalidPostStatusTransitionError(
+          from,
+          status,
+          'Cannot publish a post whose photos are not all processed',
+        );
+      }
+
+      // conditional on the status read above, so a concurrent change (e.g.
+      // the gallery pipeline publishing a draft) can't be overwritten
+      const { affected } = await postRepository.update(
+        { id: post.id, status: from },
+        { status },
+      );
+
+      if (!affected) {
+        throw new InvalidPostStatusTransitionError(
+          from,
+          status,
+          'The post status changed concurrently',
+        );
+      }
+
+      post.status = status;
+
+      return post;
+    });
   }
 
   /** `viewer` is the requesting user, used to fill `likedByMe`. */
