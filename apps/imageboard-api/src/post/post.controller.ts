@@ -5,8 +5,8 @@ import {
   Delete,
   Get,
   Param,
-  Patch,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
   Query,
@@ -44,7 +44,7 @@ import { UpdatePostStatusDto } from './dto/update-post-status.dto.js';
 import { UserPostsQueryDto } from './dto/user-posts-query.dto.js';
 import type { PostEntity } from './entities/post.entity.js';
 import { PostErrorFilter } from './post-error.filter.js';
-import type { PostPage } from './repositories/post.repository.js';
+import type { PostFeedItem, PostPage } from './repositories/post.repository.js';
 import { LikeService } from './services/like.service.js';
 import { PostService } from './services/post.service.js';
 
@@ -120,6 +120,19 @@ export class PostController {
       },
       viewer,
     );
+  }
+
+  // A Published post is public; any other status is served only to the
+  // author. A signed-in viewer also gets likedByMe
+  @UseGuards(OptionalAuthGuard)
+  @SkipEmailVerification()
+  @Get(':id')
+  @SerializeOptions({ type: PostFeedItemDto })
+  public async getOne(
+    @User() viewer: UserEntity | undefined,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<PostFeedItem> {
+    return await this.postService.getPost(id, viewer);
   }
 
   // The author deletes (Unpublished) or restores (Published) their own post

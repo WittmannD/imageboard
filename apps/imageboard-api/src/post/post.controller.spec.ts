@@ -170,6 +170,7 @@ describe('PostController authenticated actions', () => {
   const postService = {
     getPaginatedPublishedPostsWithUser: vi.fn(),
     changePostStatus: vi.fn(),
+    getPost: vi.fn(),
   };
   const likeService = { likePost: vi.fn(), unlikePost: vi.fn() };
   const authService = { validateAccessToken: vi.fn() };
@@ -375,5 +376,64 @@ describe('PostController authenticated actions', () => {
     expect(((await res.json()) as { errorCode: string }).errorCode).toBe(
       errorCode,
     );
+  });
+
+  it('serves a single post anonymously without a viewer', async () => {
+    postService.getPost.mockResolvedValue({
+      id: 7,
+      status: 'Published',
+      likedByMe: false,
+      photos: [],
+      user: { ...user, credentials: [{ secret: 'x' }] },
+    });
+
+    const res = await request('/7', { auth: false });
+
+    expect(res.status).toBe(200);
+    expect(authService.validateAccessToken).not.toHaveBeenCalled();
+    expect(postService.getPost).toHaveBeenCalledWith(7, undefined);
+    const body = (await res.json()) as { id: number; user: object };
+    expect(body).toMatchObject({ id: 7, likedByMe: false });
+    expect(body.user).not.toHaveProperty('credentials');
+  });
+
+  it('passes the signed-in viewer when getting a single post', async () => {
+    postService.getPost.mockResolvedValue({
+      id: 7,
+      likedByMe: true,
+      photos: [],
+      user,
+    });
+
+    const res = await request('/7');
+
+    expect(res.status).toBe(200);
+    expect(postService.getPost).toHaveBeenCalledWith(7, user);
+  });
+
+  it('maps PostAccessForbiddenError on a single post to 403 forbidden', async () => {
+    postService.getPost.mockRejectedValue(new PostAccessForbiddenError());
+
+    const res = await request('/7', { auth: false });
+
+    expect(res.status).toBe(403);
+    expect(((await res.json()) as { errorCode: string }).errorCode).toBe(
+      'forbidden',
+    );
+  });
+
+  it('maps PostNotFoundError on a single post to 404 post_not_found', async () => {
+    postService.getPost.mockRejectedValue(new PostNotFoundError());
+
+    const res = await request('/7', { auth: false });
+
+    expect(res.status).toBe(404);
+  });
+
+  it('rejects a non-integer post id when getting a single post', async () => {
+    const res = await request('/abc', { auth: false });
+
+    expect(res.status).toBe(400);
+    expect(postService.getPost).not.toHaveBeenCalled();
   });
 });

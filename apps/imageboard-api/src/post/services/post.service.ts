@@ -19,6 +19,7 @@ import {
 } from '../errors/post-service-error.js';
 import { PhotoRepository } from '../repositories/photo.repository.js';
 import {
+  type PostFeedItem,
   type PostPage,
   PostRepository,
 } from '../repositories/post.repository.js';
@@ -36,6 +37,7 @@ const AUTHOR_STATUS_TRANSITIONS: Record<PostStatus, readonly PostStatus[]> = {
   [PostStatus.Unpublished]: [PostStatus.Published],
 };
 
+// TODO: Refactoring: move image processing logic from both PostService and PhotoService to a separate service
 @Injectable()
 export class PostService {
   private readonly logger = new Logger(PostService.name);
@@ -214,6 +216,45 @@ export class PostService {
       post.status = status;
 
       return post;
+    });
+  }
+
+  /**
+   * One post with its photos and author; `viewer` fills `likedByMe`.
+   * Only the author may get a post that isn't Published.
+   */
+  async getPost(
+    postId: PostEntity['id'],
+    viewer?: UserEntity,
+    em?: EntityManager,
+  ): Promise<PostFeedItem> {
+    return await this.tx.withManager(em, async (entityManager) => {
+      const post = await entityManager
+        .withRepository(this.postRepository)
+        .findOne({
+          relations: { user: true, photos: true },
+          where: { id: postId },
+        });
+
+      if (!post) {
+        throw new PostNotFoundError();
+      }
+
+      if (post.status !== PostStatus.Published && viewer?.id !== post.user.id) {
+        throw new PostAccessForbiddenError(
+          'Only the author can see an unpublished post',
+        );
+      }
+
+      const likedIds = viewer
+        ? await this.likeService.getLikedPostIds(
+            viewer,
+            [post.id],
+            entityManager,
+          )
+        : new Set<number>();
+
+      return Object.assign(post, { likedByMe: likedIds.has(post.id) });
     });
   }
 

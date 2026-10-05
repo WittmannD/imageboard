@@ -324,3 +324,96 @@ describe('PostService.getPaginatedPostsByAuthor access', () => {
     ).resolves.toMatchObject({ items: [] });
   });
 });
+
+describe('PostService.getPost', () => {
+  let service: PostService;
+  const author = { id: 42 } as UserEntity;
+  const postRepository = { findOne: vi.fn() };
+  const likeService = { getLikedPostIds: vi.fn() };
+  const tx = {
+    withManager: (_: unknown, cb: (m: unknown) => unknown) =>
+      cb({ withRepository: <T>(repository: T) => repository }),
+  };
+
+  const givenPost = (status: PostStatus) =>
+    postRepository.findOne.mockResolvedValue({
+      id: 7,
+      status,
+      user: author,
+      photos: [],
+    });
+
+  beforeEach(async () => {
+    vi.resetAllMocks();
+    likeService.getLikedPostIds.mockResolvedValue(new Set([7]));
+
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        PostService,
+        { provide: PostRepository, useValue: postRepository },
+        { provide: PhotoRepository, useValue: {} },
+        { provide: PhotoService, useValue: {} },
+        { provide: LikeService, useValue: likeService },
+        { provide: TransactionService, useValue: tx },
+      ],
+    }).compile();
+
+    service = moduleRef.get(PostService);
+  });
+
+  it('throws PostNotFoundError for a missing post', async () => {
+    postRepository.findOne.mockResolvedValue(null);
+
+    await expect(service.getPost(7)).rejects.toBeInstanceOf(PostNotFoundError);
+  });
+
+  it('serves a published post anonymously with likedByMe false', async () => {
+    givenPost(PostStatus.Published);
+
+    await expect(service.getPost(7)).resolves.toMatchObject({
+      id: 7,
+      likedByMe: false,
+    });
+    expect(likeService.getLikedPostIds).not.toHaveBeenCalled();
+  });
+
+  it('fills likedByMe for a signed-in viewer', async () => {
+    givenPost(PostStatus.Published);
+    const viewer = { id: 1 } as UserEntity;
+
+    await expect(service.getPost(7, viewer)).resolves.toMatchObject({
+      likedByMe: true,
+    });
+    expect(likeService.getLikedPostIds).toHaveBeenCalledWith(
+      viewer,
+      [7],
+      expect.anything(),
+    );
+  });
+
+  it.each([PostStatus.Draft, PostStatus.Unpublished])(
+    'forbids a %s post to anyone but the author',
+    async (status) => {
+      givenPost(status);
+
+      await expect(service.getPost(7)).rejects.toBeInstanceOf(
+        PostAccessForbiddenError,
+      );
+      await expect(
+        service.getPost(7, { id: 1 } as UserEntity),
+      ).rejects.toBeInstanceOf(PostAccessForbiddenError);
+    },
+  );
+
+  it.each([PostStatus.Draft, PostStatus.Unpublished])(
+    'serves a %s post to its author',
+    async (status) => {
+      givenPost(status);
+
+      await expect(service.getPost(7, author)).resolves.toMatchObject({
+        id: 7,
+        status,
+      });
+    },
+  );
+});
