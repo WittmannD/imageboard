@@ -20,11 +20,16 @@ on:
         description: 'Public URL shown on the GitHub environment'
         required: true
         type: string
+      commit:
+        description: 'Full SHA of the commit to deploy. Defaults to the commit the run started on; release.yml passes the release commit it just pushed.'
+        required: false
+        type: string
 
 env:
   REGISTRY: ghcr.io
   REPO: ${{ github.repository }}
-  IMAGE_TAG: ${{ inputs.environment }}-${{ github.sha }}
+  COMMIT_SHA: ${{ inputs.commit || github.sha }}
+  IMAGE_TAG: ${{ inputs.environment }}-${{ inputs.commit || github.sha }}
 
 jobs:
   # Non-secret settings come from the profile in packages/config; compose on
@@ -37,6 +42,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.COMMIT_SHA }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -73,6 +80,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.COMMIT_SHA }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -111,6 +120,7 @@ jobs:
           target: ${{ matrix.app == 'imageboard-client' && 'production' || '' }}
           build-args: |
             APP_ENV=${{ inputs.environment }}
+            GIT_COMMIT_SHA=${{ env.COMMIT_SHA }}
           push: true
           tags: |
             ${{ steps.meta.outputs.image }}:${{ inputs.environment }}
@@ -127,6 +137,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.COMMIT_SHA }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -163,7 +175,7 @@ jobs:
             mkdir -p /opt/imageboard-${{ inputs.environment }}/sh /opt/imageboard-${{ inputs.environment }}/backups
             cd /opt/imageboard-${{ inputs.environment }}
 
-            RAW_URL="https://raw.githubusercontent.com/${{ env.REPO }}/${{ github.sha }}"
+            RAW_URL="https://raw.githubusercontent.com/${{ env.REPO }}/${{ env.COMMIT_SHA }}"
             wget -q -O docker-compose.yaml "$RAW_URL/docker-compose.${{ inputs.environment }}.yaml"
             wget -q -O sh/multiple-databases.sh "$RAW_URL/sh/multiple-databases.sh"
             chmod +x sh/multiple-databases.sh

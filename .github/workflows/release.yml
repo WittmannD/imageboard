@@ -1,0 +1,98 @@
+name: Release
+
+# Cuts a release from main and ships it to production (see bin/nx-release.ts):
+#   - bumps every deployed app to one version from the conventional commits
+#     since the last v* tag, updates CHANGELOG.md, commits, tags v<version>,
+#     pushes to main and creates the GitHub release,
+#   - deploys that release commit to production via deploy-reusable.yml.
+# Does nothing (and deploys nothing) when there are no releasable commits.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Only preview the version and changelog; push and deploy nothing'
+        type: boolean
+        default: false
+      deploy:
+        description: 'Deploy the new release to production'
+        type: boolean
+        default: true
+
+# one release at a time; a second run waits instead of racing the version bump
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    # releases are cut from main only
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    permissions:
+      # push the release commit and tag, create the GitHub release
+      contents: write
+
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      commit: ${{ steps.commit.outputs.sha }}
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # the version and changelog are derived from the full history and tags
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure git author
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Release
+        id: release
+        run: npx tsx bin/nx-release.ts ${{ inputs.dry-run && '--dry-run' || '' }}
+        env:
+          # read by nx to create the GitHub release
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve release commit
+        id: commit
+        if: steps.release.outputs.version != ''
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Summary
+        run: |
+          if [ -n '${{ steps.release.outputs.version }}' ]; then
+            echo "Released **v${{ steps.release.outputs.version }}** (\`${{ steps.commit.outputs.sha }}\`)" >> "$GITHUB_STEP_SUMMARY"
+          elif [ '${{ inputs.dry-run }}' = 'true' ]; then
+            echo 'Dry run: see the Release step log for the planned version and changelog.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'Nothing to release: no releasable commits since the last tag.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  deploy:
+    needs: release
+    if: needs.release.outputs.version != '' && inputs.deploy
+    # shares the group of deploy-production.yml, so it never overlaps a
+    # manually started production deploy
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/deploy-reusable.yml
+    with:
+      environment: production
+      url: https://spottish.website
+      commit: ${{ needs.release.outputs.commit }}
+    secrets: inherit

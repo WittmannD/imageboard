@@ -1,16 +1,31 @@
+import { execSync } from 'node:child_process';
+import { appendFileSync } from 'node:fs';
 import { ReleaseClient } from 'nx/release/index.js';
 
+// Every deployed app shares one version: they always ship together, so a
+// single number (tagged v{version}) says what is running. The apps are private
+// and deployed as images, so nothing is published to a registry.
 const release = new ReleaseClient({
-  projects: ['apps/*'],
-  projectsRelationship: 'independent',
+  projects: ['apps/*', '!imageboard-e2e'],
+  projectsRelationship: 'fixed',
   releaseTagPatternCheckAllBranchesWhen: false,
   version: {
     conventionalCommits: true,
   },
+  conventionalCommits: {
+    types: {
+      // this repo writes `feature:` rather than the standard `feat:`
+      feature: {
+        semverBump: 'minor',
+        changelog: { title: '🚀 Features' },
+      },
+    },
+  },
   changelog: {
     automaticFromRef: true,
-    projectChangelogs: {
-      file: false,
+    projectChangelogs: false,
+    workspaceChangelog: {
+      file: '{workspaceRoot}/CHANGELOG.md',
       createRelease: 'github',
       renderOptions: {
         authors: false,
@@ -22,42 +37,42 @@ const release = new ReleaseClient({
   },
 });
 
-// Modify to suit your environment
-const isDry = process.platform === 'darwin';
+// `npm run release -- --dry-run` previews the version and changelog without
+// writing, committing or pushing anything
+const dryRun = process.argv.includes('--dry-run');
+// Before the first v* tag there is nothing to diff against: nx then starts
+// from the version in package.json and the first commit
+const firstRelease =
+  execSync('git tag --list "v*"', { encoding: 'utf8' }).trim() === '';
 
-const version = await release.releaseVersion({
-  dryRun: isDry,
+const { workspaceVersion, projectsVersionData } = await release.releaseVersion({
+  dryRun,
   verbose: true,
-  gitTag: true,
-  gitCommit: true,
-  gitPush: true,
-  gitPushArgs: ['-f'],
-  gitRemote: 'origin',
-  firstRelease: true,
+  // committed and tagged together with the changelog below
+  gitCommit: false,
+  gitTag: false,
+  firstRelease,
 });
 
-for (const [projectName, versionData] of Object.entries(
-  version.projectsVersionData,
-)) {
-  const fromTag = `${projectName}@${versionData.currentVersion}`;
-
-  // Performed when tag information is available after the first release.
-  await release.releaseChangelog({
-    dryRun: isDry,
-    verbose: true,
-    versionData: { [projectName]: versionData },
-    projects: [`apps/${projectName}`],
-    from: fromTag,
-    to: 'HEAD',
-    gitTag: false,
-    gitCommit: false,
-    gitPush: false,
-  });
+// no releasable commits (only chore, docs, ...) since the last tag
+if (!workspaceVersion) {
+  console.log('Nothing to release.');
+  process.exit(0);
 }
 
-const publishProjectsResult = await release.releasePublish({});
-process.exit(
-  Object.values(publishProjectsResult).every((result) => result.code === 0)
-    ? 0
-    : 1,
-);
+await release.releaseChangelog({
+  dryRun,
+  verbose: true,
+  version: workspaceVersion,
+  versionData: projectsVersionData,
+  gitCommit: true,
+  gitTag: true,
+  gitPush: true,
+  gitRemote: 'origin',
+  firstRelease,
+});
+
+// lets the release workflow deploy what was just released
+if (process.env.GITHUB_OUTPUT && !dryRun) {
+  appendFileSync(process.env.GITHUB_OUTPUT, `version=${workspaceVersion}\n`);
+}
