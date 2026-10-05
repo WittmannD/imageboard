@@ -13,8 +13,7 @@ export const store = configureStore({
       .prepend(listenerMiddleware.middleware)
       .concat(authApi.middleware)
       .concat(postsApi.middleware)
-      .concat(userApi.middleware)
-
+      .concat(userApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

@@ -22,7 +22,11 @@ export class UserErrorFilter extends ServiceErrorFilter {
       httpError(NotFoundException, ErrorCode.UserNotFound, e.message),
     ),
     mapping(AvatarProcessingError, (e) =>
-      httpError(BadGatewayException, ErrorCode.ImageProcessingFailed, e.message),
+      httpError(
+        BadGatewayException,
+        ErrorCode.ImageProcessingFailed,
+        e.message,
+      ),
     ),
   ];
 }

@@ -7,9 +7,6 @@ import type { KeySetCursor } from '../types/cursor.js';
 import { paginate } from './paginate.js';
 
 describe('paginate', () => {
-  // eslint-disable-next-line
-  let qb: any;
-
   const createMockQB = (rows: unknown[]) => {
     return {
       alias: 'entity',
@@ -22,6 +19,8 @@ describe('paginate', () => {
     };
   };
 
+  let qb: ReturnType<typeof createMockQB>;
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -30,8 +29,8 @@ describe('paginate', () => {
     qb = createMockQB([{ id: 3 }, { id: 2 }, { id: 1 }]);
 
     const result = await paginate(
-      qb as SelectQueryBuilder<BaseEntity>,
-      undefined
+      qb as unknown as SelectQueryBuilder<BaseEntity>,
+      undefined,
     );
 
     expect(qb.orderBy).toHaveBeenCalledWith('entity_id', 'DESC');
@@ -49,12 +48,14 @@ describe('paginate', () => {
     qb = createMockQB([{ id: 5 }, { id: 4 }]);
 
     const result = await paginate(
-      qb as SelectQueryBuilder<BaseEntity>,
+      qb as unknown as SelectQueryBuilder<BaseEntity>,
       cursor,
       { limit: 2 },
     );
 
-    expect(qb.andWhere).toHaveBeenCalledWith('entity.id < :id', { id: cursor.id });
+    expect(qb.andWhere).toHaveBeenCalledWith('entity.id < :id', {
+      id: cursor.id,
+    });
 
     expect(result).toEqual({
       ids: [5, 4],
@@ -77,7 +78,7 @@ describe('paginate', () => {
     ]);
 
     const result = await paginate(
-      qb as SelectQueryBuilder<BaseEntity>,
+      qb as unknown as SelectQueryBuilder<BaseEntity>,
       cursor,
       { limit: 2 },
     );
@@ -115,7 +116,7 @@ describe('paginate', () => {
     ]);
 
     const result = await paginate(
-      qb as SelectQueryBuilder<BaseEntity>,
+      qb as unknown as SelectQueryBuilder<BaseEntity>,
       cursor,
       { limit: 2, order },
     );
@@ -134,7 +135,7 @@ describe('paginate', () => {
     qb = createMockQB([]);
 
     const result = await paginate(
-      qb as SelectQueryBuilder<BaseEntity>,
+      qb as unknown as SelectQueryBuilder<BaseEntity>,
       {},
       { limit: 2 },
     );
@@ -150,7 +151,7 @@ describe('paginate', () => {
     qb = createMockQB([{ id: 2 }, { id: 1 }]);
 
     const result = await paginate(
-      qb as SelectQueryBuilder<BaseEntity>,
+      qb as unknown as SelectQueryBuilder<BaseEntity>,
       {},
       { limit: 2 },
     );
@@ -191,9 +192,13 @@ describe('paginate cursor validation', () => {
 
   it('only allows the given sortable fields', async () => {
     await expect(
-      paginate(createQB(), { id: 1, createdAt: new Date() } as KeySetCursor<BaseEntity>, {
-        sortableFields: [],
-      }),
+      paginate(
+        createQB(),
+        { id: 1, createdAt: new Date() } as KeySetCursor<BaseEntity>,
+        {
+          sortableFields: [],
+        },
+      ),
     ).rejects.toBeInstanceOf(InvalidCursorError);
   });
 
@@ -203,10 +208,10 @@ describe('paginate cursor validation', () => {
     } as unknown as Error);
 
     await expect(
-      paginate(
-        createQB(vi.fn().mockRejectedValue(dataException)),
-        { id: 1, createdAt: 'not a date' } as unknown as KeySetCursor<BaseEntity>,
-      ),
+      paginate(createQB(vi.fn().mockRejectedValue(dataException)), {
+        id: 1,
+        createdAt: 'not a date',
+      } as unknown as KeySetCursor<BaseEntity>),
     ).rejects.toBeInstanceOf(InvalidCursorError);
   });
 

@@ -25,13 +25,18 @@ export class SeederModule implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    if (this.dataSource.isInitialized && this.configService.getOrThrow<boolean>('database.seed')) {
-      runSeeders(this.dataSource, { ...seederOptions }).catch((error: unknown) => {
-        this.logger.error(
-          'Database seeding failed',
-          error instanceof Error ? error.stack : String(error),
-        );
-      });
+    if (
+      this.dataSource.isInitialized &&
+      this.configService.getOrThrow<boolean>('database.seed')
+    ) {
+      runSeeders(this.dataSource, { ...seederOptions }).catch(
+        (error: unknown) => {
+          this.logger.error(
+            'Database seeding failed',
+            error instanceof Error ? error.stack : String(error),
+          );
+        },
+      );
     }
   }
 }

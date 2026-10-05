@@ -17,7 +17,7 @@ function PostDialog({
   open,
   onOpenChange,
   onOpenChangeComplete,
-}: DialogComponentProps<{ id: string, photoId: string }>) {
+}: DialogComponentProps<{ id: string; photoId: string }>) {
   const { data: post } = useGetPostQuery(Number(params.id));
   const { setApi, handleKeyDownCapture } = useCarouselKeydownFallback();
 

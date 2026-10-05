@@ -23,23 +23,11 @@ export class PostRepository extends Repository<PostEntity> {
   }
 
   async incrementLikes(postId: PostEntity['id']) {
-    await adjustCounter(
-      this.manager,
-      PostEntity,
-      postId,
-      'likesCount',
-      1,
-    );
+    await adjustCounter(this.manager, PostEntity, postId, 'likesCount', 1);
   }
 
   async decrementLikes(postId: PostEntity['id']) {
-    await adjustCounter(
-      this.manager,
-      PostEntity,
-      postId,
-      'likesCount',
-      -1,
-    );
+    await adjustCounter(this.manager, PostEntity, postId, 'likesCount', -1);
   }
 }
 

@@ -5,7 +5,7 @@ import { XIcon } from 'lucide-react';
 import { Button } from 'src/components/ui/button/Button.tsx';
 import type { VariantProps } from 'class-variance-authority';
 import { dialogPopupVariants } from 'src/components/ui/dialog/dialog-style.ts';
-import { cn } from "src/lib/utils/cn.ts";
+import { cn } from 'src/lib/utils/cn.ts';
 import type { ComponentProps } from 'react';
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {

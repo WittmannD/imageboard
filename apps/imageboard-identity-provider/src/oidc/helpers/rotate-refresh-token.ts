@@ -21,4 +21,4 @@ export default (): OIDCDefinedConfig<'rotateRefreshToken'> => (context) => {
   }
   // rotate if the token is nearing expiration (it's beyond 70% of its lifetime)
   return refreshToken.ttlPercentagePassed() >= 70;
-}
+};

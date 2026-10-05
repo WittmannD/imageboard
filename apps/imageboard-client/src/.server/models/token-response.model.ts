@@ -1,8 +1,5 @@
 import { Type } from 'class-transformer';
-import {
-  IsString,
-  ValidateNested,
-} from 'class-validator';
+import { IsString, ValidateNested } from 'class-validator';
 import 'reflect-metadata';
 
 import { TokenClaimsModel } from './token-claims.model.ts';

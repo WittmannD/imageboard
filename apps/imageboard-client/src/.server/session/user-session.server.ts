@@ -42,4 +42,3 @@ export const toUserSessionState = (data: TokenResponseModel): UserSession => ({
   email: data.claims.email,
   emailVerified: data.claims.email_verified,
 });
-

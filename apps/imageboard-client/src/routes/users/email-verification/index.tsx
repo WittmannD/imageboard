@@ -139,7 +139,10 @@ export const action: ActionFunction = async ({ request }) => {
 
     if (refreshed.valid) {
       userSession.set('state', toUserSessionState(refreshed.data));
-      headers.append('Set-Cookie', await userSessionStorage.commitSession(userSession));
+      headers.append(
+        'Set-Cookie',
+        await userSessionStorage.commitSession(userSession),
+      );
     }
 
     return redirect(returnTo, { headers });

@@ -378,9 +378,7 @@ export function HalftoneBlobsAnimation({ className }: { className?: string }) {
         className,
       )}
     >
-      <div
-        className="spottish__halftone absolute inset-0 isolate filter-[grayscale(1)_brightness(var(--threshold))_contrast(var(--sharpness))_invert(var(--invert))]"
-      >
+      <div className="spottish__halftone absolute inset-0 isolate filter-[grayscale(1)_brightness(var(--threshold))_contrast(var(--sharpness))_invert(var(--invert))]">
         <Blobs
           className="absolute inset-[-14%] bg-black filter-[blur(var(--goo-blur))_contrast(var(--goo-contrast))_blur(var(--edge-blur))]"
           count={10}

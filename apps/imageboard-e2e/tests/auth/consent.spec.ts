@@ -14,7 +14,10 @@ import {
   denyAccess,
   denyButton,
 } from '../../src/support/consent.js';
-import { headerLogIn, headerUserMenuTrigger } from '../../src/support/logout.js';
+import {
+  headerLogIn,
+  headerUserMenuTrigger,
+} from '../../src/support/logout.js';
 import { requestVia } from '../../src/support/nginx.js';
 import { createTestUser, type TestUser } from '../../src/support/user.js';
 
@@ -45,8 +48,12 @@ test.describe('consent', () => {
     await expect(page).toHaveURL(CONSENT_URL);
     await expect(consentHeading(page)).toBeVisible();
     // Who is asking, on whose behalf, and for what.
-    await expect(page.getByText(`You are signed in as ${user.email}.`)).toBeVisible();
-    await expect(page.getByText(`${CLIENT_NAME} will be able to:`)).toBeVisible();
+    await expect(
+      page.getByText(`You are signed in as ${user.email}.`),
+    ).toBeVisible();
+    await expect(
+      page.getByText(`${CLIENT_NAME} will be able to:`),
+    ).toBeVisible();
     for (const permission of [
       'Know who you are on this service',
       'See your username',

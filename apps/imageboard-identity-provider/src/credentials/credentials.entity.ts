@@ -14,7 +14,7 @@ export class CredentialsEntity extends BaseEntity {
 
   @ManyToOne(() => UserEntity, (user) => user.credentials, {
     nullable: false,
-    onDelete: 'CASCADE'
+    onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'userId' })
   user!: Relation<UserEntity>;

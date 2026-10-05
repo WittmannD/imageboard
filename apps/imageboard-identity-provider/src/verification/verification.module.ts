@@ -7,19 +7,9 @@ import { VerificationController } from './verification.controller.js';
 import { TransactionModule } from '@hdotu1/database-common';
 
 @Module({
-  imports: [
-    TransactionModule,
-    EmailModule,
-    UserModule
-  ],
-  controllers: [
-    VerificationController
-  ],
-  providers: [
-    VerificationService
-  ],
-  exports: [
-    VerificationService
-  ],
+  imports: [TransactionModule, EmailModule, UserModule],
+  controllers: [VerificationController],
+  providers: [VerificationService],
+  exports: [VerificationService],
 })
 export class VerificationModule {}

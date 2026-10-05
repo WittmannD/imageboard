@@ -17,7 +17,9 @@ function fileKey(file: File) {
 
 function formatRejectionError(rejections: FileRejection[]) {
   const messages = new Set(
-    rejections.flatMap((rejection) => rejection.errors.map((error) => error.message)),
+    rejections.flatMap((rejection) =>
+      rejection.errors.map((error) => error.message),
+    ),
   );
 
   return new Error([...messages].join(' '));
@@ -25,7 +27,7 @@ function formatRejectionError(rejections: FileRejection[]) {
 
 /**
  * A component that generates a preview image for a file dropped into a file dropzone.
-  */
+ */
 function FileDropzonePreviewImage({
   file,
   className,
@@ -99,7 +101,7 @@ function FileDropzonePreview({
 
 /**
  * Renders a preview grid for a collection of files with support for individual file removal.
-  */
+ */
 function FileDropzonePreviewGrid({
   files,
   onRemove,
@@ -112,14 +114,20 @@ function FileDropzonePreviewGrid({
   return (
     <div className={cn('flex flex-wrap gap-3', className)}>
       {files.map((file) => (
-        <FileDropzonePreview key={fileKey(file)} file={file} onRemove={onRemove} />
+        <FileDropzonePreview
+          key={fileKey(file)}
+          file={file}
+          onRemove={onRemove}
+        />
       ))}
     </div>
   );
 }
 
-export interface FileDropzoneProps
-  extends Omit<React.ComponentPropsWithoutRef<'div'>, 'children' | 'onChange' | 'onError'> {
+export interface FileDropzoneProps extends Omit<
+  React.ComponentPropsWithoutRef<'div'>,
+  'children' | 'onChange' | 'onError'
+> {
   value?: File[];
   onChange: (files: File[]) => void;
   onBlur?: () => void;

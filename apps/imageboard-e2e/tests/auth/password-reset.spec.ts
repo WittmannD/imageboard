@@ -93,7 +93,9 @@ test.describe('password reset', () => {
     await page.goto('/auth/reset-password#token=not-a-real-token');
     await waitForHydration(page);
     await page.getByTestId('reset-password-new-input').fill('a-long-password');
-    await page.getByTestId('reset-password-confirm-input').fill('a-long-password');
+    await page
+      .getByTestId('reset-password-confirm-input')
+      .fill('a-long-password');
     await page.getByTestId('reset-password-submit').click();
     await expect(page.getByText('Reset link invalid')).toBeVisible();
   });

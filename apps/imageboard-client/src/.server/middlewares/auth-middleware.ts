@@ -5,7 +5,10 @@ import type { UserSession } from '../interfaces';
 
 export const apiCredentialsContext = createContext<UserSession | null>(null);
 
-export const authMiddleware: MiddlewareFunction = async ({ request, context }) => {
+export const authMiddleware: MiddlewareFunction = async ({
+  request,
+  context,
+}) => {
   const user = await getUserSessionFromCookie(request);
   const tokens = user.get('state');
 

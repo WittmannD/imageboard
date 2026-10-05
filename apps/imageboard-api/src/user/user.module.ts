@@ -1,4 +1,4 @@
-import { forwardRef, Module } from "@nestjs/common";
+import { forwardRef, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
@@ -11,9 +11,7 @@ import { UploadsModuleFactory } from '../multer/uploads-module-factory.js';
 import { UserEntity } from './entities/user.entity.js';
 import { UserStatsEntity } from './entities/user-stats.entity.js';
 import { UserRepositoryProvider } from './repositories/user.repository.js';
-import {
-  UserStatsRepositoryProvider,
-} from './repositories/user-stats.repository.js';
+import { UserStatsRepositoryProvider } from './repositories/user-stats.repository.js';
 import { AvatarService } from './service/avatar.service.js';
 import { UserService } from './service/user.service.js';
 import { UserController } from './user.controller.js';

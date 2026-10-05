@@ -20,7 +20,11 @@ export class AppController {
     data: ImageProcessingMessageDto,
   ): Promise<ImageProcessingResponse> {
     const outputs = await firstValueFrom(
-      this.appService.processFromConfig(data.key, data.variables, data.configKey),
+      this.appService.processFromConfig(
+        data.key,
+        data.variables,
+        data.configKey,
+      ),
     );
     return new ImageProcessingResponseFactory().createFromFileOutputs(outputs);
   }

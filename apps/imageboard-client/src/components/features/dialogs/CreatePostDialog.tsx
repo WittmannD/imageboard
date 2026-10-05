@@ -37,7 +37,7 @@ function CreatePostDialog({
       title: 'Post sent to moderation.',
       description: 'Your post will be published once it has been approved.',
     });
-  }, [onOpenChange])
+  }, [onOpenChange]);
 
   return (
     <Dialog

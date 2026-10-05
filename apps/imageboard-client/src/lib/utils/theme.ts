@@ -1,4 +1,8 @@
-import { getStorageItem, setStorageItem, THEME, } from 'src/lib/utils/local-storage.ts';
+import {
+  getStorageItem,
+  setStorageItem,
+  THEME,
+} from 'src/lib/utils/local-storage.ts';
 
 export type ThemeName = 'light' | 'dark';
 
@@ -17,7 +21,7 @@ export const getSystemTheme = (): ThemeName => {
 export const getCurrentTheme = (): ThemeName => {
   if (typeof document === 'undefined') return 'light';
   return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-}
+};
 
 export const loadTheme = (): ThemeName | null => {
   const value = getStorageItem(THEME);

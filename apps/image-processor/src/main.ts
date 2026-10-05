@@ -15,7 +15,7 @@ async function bootstrap() {
       useFactory: (configService: ConfigService) => ({
         strategy: new RedisTransportServer({
           ...configService.getOrThrow<AppConfig['redis']>('redis'),
-          keyPrefix: 'improc:'
+          keyPrefix: 'improc:',
         }),
       }),
       inject: [ConfigService],

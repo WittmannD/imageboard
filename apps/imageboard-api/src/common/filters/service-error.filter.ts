@@ -27,7 +27,10 @@ export abstract class ServiceErrorFilter implements ExceptionFilter<ServiceError
 
   catch(error: ServiceError, host: ArgumentsHost): void {
     const res = host.switchToHttp().getResponse<Response>();
-    const exception = mapError(error, [...this.mappings, ...AUTH_ERROR_MAPPINGS]);
+    const exception = mapError(error, [
+      ...this.mappings,
+      ...AUTH_ERROR_MAPPINGS,
+    ]);
 
     if (exception) {
       sendHttpException(res, exception, this.logger);

@@ -22,7 +22,10 @@ export function UserBadgeSkeleton({
 }: React.ComponentProps<'div'> & VariantProps<typeof userBadgeVariants>) {
   return (
     <div className={cn(userBadgeVariants({ size, className }))} {...props}>
-      <Skeleton className="size-8 shrink-0 rounded-full" data-slot="skeleton-avatar" />
+      <Skeleton
+        className="size-8 shrink-0 rounded-full"
+        data-slot="skeleton-avatar"
+      />
       <Skeleton
         className="h-4 w-[150px] rounded-full"
         data-slot="skeleton-username"

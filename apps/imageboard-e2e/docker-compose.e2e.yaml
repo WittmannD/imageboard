@@ -39,7 +39,8 @@ services:
     healthcheck:
       # -h forces TCP: the temporary init-time server only listens on the unix
       # socket, so a socket check would report ready before the databases exist.
-      test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U ${DB_USER} -d ${DB_NAME_API}']
+      test:
+        ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U ${DB_USER} -d ${DB_NAME_API}']
       interval: 2s
       timeout: 3s
       retries: 30
@@ -162,7 +163,8 @@ services:
     volumes:
       - shared-data:/shared
     healthcheck:
-      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:${API_PORT}/ip']
+      test:
+        ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:${API_PORT}/ip']
       interval: 3s
       timeout: 5s
       retries: 30
@@ -186,7 +188,8 @@ services:
     env_file:
       - .env.e2e
     healthcheck:
-      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:${CLIENT_PORT}/']
+      test:
+        ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:${CLIENT_PORT}/']
       interval: 3s
       timeout: 5s
       retries: 30
@@ -213,7 +216,15 @@ services:
     healthcheck:
       # nginx's own endpoint (see default.conf.template), independent of the
       # upstreams, which wait for this before they start.
-      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:8080/healthz']
+      test:
+        [
+          'CMD',
+          'wget',
+          '-q',
+          '-O',
+          '/dev/null',
+          'http://127.0.0.1:8080/healthz',
+        ]
       interval: 2s
       timeout: 3s
       retries: 15

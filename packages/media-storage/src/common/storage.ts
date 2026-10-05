@@ -8,7 +8,10 @@ export interface ReadableStorage {
 }
 
 export interface WritableStorage {
-  upload(file: UploadObject, options?: UploadObjectOptions): Promise<StoredObject>;
+  upload(
+    file: UploadObject,
+    options?: UploadObjectOptions,
+  ): Promise<StoredObject>;
   delete(key: string): Promise<void>;
 }
 

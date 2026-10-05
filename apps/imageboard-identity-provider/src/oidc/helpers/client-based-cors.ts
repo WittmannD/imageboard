@@ -1,4 +1,3 @@
-
 import { CORS_METADATA_PROPERTY } from '../config/extra-client-metadata.config.js';
 import type { OIDCDefinedConfig } from '../types/config.js';
 

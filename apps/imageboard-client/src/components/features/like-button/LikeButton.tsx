@@ -24,7 +24,10 @@ function LikeButton({
     compactDisplay: 'short',
   });
 
-  const isDisabled = useMemo(() => !isLoggedIn || post.status !== 'Published', [isLoggedIn, post.status]);
+  const isDisabled = useMemo(
+    () => !isLoggedIn || post.status !== 'Published',
+    [isLoggedIn, post.status],
+  );
 
   const onLikeClick = useCallback(() => {
     if (isDisabled) {

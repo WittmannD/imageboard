@@ -3,7 +3,7 @@ import { config, secrets } from 'src/.server/config.ts';
 import type { OidcAuthState } from 'src/.server/interfaces.ts';
 
 export interface OidcSessionData {
-  state: OidcAuthState
+  state: OidcAuthState;
 }
 
 export interface OidcSessionFlashData {
@@ -30,4 +30,5 @@ export const oidcSession = createCookieSessionStorage<
   },
 });
 
-export const getOidcSessionFromCookie = (request: Request) => oidcSession.getSession(request.headers.get('Cookie'));
+export const getOidcSessionFromCookie = (request: Request) =>
+  oidcSession.getSession(request.headers.get('Cookie'));

@@ -86,7 +86,7 @@ export interface PageQuery {
   limit?: number;
 }
 
-export type GetPostsQuery = Omit<PageQuery, 'cursor'>
+export type GetPostsQuery = Omit<PageQuery, 'cursor'>;
 
 export interface GetPostsResponse {
   nextCursor: string | null;

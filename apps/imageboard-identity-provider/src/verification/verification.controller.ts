@@ -19,14 +19,15 @@ import { VerificationService } from './verification.service.js';
 
 @Controller('verification')
 export class VerificationController {
-  constructor(
-    private readonly verificationService: VerificationService
-  ) {}
+  constructor(private readonly verificationService: VerificationService) {}
 
   @Throttle(EMAIL_VERIFICATION_THROTTLE)
   @Post()
   async emailVerification(@Body() body: VerificationDto) {
-    return await this.verificationService.requestVerification(body.userId, 'email-verification');
+    return await this.verificationService.requestVerification(
+      body.userId,
+      'email-verification',
+    );
   }
 
   @Throttle(VERIFICATION_COMPLETE_THROTTLE)

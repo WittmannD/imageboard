@@ -1,4 +1,4 @@
-import  { errors } from 'oidc-provider';
+import { errors } from 'oidc-provider';
 
 import type { OIDCDefinedFeatureConfig } from '../types/config.js';
 

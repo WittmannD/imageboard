@@ -17,9 +17,10 @@ export default (): Omit<
   // the request must resolve to exactly one already-granted resource —
   // you must return a member of it.
   defaultResource(_ctx, _client, oneOf) {
-    if (oneOf) return oneOf.includes(API_RESOURCE_IDENTIFIER)
-      ? API_RESOURCE_IDENTIFIER
-      : oneOf[0];
+    if (oneOf)
+      return oneOf.includes(API_RESOURCE_IDENTIFIER)
+        ? API_RESOURCE_IDENTIFIER
+        : oneOf[0];
     return API_RESOURCE_IDENTIFIER;
   },
 

@@ -48,9 +48,10 @@ function assertValidCursor(
 // SQLSTATE class 22 (data exception): a cursor value Postgres can't
 // interpret for its column, e.g. a malformed date
 function isDataException(error: unknown) {
-  const code = (error instanceof QueryFailedError
-    ? (error.driverError as { code?: unknown } | undefined)?.code
-    : undefined);
+  const code =
+    error instanceof QueryFailedError
+      ? (error.driverError as { code?: unknown } | undefined)?.code
+      : undefined;
 
   return typeof code === 'string' && code.startsWith('22');
 }
@@ -82,21 +83,18 @@ export async function paginate<Entity extends BaseEntity>(
   } else if (tieBroken) {
     // if there are id and tieBreaker values in the cursor return key-set-paginated page
     query = query
-      .addSelect(
-        `${query.alias}.${tieBreakerKey}`,
-        `${query.alias}_tieBreaker`,
-      )
+      .addSelect(`${query.alias}.${tieBreakerKey}`, `${query.alias}_tieBreaker`)
       .orderBy(`${query.alias}_tieBreaker`, order)
       .addOrderBy(`${query.alias}_id`, order)
       .take(limit + 1)
       .andWhere(
         new Brackets((w) => {
           w.where(`${query.alias}.${tieBreakerKey} ${op} :tieBreakerValue`, {
-            tieBreakerValue
+            tieBreakerValue,
           }).orWhere(
             new Brackets((w2) => {
               w2.where(`${query.alias}.${tieBreakerKey} = :tieBreakerValue`, {
-                tieBreakerValue
+                tieBreakerValue,
               }).andWhere(`${query.alias}.id ${op} :id`, { id });
             }),
           );

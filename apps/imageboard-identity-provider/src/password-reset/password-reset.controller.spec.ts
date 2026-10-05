@@ -1,4 +1,4 @@
-import { type INestApplication,ValidationPipe } from '@nestjs/common';
+import { type INestApplication, ValidationPipe } from '@nestjs/common';
 import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -60,7 +60,9 @@ describe('PasswordResetController', () => {
     const res = await post('', { email: 'nope' });
 
     expect(res.status).toBe(400);
-    expect((await res.json()).errorCode).toBe('invalid_input');
+    expect(((await res.json()) as { errorCode?: string }).errorCode).toBe(
+      'invalid_input',
+    );
     expect(service.requestReset).not.toHaveBeenCalled();
   });
 
@@ -92,7 +94,9 @@ describe('PasswordResetController', () => {
     const res = await post('/complete', { token: 'abc', password: 'short' });
 
     expect(res.status).toBe(400);
-    expect((await res.json()).errorCode).toBe('invalid_input');
+    expect(((await res.json()) as { errorCode?: string }).errorCode).toBe(
+      'invalid_input',
+    );
     expect(service.completeReset).not.toHaveBeenCalled();
   });
 
@@ -120,6 +124,8 @@ describe('PasswordResetController', () => {
     });
 
     expect(res.status).toBe(500);
-    expect((await res.json()).errorCode).toBeUndefined();
+    expect(
+      ((await res.json()) as { errorCode?: string }).errorCode,
+    ).toBeUndefined();
   });
 });

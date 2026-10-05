@@ -14,7 +14,9 @@ test('a new post is processed, published and rendered in the feed', async ({
   // A file chosen before hydration never reaches the form state.
   await waitForHydration(page);
   await page.locator('input[type="file"]').setInputFiles(images);
-  await page.getByTestId('create-post-caption-input').fill('Posted by the e2e suite');
+  await page
+    .getByTestId('create-post-caption-input')
+    .fill('Posted by the e2e suite');
 
   const created = page.waitForResponse(
     (response) =>

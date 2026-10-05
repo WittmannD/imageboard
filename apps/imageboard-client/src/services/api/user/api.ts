@@ -1,7 +1,11 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { publicConfig } from 'src/lib/config.ts';
 import { axiosBaseQuery } from 'src/services/api/base-query.ts';
-import type { ProfileDto, UserDto, UserStatsDto } from 'src/services/api/types.ts';
+import type {
+  ProfileDto,
+  UserDto,
+  UserStatsDto,
+} from 'src/services/api/types.ts';
 import {
   USER_STATS_TAG_TYPE,
   USER_TAG_TYPE,

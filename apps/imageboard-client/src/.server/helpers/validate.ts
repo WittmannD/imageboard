@@ -10,7 +10,7 @@ export async function validateShape<T extends object>(
 
   const errors = await validate(instance as object, {
     forbidNonWhitelisted: true,
-    ...options
+    ...options,
   });
 
   if (errors.length > 0) {
@@ -21,4 +21,3 @@ export async function validateShape<T extends object>(
   }
   return { valid: true, data: instance };
 }
-

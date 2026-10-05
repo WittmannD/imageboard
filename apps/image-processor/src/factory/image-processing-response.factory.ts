@@ -11,7 +11,7 @@ export class ImageProcessingResponseFactory {
         width: output.width,
         height: output.height,
         format: output.format,
-        metadata: output.metadata ?? {}
+        metadata: output.metadata ?? {},
       })),
     };
   }

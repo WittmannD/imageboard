@@ -18,7 +18,8 @@ export const headerUserMenuTrigger = (page: Page) =>
 export const headerMenuLogOut = (page: Page) =>
   page.getByTestId('header-menu-logout');
 
-export const headerLogIn = (page: Page) => page.getByTestId('header-login-link');
+export const headerLogIn = (page: Page) =>
+  page.getByTestId('header-login-link');
 
 /** The profile section's own button (on `/users/me`). */
 export const profileLogOut = (page: Page) => page.getByTestId('profile-logout');

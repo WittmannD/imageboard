@@ -33,7 +33,9 @@ const useMap = <T extends object = object>(
           return rest as T;
         });
       },
-      reset: () => { set(initialMap); },
+      reset: () => {
+        set(initialMap);
+      },
     }),
     [set],
   );
@@ -47,4 +49,3 @@ const useMap = <T extends object = object>(
 };
 
 export default useMap;
-

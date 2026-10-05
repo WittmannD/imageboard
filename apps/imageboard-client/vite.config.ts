@@ -1,7 +1,7 @@
 import * as path from 'node:path';
 import { reactRouter } from '@react-router/dev/vite';
-import tailwindcss from "@tailwindcss/vite";
-import { defineConfig } from 'vite'
+import tailwindcss from '@tailwindcss/vite';
+import { defineConfig } from 'vite';
 
 import { getConfig, toPublicConfig } from '@hdotu1/config';
 
@@ -15,15 +15,12 @@ export default defineConfig({
     __PUBLIC_CONFIG__: JSON.stringify(toPublicConfig(config)),
   },
   server: {
-    allowedHosts: [`.${config.domain}`, config.domain]
+    allowedHosts: [`.${config.domain}`, config.domain],
   },
   resolve: {
     alias: {
-      'src': path.resolve(import.meta.dirname, './src'),
+      src: path.resolve(import.meta.dirname, './src'),
     },
   },
-  plugins: [
-    tailwindcss(),
-    reactRouter()
-  ],
+  plugins: [tailwindcss(), reactRouter()],
 });

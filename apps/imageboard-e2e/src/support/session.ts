@@ -6,7 +6,7 @@ import { requestVia } from './nginx.js';
 /** The client's own session (holds the tokens), set on the app's origin. */
 const APP_SESSION_COOKIE = 'auth-session';
 /** oidc-provider's login session (`_session` plus its `.sig`), set on the auth host. */
-const PROVIDER_SESSION_COOKIE = /^_session/;
+const PROVIDER_SESSION_COOKIE_PREFIX = '_session';
 
 const isOnAuthHost = (cookie: Cookie) =>
   cookie.domain.replace(/^\./, '') === env.authHost;
@@ -16,7 +16,9 @@ export const appSessionCookie = (cookies: Cookie[]) =>
 
 export const providerSessionCookies = (cookies: Cookie[]) =>
   cookies.filter(
-    (cookie) => isOnAuthHost(cookie) && PROVIDER_SESSION_COOKIE.test(cookie.name),
+    (cookie) =>
+      isOnAuthHost(cookie) &&
+      cookie.name.startsWith(PROVIDER_SESSION_COOKIE_PREFIX),
   );
 
 /**

@@ -4,7 +4,11 @@ import * as fsPromises from 'node:fs/promises';
 import * as path from 'node:path';
 import * as streamPromises from 'node:stream/promises';
 
-import type { ObjectMetadata, StoredObject, UploadObject } from '../common/object.js';
+import type {
+  ObjectMetadata,
+  StoredObject,
+  UploadObject,
+} from '../common/object.js';
 import type { UploadObjectOptions } from '../common/options.js';
 import type { ReadableStorage, WritableStorage } from '../common/storage.js';
 import { AlreadyExistsError } from '../errors/already-exists-error.js';

@@ -5,8 +5,14 @@ import { useGetMeQuery } from 'src/services/api/user/api.ts';
 import { useUpdatePostStatusMutation } from 'src/services/api/post/api.ts';
 import useCopyToClipboard from 'src/hooks/useCopyToClipboard.ts';
 import { toast } from 'src/components/ui/toast/Toast.tsx';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
-  DropdownMenuSeparator, DropdownMenuTrigger } from 'src/components/ui/dropdown-menu/DropdownMenu.tsx';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from 'src/components/ui/dropdown-menu/DropdownMenu.tsx';
 import { Button } from 'src/components/ui/button/Button.tsx';
 import {
   ArchiveIcon,
@@ -15,7 +21,13 @@ import {
   LinkIcon,
 } from 'lucide-react';
 
-export function PostActionMenu({ post, onArchive }: { post: PostDto, onArchive?: () => void }) {
+export function PostActionMenu({
+  post,
+  onArchive,
+}: {
+  post: PostDto;
+  onArchive?: () => void;
+}) {
   const { isLoggedIn } = useAuth();
   const { data: user } = useGetMeQuery(undefined, { skip: !isLoggedIn });
   const [updateStatus] = useUpdatePostStatusMutation();

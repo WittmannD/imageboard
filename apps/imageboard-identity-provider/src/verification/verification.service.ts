@@ -50,7 +50,9 @@ export class VerificationService {
     userId: string,
     purpose: VerificationSession['purpose'],
   ) {
-    const ttl = this.configService.getOrThrow<number>('identityProvider.verification.sessionTtlMs');
+    const ttl = this.configService.getOrThrow<number>(
+      'identityProvider.verification.sessionTtlMs',
+    );
     const resendCooldown = this.configService.getOrThrow<number>(
       'identityProvider.verification.resendCooldownMs',
     );
