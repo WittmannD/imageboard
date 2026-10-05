@@ -69,7 +69,11 @@ describe('UserController errors', () => {
   };
 
   const body = async (res: Response) =>
-    (await res.json()) as { statusCode: number; errorCode?: string; message?: string };
+    (await res.json()) as {
+      statusCode: number;
+      errorCode?: string;
+      message?: string;
+    };
 
   it('maps UserNotFoundError to 404 user_not_found', async () => {
     userService.getOneById.mockRejectedValue(new UserNotFoundError());
@@ -133,7 +137,9 @@ describe('UserController errors', () => {
   });
 
   it('masks unexpected errors as 500 internal_error', async () => {
-    userService.getOneById.mockRejectedValue(new Error('db password is hunter2'));
+    userService.getOneById.mockRejectedValue(
+      new Error('db password is hunter2'),
+    );
 
     const res = await request('/42', { auth: false });
     const json = await body(res);

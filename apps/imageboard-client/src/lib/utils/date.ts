@@ -28,4 +28,3 @@ export function formatPostDate(date: Date | string): string {
     day: 'numeric',
   });
 }
-

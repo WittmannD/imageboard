@@ -1,8 +1,4 @@
-import {
-  SettingsIcon,
-  UserIcon,
-  LogOutIcon,
-} from 'lucide-react';
+import { SettingsIcon, UserIcon, LogOutIcon } from 'lucide-react';
 
 import {
   DropdownMenu,
@@ -18,7 +14,8 @@ import { useGetMeQuery } from 'src/services/api/user/api.ts';
 import { Form, Link } from 'react-router';
 import {
   UserAvatar,
-  UserBadge, UserTag,
+  UserBadge,
+  UserTag,
 } from 'src/components/features/user/UserBadge.tsx';
 
 export function UserMenu() {

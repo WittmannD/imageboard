@@ -12,9 +12,7 @@ export function buildErrorRedirect(base: string, error: object): string {
       )
     : error;
 
-  const encoded = Buffer.from(JSON.stringify(safeError)).toString(
-    'base64url',
-  );
+  const encoded = Buffer.from(JSON.stringify(safeError)).toString('base64url');
   url.searchParams.set('error', encoded);
 
   return url.href;

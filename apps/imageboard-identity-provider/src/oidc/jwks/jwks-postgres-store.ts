@@ -15,7 +15,9 @@ export interface JwksStore {
 }
 
 async function generateSigningKey(): Promise<JWK> {
-  const { privateKey } = await generateKeyPair(SIGNING_ALG, { extractable: true });
+  const { privateKey } = await generateKeyPair(SIGNING_ALG, {
+    extractable: true,
+  });
   const jwk = await exportJWK(privateKey);
 
   jwk.alg = SIGNING_ALG;

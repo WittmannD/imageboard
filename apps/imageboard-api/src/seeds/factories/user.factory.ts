@@ -15,7 +15,7 @@ export default setSeederFactory(UserEntity, () => {
     .padEnd(USERNAME_MIN_LENGTH, '_')
     .slice(0, USERNAME_MAX_LENGTH);
   user.email = faker.internet.email({
-    firstName: user.username
+    firstName: user.username,
   });
 
   return user;

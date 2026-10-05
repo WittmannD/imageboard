@@ -71,8 +71,8 @@ export function ForgotPasswordForm(props: React.ComponentProps<typeof Card>) {
         <CardHeader>
           <CardTitle>Check your email</CardTitle>
           <CardDescription>
-            If an account exists for {sentTo}, we've sent a link to reset
-            its password. The link can only be used once and expires soon.
+            If an account exists for {sentTo}, we've sent a link to reset its
+            password. The link can only be used once and expires soon.
           </CardDescription>
         </CardHeader>
         <CardContent>

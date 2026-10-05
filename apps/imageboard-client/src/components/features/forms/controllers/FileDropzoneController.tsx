@@ -1,15 +1,33 @@
-import { Controller, type FieldPath, type FieldValues, useFormContext } from 'react-hook-form';
+import {
+  Controller,
+  type FieldPath,
+  type FieldValues,
+  useFormContext,
+} from 'react-hook-form';
 import { useCallback } from 'react';
-import { Field, FieldError, FieldLabel } from 'src/components/ui/field/Field.tsx';
-import { FileDropzone, type FileDropzoneProps } from 'src/components/ui/dropzone/Dropzone.tsx';
+import {
+  Field,
+  FieldError,
+  FieldLabel,
+} from 'src/components/ui/field/Field.tsx';
+import {
+  FileDropzone,
+  type FileDropzoneProps,
+} from 'src/components/ui/dropzone/Dropzone.tsx';
 
-interface FileDropzoneControllerProps<TFieldValues extends FieldValues = FieldValues>
-  extends Omit<FileDropzoneProps, 'value' | 'onChange' | 'onBlur' | 'onError' | 'name' | 'id'> {
+interface FileDropzoneControllerProps<
+  TFieldValues extends FieldValues = FieldValues,
+> extends Omit<
+  FileDropzoneProps,
+  'value' | 'onChange' | 'onBlur' | 'onError' | 'name' | 'id'
+> {
   name: FieldPath<TFieldValues>;
   label?: string;
 }
 
-function FileDropzoneController<TFieldValues extends FieldValues = FieldValues>({
+function FileDropzoneController<
+  TFieldValues extends FieldValues = FieldValues,
+>({
   name,
   label,
   className,
@@ -44,7 +62,10 @@ function FileDropzoneController<TFieldValues extends FieldValues = FieldValues>(
             onError={onError}
           />
           {fieldState.invalid && (
-            <FieldError id={`${name}-input-error`} errors={[fieldState.error]} />
+            <FieldError
+              id={`${name}-input-error`}
+              errors={[fieldState.error]}
+            />
           )}
         </Field>
       )}

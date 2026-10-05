@@ -4,4 +4,3 @@ export interface UnvalidatedOidcClaims {
   email_verified?: boolean;
   preferred_username?: string;
 }
-

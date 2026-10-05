@@ -55,7 +55,9 @@ function deepFreeze<T>(value: T): T {
 }
 
 /** The environment named by APP_ENV, `development` when unset. */
-export function resolveAppEnv(value: string | undefined = process.env['APP_ENV']): AppEnv {
+export function resolveAppEnv(
+  value: string | undefined = process.env['APP_ENV'],
+): AppEnv {
   // An empty APP_ENV (e.g. `APP_ENV=` in compose) counts as unset.
   const env = value === undefined || value === '' ? 'development' : value;
 

@@ -42,12 +42,13 @@ function ScrollAreaContent({ ...props }: ScrollAreaPrimitive.Content.Props) {
   );
 }
 
-function ScrollArea({ className, children, ...props }: ScrollAreaPrimitive.Root.Props) {
+function ScrollArea({
+  className,
+  children,
+  ...props
+}: ScrollAreaPrimitive.Root.Props) {
   return (
-    <ScrollAreaRoot
-      className={cn('relative', className)}
-      {...props}
-    >
+    <ScrollAreaRoot className={cn('relative', className)} {...props}>
       <ScrollAreaViewport>
         <ScrollAreaContent>{children}</ScrollAreaContent>
       </ScrollAreaViewport>
@@ -81,4 +82,10 @@ function ScrollBar({
   );
 }
 
-export { ScrollArea, ScrollAreaRoot, ScrollAreaViewport, ScrollAreaContent, ScrollBar };
+export {
+  ScrollArea,
+  ScrollAreaRoot,
+  ScrollAreaViewport,
+  ScrollAreaContent,
+  ScrollBar,
+};

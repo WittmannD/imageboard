@@ -36,7 +36,10 @@ test.describe('log out', () => {
       expect(await sessionCookies(page)).toEqual({ app: true, provider: true });
     });
 
-    for (const entry of ['header', 'profile'] as const satisfies LogOutEntry[]) {
+    for (const entry of [
+      'header',
+      'profile',
+    ] as const satisfies LogOutEntry[]) {
       test(`the ${entry} button asks the provider, then ends the session`, async ({
         page,
       }) => {

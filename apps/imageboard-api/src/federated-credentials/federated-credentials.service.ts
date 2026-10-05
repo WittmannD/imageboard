@@ -4,7 +4,10 @@ import type { EntityManager } from 'typeorm';
 import { TransactionService } from '@hdotu1/database-common';
 
 import type { UserEntity } from '../user/entities/user.entity.js';
-import { FederatedCredentialsEntity, ISSUER_SUBJECT_UNIQUE_CONSTRAINT } from './entities/federated-credentials.entity.js';
+import {
+  FederatedCredentialsEntity,
+  ISSUER_SUBJECT_UNIQUE_CONSTRAINT,
+} from './entities/federated-credentials.entity.js';
 import { FederatedCredentialsRepository } from './repositories/federated-credentials.repository.js';
 
 @Injectable()
@@ -78,11 +81,14 @@ export class FederatedCredentialsService {
         return federatedCredentialRepository.merge(
           federatedCredentialRepository.create(),
           result.generatedMaps[0],
-          { user }
+          { user },
         );
       }
 
-      return await federatedCredentialRepository.findOneByOrFail({ issuer, subject });
+      return await federatedCredentialRepository.findOneByOrFail({
+        issuer,
+        subject,
+      });
     });
   }
 }

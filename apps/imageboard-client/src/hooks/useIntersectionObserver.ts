@@ -12,7 +12,12 @@ interface UseIntersectionObserverOptions extends IntersectionObserverInit {
 function useIntersectionObserver(
   ref: RefObject<HTMLElement | null>,
   onIntersect: (entry: IntersectionObserverEntry) => void,
-  { enabled = true, root, rootMargin, threshold }: UseIntersectionObserverOptions = {},
+  {
+    enabled = true,
+    root,
+    rootMargin,
+    threshold,
+  }: UseIntersectionObserverOptions = {},
 ): void {
   const onIntersectRef = useRef(onIntersect);
 
@@ -29,7 +34,7 @@ function useIntersectionObserver(
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry?.isIntersecting) {
+        if (entry.isIntersecting) {
           onIntersectRef.current(entry);
         }
       },

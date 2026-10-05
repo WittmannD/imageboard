@@ -83,7 +83,11 @@ export function ConsentForm({
 
   if (isLoading) {
     return (
-      <ConsentCard {...props} title="Just a moment" description="Loading the request..." />
+      <ConsentCard
+        {...props}
+        title="Just a moment"
+        description="Loading the request..."
+      />
     );
   }
 

@@ -11,7 +11,11 @@ import { OIDC_PROVIDER, OidcProvider } from './oidc.provider.js';
 import { OidcSessionStoreProvider } from './session/oidc-session-store.provider.js';
 
 @Module({
-  imports: [UserModule, KeyvStoreModule, TypeOrmModule.forFeature([JwksKeyEntity])],
+  imports: [
+    UserModule,
+    KeyvStoreModule,
+    TypeOrmModule.forFeature([JwksKeyEntity]),
+  ],
   providers: [
     OidcSessionStoreProvider,
     JwksKeyRepositoryProvider,

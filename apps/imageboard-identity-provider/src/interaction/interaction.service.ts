@@ -7,9 +7,7 @@ import {
   TransactionService,
 } from '@hdotu1/database-common';
 
-import type {
-  CreateUser,
-} from '../common/interfaces.js';
+import type { CreateUser } from '../common/interfaces.js';
 import { CredentialsService } from '../credentials/credentials.service.js';
 import { USERNAME_UNIQUE_CONSTRAINT } from '../user/user.entity.js';
 import { UserService } from '../user/user.service.js';
@@ -46,7 +44,9 @@ export class InteractionService {
         return user;
       } catch (error: unknown) {
         if (error instanceof Error && isUniqueViolation(error)) {
-          if (getUniqueViolationConstraint(error) === USERNAME_UNIQUE_CONSTRAINT) {
+          if (
+            getUniqueViolationConstraint(error) === USERNAME_UNIQUE_CONSTRAINT
+          ) {
             throw new UsernameTakenError();
           }
           return null;

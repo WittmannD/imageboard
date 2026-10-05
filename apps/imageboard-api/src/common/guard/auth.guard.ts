@@ -12,12 +12,15 @@ import { ErrorCode } from '../errors/error-code.js';
 import { httpError } from '../errors/error-mapping.js';
 import type { AuthorizedRequest } from '../types/request.js';
 
-function parseAuthorizationHeader(header: string): { type?: string, token?: string } {
+function parseAuthorizationHeader(header: string): {
+  type?: string;
+  token?: string;
+} {
   const [type, token] = header.split(' ');
   return {
     type,
-    token
-  }
+    token,
+  };
 }
 
 @Injectable()

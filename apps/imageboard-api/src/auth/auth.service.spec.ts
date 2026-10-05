@@ -84,7 +84,13 @@ describe('AuthService', () => {
           provide: FederatedCredentialsService,
           useValue: federatedCredentialService,
         },
-        { provide: TransactionService, useValue: { withManager: (_: unknown, cb: (m: unknown) => unknown) => cb(undefined) } },
+        {
+          provide: TransactionService,
+          useValue: {
+            withManager: (_: unknown, cb: (m: unknown) => unknown) =>
+              cb(undefined),
+          },
+        },
       ],
     }).compile();
 
@@ -138,12 +144,36 @@ describe('AuthService', () => {
 
   describe('token verification errors', () => {
     it.each([
-      ['an expired token', new joseErrors.JWTExpired('expired', {}), AccessTokenExpiredError],
-      ['a bad signature', new joseErrors.JWSSignatureVerificationFailed(), InvalidAccessTokenError],
-      ['an unknown signing key', new joseErrors.JWKSNoMatchingKey(), InvalidAccessTokenError],
-      ['a JWKS fetch timeout', new joseErrors.JWKSTimeout(), AuthProviderUnavailableError],
-      ['a non-200 JWKS response', new joseErrors.JOSEError('Expected 200 OK'), AuthProviderUnavailableError],
-      ['a network failure', new TypeError('fetch failed'), AuthProviderUnavailableError],
+      [
+        'an expired token',
+        new joseErrors.JWTExpired('expired', {}),
+        AccessTokenExpiredError,
+      ],
+      [
+        'a bad signature',
+        new joseErrors.JWSSignatureVerificationFailed(),
+        InvalidAccessTokenError,
+      ],
+      [
+        'an unknown signing key',
+        new joseErrors.JWKSNoMatchingKey(),
+        InvalidAccessTokenError,
+      ],
+      [
+        'a JWKS fetch timeout',
+        new joseErrors.JWKSTimeout(),
+        AuthProviderUnavailableError,
+      ],
+      [
+        'a non-200 JWKS response',
+        new joseErrors.JOSEError('Expected 200 OK'),
+        AuthProviderUnavailableError,
+      ],
+      [
+        'a network failure',
+        new TypeError('fetch failed'),
+        AuthProviderUnavailableError,
+      ],
     ])('maps %s', async (_, error, expected) => {
       vi.mocked(jwtVerify).mockRejectedValue(error);
 
@@ -154,7 +184,9 @@ describe('AuthService', () => {
     });
 
     it('does not report an expired token as generically invalid only', async () => {
-      vi.mocked(jwtVerify).mockRejectedValue(new joseErrors.JWTExpired('expired', {}));
+      vi.mocked(jwtVerify).mockRejectedValue(
+        new joseErrors.JWTExpired('expired', {}),
+      );
 
       // AccessTokenExpiredError is also an InvalidAccessTokenError, so callers
       // that only know about the latter still treat it as a bad token
@@ -170,13 +202,17 @@ describe('AuthService', () => {
     });
 
     it('does not fail startup when the identity provider is down', async () => {
-      vi.mocked(oidcClient.discovery).mockRejectedValue(new Error('ECONNREFUSED'));
+      vi.mocked(oidcClient.discovery).mockRejectedValue(
+        new Error('ECONNREFUSED'),
+      );
 
       await expect(service.onModuleInit()).resolves.toBeUndefined();
     });
 
     it('reports an unreachable identity provider as unavailable', async () => {
-      vi.mocked(oidcClient.discovery).mockRejectedValue(new Error('ECONNREFUSED'));
+      vi.mocked(oidcClient.discovery).mockRejectedValue(
+        new Error('ECONNREFUSED'),
+      );
 
       await expect(
         service.validateAccessToken('token', true),
@@ -208,7 +244,9 @@ describe('AuthService', () => {
     });
 
     it('wraps a failure to create the user on first sign-in', async () => {
-      federatedCredentialService.findOneByIssuerAndSubject.mockResolvedValue(null);
+      federatedCredentialService.findOneByIssuerAndSubject.mockResolvedValue(
+        null,
+      );
       userService.createWithUsernameOrFindUser.mockRejectedValue(
         new UsernameGenerationError(),
       );

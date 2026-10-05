@@ -63,7 +63,7 @@ export class LayoutEngine {
       const layout = this.fallbackTemplate.solve(images, this.context);
 
       if (layout) {
-        best = { template: this.fallbackTemplate.name, layout, score: null }
+        best = { template: this.fallbackTemplate.name, layout, score: null };
       }
     }
 

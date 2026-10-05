@@ -1,33 +1,55 @@
+import { type ActionFunction, type LoaderFunction } from 'react-router';
 import {
-  type ActionFunction,
-  type LoaderFunction,
-} from 'react-router';
-import { userSessionStorage, getUserSessionFromCookie, toUserSessionState } from 'src/.server/session/user-session.server.ts';
+  userSessionStorage,
+  getUserSessionFromCookie,
+  toUserSessionState,
+} from 'src/.server/session/user-session.server.ts';
 import { config } from 'src/.server/config.ts';
 import { refreshTokenGrant } from 'src/.server/helpers/oidc.ts';
 
 const apiUrl = new URL(config.urls.api);
-const includeResponseHeaderKeys: string[] = ['Content-Type', 'Retry-After', 'Cache-Control', 'ETag', 'Last-Modified'];
+const includeResponseHeaderKeys: string[] = [
+  'Content-Type',
+  'Retry-After',
+  'Cache-Control',
+  'ETag',
+  'Last-Modified',
+];
 // hop-by-hop / connection-specific headers that must not be forwarded as-is to the upstream API
-const excludeRequestHeaderKeys: string[] = ['Host', 'Connection', 'Content-Length'];
+const excludeRequestHeaderKeys: string[] = [
+  'Host',
+  'Connection',
+  'Content-Length',
+];
 
-function filterHeaders(headers: Headers, keys: string[] = [], mode: 'include' | 'exclude' = 'include') {
+function filterHeaders(
+  headers: Headers,
+  keys: string[] = [],
+  mode: 'include' | 'exclude' = 'include',
+) {
   const filteredHeaders = new Headers(mode === 'exclude' ? headers : undefined);
 
   for (const [key, value] of headers) {
     const matches = keys.some((k) => k.toLowerCase() === key.toLowerCase());
 
-    if (mode === 'include' && matches)
-      filteredHeaders.set(key, value);
-    else if (mode === 'exclude' && matches)
-      filteredHeaders.delete(key);
+    if (mode === 'include' && matches) filteredHeaders.set(key, value);
+    else if (mode === 'exclude' && matches) filteredHeaders.delete(key);
   }
 
   return filteredHeaders;
 }
 
-async function apiRequest(endpoint: string, request: Request, body: BodyInit | undefined, accessToken?: string) {
-  const requestHeaders = filterHeaders(request.headers, excludeRequestHeaderKeys, 'exclude');
+async function apiRequest(
+  endpoint: string,
+  request: Request,
+  body: BodyInit | undefined,
+  accessToken?: string,
+) {
+  const requestHeaders = filterHeaders(
+    request.headers,
+    excludeRequestHeaderKeys,
+    'exclude',
+  );
 
   if (accessToken) {
     requestHeaders.set('Authorization', `Bearer ${accessToken}`);
@@ -51,12 +73,17 @@ async function proxy(request: Request, endpoint: string = '/') {
   // Request.body is a ReadableStream that can only be consumed once, but a
   // 401 below needs to retry the same request with a refreshed token -
   // buffer it up front so both attempts can send it.
-  const body = request.method === 'GET' || request.method === 'HEAD'
-    ? undefined
-    : await request.arrayBuffer();
+  const body =
+    request.method === 'GET' || request.method === 'HEAD'
+      ? undefined
+      : await request.arrayBuffer();
 
   let response = await apiRequest(endpoint, request, body, user?.accessToken);
-  let responseHeaders = filterHeaders(response.headers, includeResponseHeaderKeys, 'include');
+  let responseHeaders = filterHeaders(
+    response.headers,
+    includeResponseHeaderKeys,
+    'include',
+  );
 
   if (response.status === 401 && user) {
     // drain the response body we're about to discard - an unread body can
@@ -66,9 +93,7 @@ async function proxy(request: Request, endpoint: string = '/') {
 
     // The grant throws when the identity provider no longer honors the
     // refresh token (expired, revoked, or predating a password reset).
-    const result = await refreshTokenGrant(user.refreshToken).catch(
-      () => null,
-    );
+    const result = await refreshTokenGrant(user.refreshToken).catch(() => null);
 
     if (!result?.valid) {
       // The session can't be renewed: drop it, and answer with a bare 401 the
@@ -86,7 +111,12 @@ async function proxy(request: Request, endpoint: string = '/') {
 
     const setCookie = await userSessionStorage.commitSession(userSession);
     // retry request with new access token
-    response = await apiRequest(endpoint, request, body, result.data.access_token);
+    response = await apiRequest(
+      endpoint,
+      request,
+      body,
+      result.data.access_token,
+    );
     responseHeaders = filterHeaders(
       response.headers,
       includeResponseHeaderKeys,
@@ -104,8 +134,8 @@ async function proxy(request: Request, endpoint: string = '/') {
 
 export const loader: LoaderFunction = async ({ request, params }) => {
   return proxy(request, params['*']);
-}
+};
 
 export const action: ActionFunction = async ({ request, params }) => {
   return proxy(request, params['*']);
-}
+};

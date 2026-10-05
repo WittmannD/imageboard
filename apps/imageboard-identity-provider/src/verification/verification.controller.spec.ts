@@ -48,7 +48,10 @@ describe('VerificationController', () => {
       controllers: [VerificationController],
       providers: [
         VerificationService,
-        { provide: ConfigService, useValue: { getOrThrow: (k: string) => settings[k] } },
+        {
+          provide: ConfigService,
+          useValue: { getOrThrow: (k: string) => settings[k] },
+        },
         { provide: KEYV_STORE, useValue: new Keyv() },
         { provide: UserService, useValue: userService },
         { provide: EmailService, useValue: emailService },

@@ -81,7 +81,9 @@ describe('loadSecrets', () => {
   });
 
   it('names every missing secret', () => {
-    expect(() => loadSecrets(clientSecrets, { OIDC_CLIENT_SECRET: '' })).toThrow(
+    expect(() =>
+      loadSecrets(clientSecrets, { OIDC_CLIENT_SECRET: '' }),
+    ).toThrow(
       'Missing or invalid secrets in the environment: OIDC_CLIENT_SECRET, SESSION_COOKIE_SECRET',
     );
   });

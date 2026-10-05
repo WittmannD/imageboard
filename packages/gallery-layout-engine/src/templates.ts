@@ -15,7 +15,6 @@ export interface Template {
   solve(images: InputImage[], context: LayoutContext): Layout | null;
 }
 
-
 /**
  * ```
  * +-------------+------+
@@ -41,7 +40,8 @@ export const featuredPortraitTileLayoutTemplate = {
 
     // Sum of aspect ratios (height / width) of the right-hand images
     const r = rest.reduce(
-      (acc, image) => acc + context.getEffectiveAspect(image.height / image.width),
+      (acc, image) =>
+        acc + context.getEffectiveAspect(image.height / image.width),
       0,
     );
 

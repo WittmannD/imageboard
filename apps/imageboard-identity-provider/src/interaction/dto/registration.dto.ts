@@ -1,10 +1,4 @@
-import {
-  IsEmail,
-  IsString,
-  Length,
-  Matches,
-  MaxLength,
-} from 'class-validator';
+import { IsEmail, IsString, Length, Matches, MaxLength } from 'class-validator';
 
 import {
   PASSWORD_MAX_LENGTH,

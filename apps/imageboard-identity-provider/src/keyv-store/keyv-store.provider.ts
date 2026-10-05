@@ -8,15 +8,16 @@ export const KEYV_STORE = Symbol('KEYV_STORE');
 export const KeyvStoreProvider = {
   provide: KEYV_STORE,
   useFactory: (configService: ConfigService) => {
-    const { host, port } = configService.getOrThrow<AppConfig['redis']>('redis');
+    const { host, port } =
+      configService.getOrThrow<AppConfig['redis']>('redis');
 
     return new Keyv({
       store: new KeyvRedis({
         //redis[s]://[[username][:password]@][host][:port][/db-number]
         url: `redis://${host}:${port}`,
       }),
-      namespace: 'oidc'
-    })
+      namespace: 'oidc',
+    });
   },
-  inject: [ConfigService]
+  inject: [ConfigService],
 } satisfies Provider<Keyv>;

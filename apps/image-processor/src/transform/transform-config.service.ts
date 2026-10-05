@@ -13,15 +13,16 @@ export interface ImageTransformConfig {
 
 @Injectable()
 export class TransformConfigService {
-  private readonly schemaPath = path.resolve(import.meta.dirname, '../schema/image-transform-config.schema.json');
+  private readonly schemaPath = path.resolve(
+    import.meta.dirname,
+    '../schema/image-transform-config.schema.json',
+  );
   private readonly cache = new Map<
     string,
     YamlTemplate<ImageTransformConfig>
   >();
 
-  constructor(
-    @Inject(MEDIA_STORAGE) private readonly storage: StorageDriver,
-  ) {}
+  constructor(@Inject(MEDIA_STORAGE) private readonly storage: StorageDriver) {}
 
   async getOrThrow(key: string): Promise<YamlTemplate<ImageTransformConfig>> {
     const cached = this.cache.get(key);

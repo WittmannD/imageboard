@@ -6,6 +6,7 @@ export default (): OIDCDefinedFeatureConfig<'rpInitiatedLogout'>['postLogoutSucc
   (context) => {
     context.type = 'html';
     context.body = signOutSuccessPage({
-      clientName: context.oidc.client?.clientName ?? context.oidc.client?.clientId,
+      clientName:
+        context.oidc.client?.clientName ?? context.oidc.client?.clientId,
     });
   };

@@ -23,6 +23,6 @@ export async function getAuth(request: Request): Promise<AuthData> {
       id: userState.sub,
       emailVerified: userState.emailVerified,
       email: userState.email,
-    }
+    },
   };
 }

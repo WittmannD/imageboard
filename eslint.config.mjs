@@ -1,66 +1,81 @@
-import { defineConfig } from 'eslint/config';
+import { defineConfig, globalIgnores } from 'eslint/config';
 import js from '@eslint/js';
 import vitest from '@vitest/eslint-plugin';
 import prettier from 'eslint-config-prettier';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import tseslint from 'typescript-eslint';
 
-export default defineConfig({
-  files: ['**/*.{js,ts}'],
-  ignores: ['**/node_modules/**', '**/dist/**'],
+export default defineConfig([
+  // build output and generated reports; a global ignore, so ESLint doesn't
+  // fall back to linting them without this config's plugins
+  globalIgnores([
+    '**/node_modules/',
+    '**/dist/',
+    '**/build/',
+    '**/playwright-report/',
+    '**/test-results/',
+    '**/blob-report/',
+  ]),
+  {
+    files: ['**/*.{js,ts}'],
 
-  extends: [
-    js.configs.recommended,
-    tseslint.configs.recommendedTypeChecked,
-    tseslint.configs.strictTypeChecked,
-    tseslint.configs.stylisticTypeChecked,
-    vitest.configs.recommended,
-    {
-      languageOptions: {
-        parserOptions: {
-          // projectService: true,
-          projectService: {
-            allowDefaultProject: ['*.cjs', '*.mjs'],
+    extends: [
+      js.configs.recommended,
+      tseslint.configs.recommendedTypeChecked,
+      tseslint.configs.strictTypeChecked,
+      tseslint.configs.stylisticTypeChecked,
+      vitest.configs.recommended,
+      {
+        languageOptions: {
+          parserOptions: {
+            // projectService: true,
+            projectService: {
+              allowDefaultProject: ['*.cjs', '*.mjs'],
+            },
+            tsconfigRootDir: import.meta.dirname,
           },
-          tsconfigRootDir: import.meta.dirname,
+        },
+        plugins: {
+          '@typescript-eslint': tseslint.plugin,
+          'simple-import-sort': simpleImportSort,
+          vitest,
+        },
+        rules: {
+          '@typescript-eslint/no-extraneous-class': 'off',
+          '@typescript-eslint/no-unsafe-assignment': 'off',
+          '@typescript-eslint/require-await': 'off',
+          '@typescript-eslint/no-unused-vars': [
+            'error',
+            {
+              args: 'all',
+              argsIgnorePattern: '^_',
+              caughtErrors: 'all',
+              caughtErrorsIgnorePattern: '^_',
+              destructuredArrayIgnorePattern: '^_',
+              varsIgnorePattern: '^_',
+              ignoreRestSiblings: true,
+            },
+          ],
+          '@typescript-eslint/restrict-template-expressions': [
+            'error',
+            {
+              allowNumber: true,
+            },
+          ],
+          'simple-import-sort/imports': [
+            'warn',
+            {
+              groups: [
+                ['^node:', '^@?\\w', '^\\u0000'],
+                ['^(@hdotu)'],
+                ['^\\.'],
+              ],
+            },
+          ],
+          'simple-import-sort/exports': 'warn',
         },
       },
-      plugins: {
-        '@typescript-eslint': tseslint.plugin,
-        'simple-import-sort': simpleImportSort,
-        vitest,
-      },
-      rules: {
-        '@typescript-eslint/no-extraneous-class': 'off',
-        '@typescript-eslint/no-unsafe-assignment': 'off',
-        '@typescript-eslint/require-await': 'off',
-        '@typescript-eslint/no-unused-vars': [
-          'error',
-          {
-            args: 'all',
-            argsIgnorePattern: '^_',
-            caughtErrors: 'all',
-            caughtErrorsIgnorePattern: '^_',
-            destructuredArrayIgnorePattern: '^_',
-            varsIgnorePattern: '^_',
-            ignoreRestSiblings: true,
-          },
-        ],
-        '@typescript-eslint/restrict-template-expressions': [
-          'error',
-          {
-            allowNumber: true,
-          },
-        ],
-        'simple-import-sort/imports': [
-          'warn',
-          {
-            groups: [['^node:', '^@?\\w', '^\\u0000'], ['^(@hdotu)'], ['^\\.']],
-          },
-        ],
-        'simple-import-sort/exports': 'warn',
-      },
-    },
-    prettier,
-  ],
-});
+      prettier,
+    ],
+  },
+]);

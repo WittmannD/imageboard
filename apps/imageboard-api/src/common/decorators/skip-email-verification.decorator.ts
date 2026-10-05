@@ -1,6 +1,5 @@
 import { SetMetadata } from '@nestjs/common';
 
-
 export const SKIP_EMAIL_VERIFICATION = 'skipEmailVerification';
 
 /**

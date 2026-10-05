@@ -145,9 +145,7 @@ export function ResetPasswordForm(props: React.ComponentProps<typeof Card>) {
     <Card {...props}>
       <CardHeader>
         <CardTitle>Choose a new password</CardTitle>
-        <CardDescription>
-          Enter a new password for your account
-        </CardDescription>
+        <CardDescription>Enter a new password for your account</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} noValidate>

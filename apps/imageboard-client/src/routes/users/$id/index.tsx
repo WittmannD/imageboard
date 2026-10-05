@@ -1,9 +1,7 @@
 import { useParams } from 'react-router';
 import { useGetUserQuery } from 'src/services/api/user/api.ts';
 import { ProfileView } from 'src/components/features/profile/ProfileView.tsx';
-import {
-  useGetUserPostsInfiniteQuery,
-} from 'src/services/api/post/api.ts';
+import { useGetUserPostsInfiniteQuery } from 'src/services/api/post/api.ts';
 import { useMemo } from 'react';
 import { Feed } from 'src/components/features/feed/Feed.tsx';
 import type { PostStatus } from 'src/services/api/types.ts';
@@ -11,7 +9,13 @@ import type { PostStatus } from 'src/services/api/types.ts';
 const FEED_POSTS_POLLING_INTERVAL = 20000;
 const FEED_POSTS_PAGE_SIZE = 10;
 
-function UserPostsFeed({ userId, status }: { userId: number, status: PostStatus }) {
+function UserPostsFeed({
+  userId,
+  status,
+}: {
+  userId: number;
+  status: PostStatus;
+}) {
   const {
     data,
     isFetching,
@@ -65,7 +69,9 @@ function UserProfilePage() {
     <div className="py-8">
       <ProfileView user={user} />
       <div className="mt-8 mx-auto w-full max-w-xl">
-        <h2 className="pl-4 text-2xl font-bold">{user.username}'s recent posts</h2>
+        <h2 className="pl-4 text-2xl font-bold">
+          {user.username}'s recent posts
+        </h2>
         <UserPostsFeed userId={userId} status="Published" />
       </div>
     </div>

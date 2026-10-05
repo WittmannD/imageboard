@@ -2,6 +2,7 @@ import React, { useEffect, useLayoutEffect, useState } from 'react';
 import {
   Links,
   Meta,
+  type MetaFunction,
   type MiddlewareFunction,
   Outlet,
   Scripts,
@@ -18,8 +19,12 @@ import {
 import { getSystemTheme } from 'src/lib/utils/theme.ts';
 import { cn } from 'src/lib/utils/cn.ts';
 import { Toaster } from 'src/components/ui/toast/Toast.tsx';
+import { SITE_NAME } from 'src/lib/utils/meta.ts';
 
 export const middleware: MiddlewareFunction[] = [authMiddleware];
+
+// the default for routes without their own meta; a route's meta replaces it
+export const meta: MetaFunction = () => [{ title: SITE_NAME }];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState(() => {
@@ -45,7 +50,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>spottish.website</title>
         <script
           dangerouslySetInnerHTML={{
             __html: `

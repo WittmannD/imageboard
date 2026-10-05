@@ -55,26 +55,25 @@ describe('getCors', () => {
       headers: http.IncomingHttpHeaders;
       body: string;
     }>((resolve, reject) => {
-        const request = http.request(
-          { host: '127.0.0.1', port, path: '/ping', method, headers },
-          (response) => {
-            const chunks: Buffer[] = [];
+      const request = http.request(
+        { host: '127.0.0.1', port, path: '/ping', method, headers },
+        (response) => {
+          const chunks: Buffer[] = [];
 
-            response.on('data', (chunk: Buffer) => chunks.push(chunk));
-            response.on('end', () => {
-              resolve({
-                status: response.statusCode ?? 0,
-                headers: response.headers,
-                body: Buffer.concat(chunks).toString('utf8'),
-              });
+          response.on('data', (chunk: Buffer) => chunks.push(chunk));
+          response.on('end', () => {
+            resolve({
+              status: response.statusCode ?? 0,
+              headers: response.headers,
+              body: Buffer.concat(chunks).toString('utf8'),
             });
-          },
-        );
+          });
+        },
+      );
 
-        request.on('error', reject);
-        request.end();
-      },
-    );
+      request.on('error', reject);
+      request.end();
+    });
 
   it('lets a registered client call with credentials', async () => {
     const response = await send('POST', { origin: CLIENT_ORIGIN });
@@ -94,7 +93,9 @@ describe('getCors', () => {
     expect(response.status).toBe(204);
     expect(response.headers['access-control-allow-origin']).toBe(CLIENT_ORIGIN);
     expect(response.headers['access-control-allow-credentials']).toBe('true');
-    expect(response.headers['access-control-allow-headers']).toBe('content-type');
+    expect(response.headers['access-control-allow-headers']).toBe(
+      'content-type',
+    );
   });
 
   it("lets the provider's own pages post to themselves", async () => {
@@ -112,7 +113,9 @@ describe('getCors', () => {
     expect(response.status).toBe(403);
     expect(JSON.parse(response.body)).toMatchObject({ statusCode: 403 });
     expect(response.headers['access-control-allow-origin']).toBeUndefined();
-    expect(response.headers['access-control-allow-credentials']).toBeUndefined();
+    expect(
+      response.headers['access-control-allow-credentials'],
+    ).toBeUndefined();
     expect(postHits).toBe(0);
   });
 

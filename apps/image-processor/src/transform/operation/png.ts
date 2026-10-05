@@ -7,5 +7,5 @@ export type ImagePngOperationArgs = PngOptions;
 export const PngOperation: Operation<'png'> = {
   process(pipeline: Sharp, args: ImagePngOperationArgs): Sharp {
     return pipeline.png(args);
-  }
-}
+  },
+};

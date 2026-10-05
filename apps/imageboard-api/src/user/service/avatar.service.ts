@@ -44,9 +44,7 @@ export class AvatarService {
     const images = await this.processAvatar(file);
 
     return await this.tx.withManager(em, async (entityManager) => {
-      const userRepository = entityManager.withRepository(
-        this.userRepository,
-      );
+      const userRepository = entityManager.withRepository(this.userRepository);
 
       user.avatars = images;
       return await userRepository.save(user);

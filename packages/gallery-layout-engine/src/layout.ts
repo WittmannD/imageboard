@@ -1,7 +1,6 @@
 import type { Tile } from './tile.js';
 
-export
-class Layout {
+export class Layout {
   constructor(public readonly tiles: Tile[] = []) {}
 
   static from(tiles: Tile[]): Layout {

@@ -1,7 +1,4 @@
-import {
-  Module,
-  ValidationPipe,
-} from '@nestjs/common';
+import { Module, ValidationPipe } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -57,8 +54,6 @@ import { VerificationModule } from './verification/verification.module.js';
       useClass: ThrottlerGuard,
     },
   ],
-  controllers: [
-    AppController
-  ]
+  controllers: [AppController],
 })
 export class AppModule {}

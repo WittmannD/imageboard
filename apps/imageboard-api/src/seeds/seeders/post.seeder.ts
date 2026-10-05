@@ -42,7 +42,7 @@ const galleries = [
           variant: 'lightbox',
         },
       },
-    ]
+    ],
   ],
   [
     [
