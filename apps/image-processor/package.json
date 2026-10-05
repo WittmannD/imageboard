@@ -1,6 +1,6 @@
 {
   "name": "image-processor",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Image processor microservice",
   "private": true,
   "type": "module",
