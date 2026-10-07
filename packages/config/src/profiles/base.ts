@@ -84,7 +84,7 @@ export const base: Omit<Profile, 'env' | 'domain' | 'imageServerUrl' | 'e2e'> =
           interaction: HOUR_IN_SEC, // 1 hour
           preAuthorizedCode: 10 * MINUTE_IN_SEC, // 10 minutes
           refreshToken: 21 * DAY_IN_SEC, // 21 days
-          grant: 14 * DAY_IN_SEC, // 14 days
+          grant: 21 * DAY_IN_SEC, // 21 days - a refresh token dies with its grant, so keep this >= refreshToken
           session: 24 * HOUR_IN_SEC, // 24 hours
         },
       },
@@ -116,7 +116,9 @@ export const base: Omit<Profile, 'env' | 'domain' | 'imageServerUrl' | 'e2e'> =
     client: {
       port: 5734,
       internalHost: 'imageboard-client',
-      sessionMaxAgeSec: HOUR_IN_SEC, // 1 hour
+      // The session cookie holds the refresh token, so it must outlive the access
+      // token - it is re-committed (and its expiry extended) on every refresh.
+      sessionMaxAgeSec: 21 * DAY_IN_SEC, // 21 days
     },
 
     imageProcessor: {

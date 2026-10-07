@@ -35,7 +35,7 @@ import { toast } from 'src/components/ui/toast/Toast.tsx';
 function AccountSettingsPage() {
   const auth = useAuth(true);
   const { getDialogSearchParams } = useDialogManager();
-  const { data: user } = useGetMeQuery();
+  const { data: user } = useGetMeQuery(undefined, { skip: !auth.isLoggedIn });
 
   const onPasswordChangeClick = useCallback(() => {
     toast.add({
@@ -51,7 +51,9 @@ function AccountSettingsPage() {
     });
   }, []);
 
-  if (!user) {
+  // useAuth(true) only redirects after render - auth.user is still undefined
+  // here when the session has expired
+  if (!auth.user || !user) {
     return null;
   }
 
@@ -137,7 +139,7 @@ function AccountSettingsPage() {
                     variant="outline"
                     size="sm"
                     nativeButton={false}
-                    render={<Link to="/users/ermail-verification" />}
+                    render={<Link to="/users/email-verification" />}
                   >
                     Verify
                   </Button>

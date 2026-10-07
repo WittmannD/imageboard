@@ -68,9 +68,11 @@ function MyPostsFeed({
 
 function MyProfilePage() {
   const auth = useAuth(true);
-  const { data: user } = useGetMeQuery();
+  const { data: user } = useGetMeQuery(undefined, { skip: !auth.isLoggedIn });
 
-  if (!user) {
+  // useAuth(true) only redirects after render - auth.user is still undefined
+  // here when the session has expired
+  if (!auth.user || !user) {
     return null;
   }
 
