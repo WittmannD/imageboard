@@ -3,7 +3,7 @@ import { Column, Entity, ManyToOne, OneToMany, type Relation } from 'typeorm';
 import { BaseEntity } from '../../common/entity/base.entity.js';
 import { UserEntity } from '../../user/entities/user.entity.js';
 import { PostStatus } from '../enums/post-status.enum.js';
-import { PhotoEntity } from './photo.entity.js';
+import { MediaEntity } from './media.entity.js';
 
 @Entity('posts')
 export class PostEntity extends BaseEntity {
@@ -16,8 +16,8 @@ export class PostEntity extends BaseEntity {
   @Column({ type: 'integer', default: 0, update: false })
   likesCount = 0;
 
-  @OneToMany(() => PhotoEntity, (photo) => photo.post)
-  photos!: PhotoEntity[];
+  @OneToMany(() => MediaEntity, (media) => media.post)
+  media!: MediaEntity[];
 
   @ManyToOne(() => UserEntity, (user) => user.posts, {
     nullable: false,

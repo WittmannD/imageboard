@@ -1,11 +1,11 @@
 import { Exclude, Type } from 'class-transformer';
 
 import { PostEntity } from '../entities/post.entity.js';
-import { PhotoDto } from './photo.dto.js';
+import { MediaDto } from './media.dto.js';
 
 export class PostDto extends PostEntity {
-  @Type(() => PhotoDto)
-  override photos!: PhotoDto[];
+  @Type(() => MediaDto)
+  override media!: MediaDto[];
 
   @Exclude()
   override user!: never;

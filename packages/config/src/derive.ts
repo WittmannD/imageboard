@@ -13,6 +13,7 @@ export function deriveUrls(profile: Profile): Urls {
     auth: `${scheme}://auth.${domain}`,
     interactions: `${web}/auth/`,
     imageServer: profile.imageServerUrl,
+    videoServer: profile.videoServerUrl,
     oidcRedirectUris: [`${web}/auth/callback`, ...client.extraRedirectUris],
     oidcPostLogoutRedirectUris: [
       `${web}/`,

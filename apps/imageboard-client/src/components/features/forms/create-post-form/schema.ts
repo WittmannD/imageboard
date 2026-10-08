@@ -6,7 +6,7 @@ export const createPostFormSchema = z.object({
   files: z
     .array(z.file().mime([...publicConfig.post.allowedImageMimeTypes]))
     .max(
-      publicConfig.post.maxImagesPerPost,
-      `You can only upload up to ${publicConfig.post.maxImagesPerPost} files`,
+      publicConfig.post.maxMediaPerPost,
+      `You can only upload up to ${publicConfig.post.maxMediaPerPost} files`,
     ),
 });

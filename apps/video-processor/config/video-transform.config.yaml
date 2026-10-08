@@ -1,6 +1,8 @@
 $schema: './schema/video-transform-config.schema.json'
+# variables.tile: the video's tile in the post gallery, laid out by the API's
+# gallery layout engine (the same tile the image-transform config gets)
 transform:
-  # The video, at most 720p
+  # The video, at most 720p, played in the lightbox
   - - operation: scale
       args:
         width: 1280
@@ -19,7 +21,7 @@ transform:
           variant: video
           hasAudio: ${{metadata.hasAudio}}
 
-  # Poster shown before playback starts
+  # Poster of the lightbox video, shown before playback starts
   - - operation: frame
       args:
         time: 0
@@ -38,7 +40,7 @@ transform:
         metadata:
           variant: poster
 
-  # Short silent loop for gallery previews
+  # Gallery tile: a short silent loop at the tile's size
   - - operation: trim
       args:
         duration: 3
@@ -46,8 +48,7 @@ transform:
       args:
         width: ${{variables.tile.width}}
         height: ${{variables.tile.height}}
-        fit: inside
-        withoutEnlargement: true
+        fit: ${{variables.tile.fit}}
     - operation: mute
       args: {}
     - operation: h264
@@ -56,10 +57,37 @@ transform:
         preset: fast
     - operation: save
       args:
-        key: ${{file.name}}/preview.mp4
+        key: ${{file.name}}/tile.mp4
         contentType: video/mp4
         metadata:
-          variant: preview
+          variant: tile
+          tile:
+            key: ${{variables.tile.key}}
+            width: ${{variables.tile.width}}
+            height: ${{variables.tile.height}}
+            fit: ${{variables.tile.fit}}
+            column: ${{variables.tile.column}}
+            row: ${{variables.tile.row}}
+            columnSpan: ${{variables.tile.columnSpan}}
+            rowSpan: ${{variables.tile.rowSpan}}
+
+  # Poster of the gallery tile, shown until the loop plays
+  - - operation: frame
+      args:
+        time: 0
+        format: jpeg
+        quality: 80
+    - operation: scale
+      args:
+        width: ${{variables.tile.width}}
+        height: ${{variables.tile.height}}
+        fit: ${{variables.tile.fit}}
+    - operation: save
+      args:
+        key: ${{file.name}}/tile-poster.jpeg
+        contentType: image/jpeg
+        metadata:
+          variant: tilePoster
           tile:
             key: ${{variables.tile.key}}
             width: ${{variables.tile.width}}

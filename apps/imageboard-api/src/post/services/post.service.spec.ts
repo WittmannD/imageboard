@@ -7,7 +7,7 @@ import { TransactionService } from '@hdotu1/database-common';
 
 import type { FileUpload } from '../../multer/file-upload.js';
 import type { UserEntity } from '../../user/entities/user.entity.js';
-import { PhotoProcessingStatus } from '../enums/photo-status.enum.js';
+import { MediaProcessingStatus } from '../enums/media-status.enum.js';
 import { PostStatus } from '../enums/post-status.enum.js';
 import {
   GalleryLayoutError,
@@ -15,22 +15,26 @@ import {
   PostAccessForbiddenError,
   PostNotFoundError,
 } from '../errors/post-service-error.js';
-import { PhotoRepository } from '../repositories/photo.repository.js';
+import { MediaRepository } from '../repositories/media.repository.js';
 import { PostRepository } from '../repositories/post.repository.js';
 import { LikeService } from './like.service.js';
+import { MediaService } from './media.service.js';
 import { PostService } from './post.service.js';
-import { PhotoService } from './photo.service.js';
 
 describe('PostService.createUserPost gallery failures', () => {
   let service: PostService;
-  const photos = [{ id: 11 }, { id: 12 }];
+  const media = [{ id: 11 }, { id: 12 }];
   const entityManager = {
     withRepository: <T>(repository: T) => repository,
     save: vi.fn(),
   };
   const postRepository = { createDraft: vi.fn(), update: vi.fn() };
-  const photoRepository = { createDraftsForPost: vi.fn(), update: vi.fn() };
-  const photoService = { createPhotoGallery: vi.fn() };
+  const mediaRepository = {
+    createDraftsForPost: vi.fn(),
+    update: vi.fn(),
+    save: vi.fn(),
+  };
+  const mediaService = { createMediaGallery: vi.fn() };
   const tx = {
     withManager: (_: unknown, cb: (m: unknown) => unknown) => cb(entityManager),
     withManager$: (_: unknown, cb: (m: unknown) => Observable<unknown>) =>
@@ -41,11 +45,14 @@ describe('PostService.createUserPost gallery failures', () => {
   beforeEach(async () => {
     vi.resetAllMocks();
     postRepository.createDraft.mockReturnValue({ id: 1 });
-    photoRepository.createDraftsForPost.mockReturnValue(photos);
+    mediaRepository.createDraftsForPost.mockReturnValue(media);
     entityManager.save.mockImplementation((entity: unknown) =>
       Promise.resolve(entity),
     );
-    photoRepository.update.mockResolvedValue(undefined);
+    mediaRepository.update.mockResolvedValue(undefined);
+    mediaRepository.save.mockImplementation((entity: unknown) =>
+      Promise.resolve(entity),
+    );
 
     // an error escaping the subscription would surface here and crash the process
     uncaught = vi.fn();
@@ -55,8 +62,8 @@ describe('PostService.createUserPost gallery failures', () => {
       providers: [
         PostService,
         { provide: PostRepository, useValue: postRepository },
-        { provide: PhotoRepository, useValue: photoRepository },
-        { provide: PhotoService, useValue: photoService },
+        { provide: MediaRepository, useValue: mediaRepository },
+        { provide: MediaService, useValue: mediaService },
         { provide: LikeService, useValue: {} },
         { provide: TransactionService, useValue: tx },
       ],
@@ -77,45 +84,62 @@ describe('PostService.createUserPost gallery failures', () => {
 
   const settle = () => new Promise((resolve) => setTimeout(resolve, 10));
 
-  it('marks the photos Failed instead of crashing when the gallery fails', async () => {
-    photoService.createPhotoGallery.mockReturnValue(
+  it('marks the media Failed instead of crashing when the gallery fails', async () => {
+    mediaService.createMediaGallery.mockReturnValue(
       throwError(() => new GalleryLayoutError()),
     );
 
-    await expect(createPost()).resolves.toMatchObject({ id: 1, photos });
+    await expect(createPost()).resolves.toMatchObject({ id: 1, media });
     await settle();
 
-    expect(photoRepository.update).toHaveBeenCalledWith(
+    expect(mediaRepository.update).toHaveBeenCalledWith(
       { id: In([11, 12]) },
-      { status: PhotoProcessingStatus.Failed },
+      { status: MediaProcessingStatus.Failed },
     );
     expect(uncaught).not.toHaveBeenCalled();
   });
 
-  it('swallows a failure to mark the photos Failed', async () => {
-    photoService.createPhotoGallery.mockReturnValue(
+  it('swallows a failure to mark the media Failed', async () => {
+    mediaService.createMediaGallery.mockReturnValue(
       throwError(() => new GalleryLayoutError()),
     );
-    photoRepository.update.mockRejectedValue(new Error('db down'));
+    mediaRepository.update.mockRejectedValue(new Error('db down'));
 
     await createPost();
     await settle();
 
-    expect(photoRepository.update).toHaveBeenCalled();
+    expect(mediaRepository.update).toHaveBeenCalled();
     expect(uncaught).not.toHaveBeenCalled();
   });
 
-  it('publishes the post only if it is still a Draft', async () => {
-    photoService.createPhotoGallery.mockReturnValue(of(undefined));
+  it('saves the processed media and publishes the post if it is still a Draft', async () => {
+    const ready = media.map((m) => ({
+      ...m,
+      status: MediaProcessingStatus.Ready,
+    }));
+    mediaService.createMediaGallery.mockReturnValue(of(ready));
     postRepository.update.mockResolvedValue({ affected: 1 });
 
     await createPost();
     await settle();
 
+    expect(mediaRepository.save).toHaveBeenCalledWith(ready);
     expect(postRepository.update).toHaveBeenCalledWith(
       { id: 1, status: PostStatus.Draft },
       { status: PostStatus.Published },
     );
+  });
+
+  it('saves nothing and keeps the post a Draft when processing fails', async () => {
+    mediaService.createMediaGallery.mockReturnValue(
+      throwError(() => new GalleryLayoutError()),
+    );
+
+    await createPost();
+    await settle();
+
+    expect(mediaRepository.save).not.toHaveBeenCalled();
+    expect(postRepository.update).not.toHaveBeenCalled();
   });
 });
 
@@ -130,15 +154,15 @@ describe('PostService.changePostStatus', () => {
 
   const givenPost = (
     status: PostStatus,
-    photoStatuses = [PhotoProcessingStatus.Ready],
+    mediaStatuses = [MediaProcessingStatus.Ready],
   ) =>
     postRepository.findOne.mockResolvedValue({
       id: 7,
       status,
       user: author,
-      photos: photoStatuses.map((photoStatus, i) => ({
+      media: mediaStatuses.map((mediaStatus, i) => ({
         id: i,
-        status: photoStatus,
+        status: mediaStatus,
       })),
     });
 
@@ -150,8 +174,8 @@ describe('PostService.changePostStatus', () => {
       providers: [
         PostService,
         { provide: PostRepository, useValue: postRepository },
-        { provide: PhotoRepository, useValue: {} },
-        { provide: PhotoService, useValue: {} },
+        { provide: MediaRepository, useValue: {} },
+        { provide: MediaService, useValue: {} },
         { provide: LikeService, useValue: {} },
         { provide: TransactionService, useValue: tx },
       ],
@@ -210,10 +234,10 @@ describe('PostService.changePostStatus', () => {
     expect(postRepository.update).not.toHaveBeenCalled();
   });
 
-  it('rejects restoring a post whose photos are not all Ready', async () => {
+  it('rejects restoring a post whose media are not all Ready', async () => {
     givenPost(PostStatus.Unpublished, [
-      PhotoProcessingStatus.Ready,
-      PhotoProcessingStatus.Failed,
+      MediaProcessingStatus.Ready,
+      MediaProcessingStatus.Failed,
     ]);
 
     await expect(
@@ -268,8 +292,8 @@ describe('PostService.getPaginatedPostsByAuthor access', () => {
       providers: [
         PostService,
         { provide: PostRepository, useValue: postRepository },
-        { provide: PhotoRepository, useValue: {} },
-        { provide: PhotoService, useValue: {} },
+        { provide: MediaRepository, useValue: {} },
+        { provide: MediaService, useValue: {} },
         { provide: LikeService, useValue: {} },
         { provide: TransactionService, useValue: tx },
       ],
@@ -340,7 +364,7 @@ describe('PostService.getPost', () => {
       id: 7,
       status,
       user: author,
-      photos: [],
+      media: [],
     });
 
   beforeEach(async () => {
@@ -351,8 +375,8 @@ describe('PostService.getPost', () => {
       providers: [
         PostService,
         { provide: PostRepository, useValue: postRepository },
-        { provide: PhotoRepository, useValue: {} },
-        { provide: PhotoService, useValue: {} },
+        { provide: MediaRepository, useValue: {} },
+        { provide: MediaService, useValue: {} },
         { provide: LikeService, useValue: likeService },
         { provide: TransactionService, useValue: tx },
       ],

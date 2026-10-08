@@ -23,6 +23,7 @@ export const ErrorCode = {
   FileRequired: 'file_required',
   FileTooLarge: 'file_too_large',
   InvalidImageFormat: 'invalid_image_format',
+  InvalidMediaFormat: 'invalid_media_format',
   ImageProcessingFailed: 'image_processing_failed',
 
   // pagination

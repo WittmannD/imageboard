@@ -1,7 +1,7 @@
 import type { MetaDescriptor } from 'react-router';
 import { publicConfig } from 'src/lib/config.ts';
-import { getImageByVariant, getImageUrl } from 'src/lib/utils/image-source.ts';
-import type { PhotoSource, PostDto } from 'src/services/api/types.ts';
+import { getLightboxSource, getMediaUrl } from 'src/lib/utils/image-source.ts';
+import type { PostDto } from 'src/services/api/types.ts';
 
 export const SITE_NAME = 'spottish.website';
 export const DESCRIPTION_MAX_LENGTH = 200;
@@ -12,18 +12,37 @@ function truncate(text: string, maxLength: number) {
     : text;
 }
 
+// e.g. "2 photos and 1 video"
+function describeMedia(post: PostDto) {
+  const count = (type: 'Image' | 'Video') =>
+    post.media.filter((media) => media.type === type).length;
+  const plural = (n: number, noun: string) =>
+    `${String(n)} ${noun}${n === 1 ? '' : 's'}`;
+  const images = count('Image');
+  const videos = count('Video');
+
+  return [
+    images ? plural(images, 'photo') : null,
+    videos ? plural(videos, 'video') : null,
+  ]
+    .filter((part) => part !== null)
+    .join(' and ');
+}
+
 export function buildPostMeta(post: PostDto): MetaDescriptor[] {
   const author = `@${post.user.username}`;
   const title = `Post by ${author} · ${SITE_NAME}`;
   const caption = post.caption?.replace(/\s+/g, ' ').trim();
-  const photoCount = post.photos.length;
   const description = caption
     ? truncate(caption, DESCRIPTION_MAX_LENGTH)
-    : `${photoCount} ${photoCount === 1 ? 'photo' : 'photos'} by ${author}`;
+    : `${describeMedia(post)} by ${author}`;
   const url = `${publicConfig.webUrl}/posts/${post.id}`;
-  const image = post.photos
-    .map((photo) => getImageByVariant<PhotoSource>(photo.sourceSet, 'lightbox'))
-    .find((source) => source !== null);
+  const preview = post.media
+    .map((media) => ({ media, image: getLightboxSource(media) }))
+    .find(({ image }) => image !== null);
+  const image = preview?.image ?? null;
+  const imageUrl =
+    preview?.image && getMediaUrl(preview.media, preview.image.key);
 
   return [
     { title },
@@ -34,9 +53,9 @@ export function buildPostMeta(post: PostDto): MetaDescriptor[] {
     { property: 'og:title', content: title },
     { property: 'og:description', content: description },
     { property: 'article:published_time', content: post.createdAt },
-    ...(image
+    ...(image && imageUrl
       ? [
-          { property: 'og:image', content: getImageUrl(image.key) },
+          { property: 'og:image', content: imageUrl },
           { property: 'og:image:type', content: image.mimetype },
           { property: 'og:image:width', content: String(image.width) },
           { property: 'og:image:height', content: String(image.height) },
@@ -49,9 +68,7 @@ export function buildPostMeta(post: PostDto): MetaDescriptor[] {
     },
     { name: 'twitter:title', content: title },
     { name: 'twitter:description', content: description },
-    ...(image
-      ? [{ name: 'twitter:image', content: getImageUrl(image.key) }]
-      : []),
+    ...(imageUrl ? [{ name: 'twitter:image', content: imageUrl }] : []),
     // only the author gets a post that isn't published; keep it out of indexes
     ...(post.status === 'Published'
       ? []

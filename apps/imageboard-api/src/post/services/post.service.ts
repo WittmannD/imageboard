@@ -10,21 +10,21 @@ import type { FileUpload } from '../../multer/file-upload.js';
 import type { UserEntity } from '../../user/entities/user.entity.js';
 import type { CreatePostDto } from '../dto/create-post.dto.js';
 import type { PostEntity } from '../entities/post.entity.js';
-import { PhotoProcessingStatus } from '../enums/photo-status.enum.js';
+import { MediaProcessingStatus } from '../enums/media-status.enum.js';
 import { PostStatus } from '../enums/post-status.enum.js';
 import {
   InvalidPostStatusTransitionError,
   PostAccessForbiddenError,
   PostNotFoundError,
 } from '../errors/post-service-error.js';
-import { PhotoRepository } from '../repositories/photo.repository.js';
+import { MediaRepository } from '../repositories/media.repository.js';
 import {
   type PostFeedItem,
   type PostPage,
   PostRepository,
 } from '../repositories/post.repository.js';
 import { LikeService } from './like.service.js';
-import { PhotoService } from './photo.service.js';
+import { MediaService } from './media.service.js';
 
 // cursor fields a client may paginate posts by
 const POST_SORTABLE_FIELDS = ['createdAt'] as const;
@@ -37,45 +37,41 @@ const AUTHOR_STATUS_TRANSITIONS: Record<PostStatus, readonly PostStatus[]> = {
   [PostStatus.Unpublished]: [PostStatus.Published],
 };
 
-// TODO: Refactoring: move image processing logic from both PostService and PhotoService to a separate service
 @Injectable()
 export class PostService {
   private readonly logger = new Logger(PostService.name);
 
   constructor(
     private readonly postRepository: PostRepository,
-    private readonly photoRepository: PhotoRepository,
-    private readonly photoService: PhotoService,
+    private readonly mediaRepository: MediaRepository,
+    private readonly mediaService: MediaService,
     private readonly likeService: LikeService,
     private readonly tx: TransactionService,
   ) {}
 
-  private createPhotoGalleryForPost(
+  // Processing runs outside of a transaction - encoding videos takes minutes -
+  // and only once all of the media are processed are they saved and the post
+  // published, together
+  private createMediaGalleryForPost(
     post: PostEntity,
     files: FileUpload[],
     em?: EntityManager,
   ) {
-    const photoEntities = post.photos;
+    return this.mediaService.createMediaGallery(post.media, files).pipe(
+      switchMap((media) =>
+        this.tx.withManager(em, async (entityManager) => {
+          await entityManager.withRepository(this.mediaRepository).save(media);
 
-    return this.tx.withManager$(em, (entityManager) =>
-      this.photoService
-        .createPhotoGallery(photoEntities, files, entityManager)
-        .pipe(
-          switchMap(() =>
-            defer(async () => {
-              const postRepository = entityManager.withRepository(
-                this.postRepository,
-              );
-
-              // only a post still in Draft: the author may have discarded
-              // the draft, setting Unpublished, while the gallery was processing
-              await postRepository.update(
-                { id: post.id, status: PostStatus.Draft },
-                { status: PostStatus.Published },
-              );
-            }),
-          ),
-        ),
+          // only a post still in Draft: the author may have discarded
+          // the draft, setting Unpublished, while the gallery was processing
+          await entityManager
+            .withRepository(this.postRepository)
+            .update(
+              { id: post.id, status: PostStatus.Draft },
+              { status: PostStatus.Published },
+            );
+        }),
+      ),
     );
   }
 
@@ -87,8 +83,8 @@ export class PostService {
   ) {
     const postEntity = await this.tx.withManager(em, async (entityManager) => {
       const postRepository = entityManager.withRepository(this.postRepository);
-      const photoRepository = entityManager.withRepository(
-        this.photoRepository,
+      const mediaRepository = entityManager.withRepository(
+        this.mediaRepository,
       );
 
       let postEntity = postRepository.createDraft({
@@ -98,13 +94,13 @@ export class PostService {
 
       postEntity = await entityManager.save(postEntity);
 
-      let photoEntities = photoRepository.createDraftsForPost(
+      let mediaEntities = mediaRepository.createDraftsForPost(
         postEntity,
         files,
       );
 
-      photoEntities = await entityManager.save(photoEntities);
-      postEntity.photos = photoEntities;
+      mediaEntities = await entityManager.save(mediaEntities);
+      postEntity.media = mediaEntities;
 
       return postEntity;
     });
@@ -112,21 +108,21 @@ export class PostService {
     // We don't need to pass entity manager here, let it run in its own transaction.
     // Nothing awaits it, so it must never error: an unhandled error in a
     // subscription is rethrown asynchronously and crashes the process
-    this.createPhotoGalleryForPost(postEntity, files)
+    this.createMediaGalleryForPost(postEntity, files)
       .pipe(
         catchError((error: unknown) => {
           this.logger.error(
-            `Failed to create photo gallery for post ${postEntity.id}`,
+            `Failed to create media gallery for post ${postEntity.id}`,
             error instanceof Error ? error.stack : String(error),
           );
 
-          return defer(() => this.markPhotosFailed(postEntity));
+          return defer(() => this.markMediaFailed(postEntity));
         }),
       )
       .subscribe({
         error: (error: unknown) => {
           this.logger.error(
-            `Unhandled error in photo gallery pipeline for post ${postEntity.id}`,
+            `Unhandled error in media gallery pipeline for post ${postEntity.id}`,
             error instanceof Error ? error.stack : String(error),
           );
         },
@@ -135,17 +131,17 @@ export class PostService {
     return postEntity;
   }
 
-  // The gallery transaction rolled back, leaving the post a Draft and its
-  // photos Processing; flag them so they don't look stuck forever
-  private async markPhotosFailed(post: PostEntity) {
+  // The gallery failed, leaving the post a Draft and its media Processing;
+  // flag them so they don't look stuck forever
+  private async markMediaFailed(post: PostEntity) {
     try {
-      await this.photoRepository.update(
-        { id: In(post.photos.map((photo) => photo.id)) },
-        { status: PhotoProcessingStatus.Failed },
+      await this.mediaRepository.update(
+        { id: In(post.media.map((media) => media.id)) },
+        { status: MediaProcessingStatus.Failed },
       );
     } catch (error) {
       this.logger.error(
-        `Failed to mark photos of post ${post.id} as failed`,
+        `Failed to mark media of post ${post.id} as failed`,
         error instanceof Error ? error.stack : String(error),
       );
     }
@@ -153,7 +149,7 @@ export class PostService {
 
   /**
    * Moves the author's own post to `status`. Unpublished is how a post is
-   * deleted; restoring it to Published needs all its photos Ready.
+   * deleted; restoring it to Published needs all its media Ready.
    */
   async changePostStatus(
     user: UserEntity,
@@ -165,7 +161,7 @@ export class PostService {
       const postRepository = entityManager.withRepository(this.postRepository);
 
       const post = await postRepository.findOne({
-        relations: { user: true, photos: true },
+        relations: { user: true, media: true },
         where: { id: postId },
       });
 
@@ -187,14 +183,12 @@ export class PostService {
 
       if (
         status === PostStatus.Published &&
-        post.photos.some(
-          (photo) => photo.status !== PhotoProcessingStatus.Ready,
-        )
+        post.media.some((media) => media.status !== MediaProcessingStatus.Ready)
       ) {
         throw new InvalidPostStatusTransitionError(
           from,
           status,
-          'Cannot publish a post whose photos are not all processed',
+          'Cannot publish a post whose media are not all processed',
         );
       }
 
@@ -220,7 +214,7 @@ export class PostService {
   }
 
   /**
-   * One post with its photos and author; `viewer` fills `likedByMe`.
+   * One post with its media and author; `viewer` fills `likedByMe`.
    * Only the author may get a post that isn't Published.
    */
   async getPost(
@@ -232,7 +226,7 @@ export class PostService {
       const post = await entityManager
         .withRepository(this.postRepository)
         .findOne({
-          relations: { user: true, photos: true },
+          relations: { user: true, media: true },
           where: { id: postId },
         });
 
@@ -333,7 +327,7 @@ export class PostService {
 
       const posts = await postRepository
         .createQueryBuilder('post')
-        .leftJoinAndSelect('post.photos', 'photo')
+        .leftJoinAndSelect('post.media', 'media')
         .leftJoinAndSelect('post.user', 'user')
         .where('post.id IN (:...ids)', { ids: page.ids })
         .getMany();

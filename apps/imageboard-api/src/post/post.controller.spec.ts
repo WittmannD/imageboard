@@ -179,7 +179,7 @@ describe('PostController authenticated actions', () => {
     vi.resetAllMocks();
     authService.validateAccessToken.mockResolvedValue(user);
     postService.getPaginatedPublishedPostsWithUser.mockResolvedValue({
-      items: [{ id: 7, likesCount: 3, likedByMe: true, photos: [], user }],
+      items: [{ id: 7, likesCount: 3, likedByMe: true, media: [], user }],
       nextCursor: null,
       hasNextPage: false,
     });
@@ -319,7 +319,7 @@ describe('PostController authenticated actions', () => {
     postService.changePostStatus.mockResolvedValue({
       id: 7,
       status: 'Unpublished',
-      photos: [],
+      media: [],
       user: { ...user, credentials: [{ secret: 'x' }] },
     });
 
@@ -383,7 +383,7 @@ describe('PostController authenticated actions', () => {
       id: 7,
       status: 'Published',
       likedByMe: false,
-      photos: [],
+      media: [],
       user: { ...user, credentials: [{ secret: 'x' }] },
     });
 
@@ -401,7 +401,7 @@ describe('PostController authenticated actions', () => {
     postService.getPost.mockResolvedValue({
       id: 7,
       likedByMe: true,
-      photos: [],
+      media: [],
       user,
     });
 

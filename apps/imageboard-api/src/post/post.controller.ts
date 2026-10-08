@@ -26,11 +26,13 @@ import { KeySetQueryDto } from '../common/dto/key-set-query.dto.js';
 import { PageDto } from '../common/dto/page.dto.js';
 import { AuthGuard } from '../common/guard/auth.guard.js';
 import { OptionalAuthGuard } from '../common/guard/optional-auth.guard.js';
-import { ParseImageFilePipe } from '../common/pipes/parse-image-file.pipe.js';
+import { ParseMediaFilesPipe } from '../common/pipes/parse-media-files.pipe.js';
 import {
   ALLOWED_POST_IMAGE_FORMATS,
-  MAX_IMAGES_PER_POST,
+  ALLOWED_POST_VIDEO_FORMATS,
+  MAX_MEDIA_PER_POST,
   POST_IMAGE_SIZE_LIMIT,
+  POST_VIDEO_SIZE_LIMIT,
 } from '../config/configuration.js';
 import { CREATE_POST_THROTTLE } from '../config/throttler.config.js';
 import type { FileUpload } from '../multer/file-upload.js';
@@ -48,6 +50,17 @@ import type { PostFeedItem, PostPage } from './repositories/post.repository.js';
 import { LikeService } from './services/like.service.js';
 import { PostService } from './services/post.service.js';
 
+const parseMediaFiles = new ParseMediaFilesPipe({
+  image: {
+    formats: ALLOWED_POST_IMAGE_FORMATS,
+    sizeLimit: POST_IMAGE_SIZE_LIMIT,
+  },
+  video: {
+    formats: ALLOWED_POST_VIDEO_FORMATS,
+    sizeLimit: POST_VIDEO_SIZE_LIMIT,
+  },
+});
+
 @UseFilters(PostErrorFilter)
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('posts')
@@ -60,19 +73,24 @@ export class PostController {
   @UseGuards(AuthGuard)
   @Throttle(CREATE_POST_THROTTLE)
   @Post()
-  @UseInterceptors(FilesInterceptor('images', MAX_IMAGES_PER_POST))
+  // images and videos; multer stops reading a file at the larger limit, the
+  // pipe then holds each file to the limit of its own kind
+  @UseInterceptors(
+    FilesInterceptor('media', MAX_MEDIA_PER_POST, {
+      limits: {
+        fileSize: Math.max(POST_IMAGE_SIZE_LIMIT, POST_VIDEO_SIZE_LIMIT),
+      },
+    }),
+  )
   @SerializeOptions({ type: PostDraftDto })
   public async create(
     @User() user: UserEntity,
-    @UploadedFiles(
-      ParseImageFilePipe(ALLOWED_POST_IMAGE_FORMATS, POST_IMAGE_SIZE_LIMIT),
-    )
-    images: FileUpload[],
+    @UploadedFiles(parseMediaFiles) media: FileUpload[],
     @Body() body: CreatePostDto,
   ): Promise<PostDraftDto> {
     return (await this.postService.createUserPost(
       user,
-      images,
+      media,
       body,
     )) as PostDraftDto;
   }

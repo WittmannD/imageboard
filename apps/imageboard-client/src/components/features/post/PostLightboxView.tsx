@@ -13,8 +13,8 @@ import {
   CarouselPrevious,
   type CarouselApi,
 } from 'src/components/ui/carousel/Carousel.tsx';
-import { getImageByVariant, getImageUrl } from 'src/lib/utils/image-source.ts';
-import type { PhotoDto, PhotoSource, PostDto } from 'src/services/api/types.ts';
+import { getLightboxSource, getMediaUrl } from 'src/lib/utils/image-source.ts';
+import type { MediaDto, MediaSource, PostDto } from 'src/services/api/types.ts';
 import {
   Card,
   CardAction,
@@ -56,16 +56,16 @@ function PostLightboxView({
 
   const slides = useMemo(
     () =>
-      post.photos
+      post.media
         .map((photo) => ({
           photo,
-          image: getImageByVariant<PhotoSource>(photo.sourceSet, 'lightbox'),
+          image: getLightboxSource(photo),
         }))
         .filter(
-          (slide): slide is { photo: PhotoDto; image: PhotoSource } =>
+          (slide): slide is { photo: MediaDto; image: MediaSource } =>
             !!slide.image,
         ),
-    [post.photos],
+    [post.media],
   );
   const startIndex = useMemo(
     () =>
@@ -146,7 +146,7 @@ function PostLightboxView({
                 {({ toggle }) => (
                   <img
                     data-lightbox-stop
-                    src={getImageUrl(image.key)}
+                    src={getMediaUrl(photo, image.key)}
                     onClick={toggle}
                     loading="eager"
                     alt=""

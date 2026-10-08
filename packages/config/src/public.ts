@@ -9,6 +9,7 @@ export interface PublicConfig {
   apiBaseUrl: string;
   oidcIssuerUrl: string;
   imageServerUrl: string;
+  videoServerUrl: string;
 
   post: Profile['post'];
   user: Profile['user'];
@@ -20,6 +21,7 @@ export function toPublicConfig(config: AppConfig): PublicConfig {
     apiBaseUrl: config.urls.apiProxy,
     oidcIssuerUrl: config.urls.auth,
     imageServerUrl: config.urls.imageServer,
+    videoServerUrl: config.urls.videoServer,
 
     post: config.post,
     user: config.user,

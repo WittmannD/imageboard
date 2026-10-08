@@ -1,4 +1,4 @@
-export enum PhotoProcessingStatus {
+export enum MediaProcessingStatus {
   Pending = 'Pending',
   Processing = 'Processing',
   Failed = 'Failed',

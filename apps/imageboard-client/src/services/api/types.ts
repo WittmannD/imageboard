@@ -1,4 +1,5 @@
-export type PhotoStatus = 'Pending' | 'Processing' | 'Ready' | 'Failed';
+export type MediaStatus = 'Pending' | 'Processing' | 'Ready' | 'Failed';
+export type MediaType = 'Image' | 'Video';
 export type PostStatus = 'Draft' | 'Published' | 'Unpublished';
 
 export interface LayoutTile {
@@ -20,13 +21,15 @@ export interface AvatarMetadata extends VariantMetadata {
   variant: 'avatar' | 'icon_small' | 'icon_medium' | 'icon_large';
 }
 
-export interface GalleryPhotoMetadata extends VariantMetadata {
+// an image's tile, or the still of a video's tile until the gallery plays videos
+export interface GalleryMediaMetadata extends VariantMetadata {
   tile: LayoutTile;
-  variant: 'tile';
+  variant: 'tile' | 'tilePoster';
 }
 
-export interface LightboxPhotoMetadata extends VariantMetadata {
-  variant: 'lightbox';
+// an image's lightbox size, or a video's poster
+export interface LightboxMediaMetadata extends VariantMetadata {
+  variant: 'lightbox' | 'poster';
 }
 
 export interface ImageSource {
@@ -38,22 +41,23 @@ export interface ImageSource {
   metadata?: VariantMetadata;
 }
 
-export interface PhotoSource extends ImageSource {
-  metadata?: GalleryPhotoMetadata | LightboxPhotoMetadata;
+export interface MediaSource extends ImageSource {
+  metadata?: GalleryMediaMetadata | LightboxMediaMetadata;
 }
 
-export interface PhotoDraftDto {
+export interface MediaDraftDto {
   id: number;
   uploadUuid: string;
   key?: string;
-  status: PhotoStatus;
+  type: MediaType;
+  status: MediaStatus;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
 }
 
-export interface PhotoDto extends PhotoDraftDto {
-  sourceSet: PhotoSource[];
+export interface MediaDto extends MediaDraftDto {
+  sourceSet: MediaSource[];
 }
 
 export interface PostDraftDto {
@@ -62,14 +66,14 @@ export interface PostDraftDto {
   status: PostStatus;
   likesCount: number;
   user: UserDto;
-  photos: PhotoDraftDto[];
+  media: MediaDraftDto[];
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
 }
 
 export interface PostDto extends PostDraftDto {
-  photos: PhotoDto[];
+  media: MediaDto[];
   // false for anonymous viewers
   likedByMe: boolean;
 }

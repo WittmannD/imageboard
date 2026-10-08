@@ -56,12 +56,14 @@ server {
     }
 
     location = /api {
-        client_max_body_size 50m;
+        # a post carries up to 5 videos of up to 50MB each (packages/config)
+        client_max_body_size 260m;
         proxy_pass $upstream;
     }
 
     location ^~ /api/ {
-        client_max_body_size 50m;
+        # a post carries up to 5 videos of up to 50MB each (packages/config)
+        client_max_body_size 260m;
         proxy_pass $upstream;
     }
 }
@@ -81,7 +83,8 @@ server {
             proxy_pass $upstream;
         }
 
-        client_max_body_size 50m;
+        # a post carries up to 5 videos of up to 50MB each (packages/config)
+        client_max_body_size 260m;
         proxy_pass $upstream;
     }
 

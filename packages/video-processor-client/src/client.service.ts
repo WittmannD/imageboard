@@ -3,6 +3,8 @@ import { ClientProxy } from '@nestjs/microservices';
 import { Observable } from 'rxjs';
 
 import {
+  type VideoProbeMessage,
+  type VideoProbeResponse,
   type VideoProcessingMessage,
   type VideoProcessingResponse,
   VideoProcessorMessagePattern,
@@ -21,6 +23,13 @@ export class VideoProcessorService {
   ): Observable<VideoProcessingResponse> {
     return this.client.send<VideoProcessingResponse, VideoProcessingMessage>(
       VideoProcessorMessagePattern.VideoFromConfig,
+      data,
+    );
+  }
+
+  public probe(data: VideoProbeMessage): Observable<VideoProbeResponse> {
+    return this.client.send<VideoProbeResponse, VideoProbeMessage>(
+      VideoProcessorMessagePattern.VideoProbe,
       data,
     );
   }

@@ -10,6 +10,7 @@ export const production: ProfileOverrides = {
   domain: 'spottish.website',
   scheme: 'https',
   imageServerUrl: 'https://imageboard.s3.filebase.io',
+  videoServerUrl: 'https://imageboard-videos.s3.filebase.io',
   database: {
     dropSchema: false,
   },

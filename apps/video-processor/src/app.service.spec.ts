@@ -59,6 +59,7 @@ describe.runIf(hasFfmpeg)('AppService', { timeout: 60_000 }, () => {
   let sourceRoot: string;
   let root: string;
   let service: AppService;
+  let queue: JobQueue;
   let configYaml: string;
   let mockTransformConfigService: {
     getOrThrow: ReturnType<typeof vi.fn>;
@@ -101,6 +102,7 @@ describe.runIf(hasFfmpeg)('AppService', { timeout: 60_000 }, () => {
     vi.clearAllMocks();
 
     root = await fsPromises.mkdtemp(path.join(testRoot, 'app-service-'));
+    queue = new JobQueue(1);
     configYaml = DEFAULT_CONFIG_YAML;
 
     mockTransformConfigService = {
@@ -127,7 +129,7 @@ describe.runIf(hasFfmpeg)('AppService', { timeout: 60_000 }, () => {
           useValue: new LocalStorageDriver({ root }),
         },
         { provide: Ffmpeg, useValue: ffmpeg },
-        { provide: JobQueue, useValue: new JobQueue(1) },
+        { provide: JobQueue, useValue: queue },
         AppService,
       ],
     }).compile();
@@ -137,6 +139,57 @@ describe.runIf(hasFfmpeg)('AppService', { timeout: 60_000 }, () => {
 
   afterEach(async () => {
     await fsPromises.rm(root, { recursive: true, force: true });
+  });
+
+  describe('probe', () => {
+    it('returns the dimensions of the video', async () => {
+      await expect(
+        firstValueFrom(service.probe('original.mp4')),
+      ).resolves.toEqual({ width: 640, height: 360 });
+    });
+
+    it('does not wait for queued jobs', async () => {
+      let finishJob!: () => void;
+      const job = queue.run(
+        () =>
+          new Promise<void>((resolve) => {
+            finishJob = resolve;
+          }),
+      );
+
+      await expect(
+        firstValueFrom(service.probe('original.mp4')),
+      ).resolves.toEqual({ width: 640, height: 360 });
+
+      finishJob();
+      await job;
+    });
+
+    it('fails for a file without a video stream', async () => {
+      await ffmpeg.run([
+        '-loglevel',
+        'error',
+        '-f',
+        'lavfi',
+        '-i',
+        'sine=duration=1',
+        '-c:a',
+        'aac',
+        path.join(sourceRoot, 'audio.m4a'),
+      ]);
+
+      await expect(firstValueFrom(service.probe('audio.m4a'))).rejects.toThrow(
+        'audio.m4a has no video stream',
+      );
+    });
+
+    it('fails for a file that is not a video', async () => {
+      await fsPromises.writeFile(path.join(sourceRoot, 'text.mp4'), 'hello');
+
+      await expect(firstValueFrom(service.probe('text.mp4'))).rejects.toThrow(
+        /ffprobe failed/,
+      );
+    });
   });
 
   describe('process', () => {
@@ -354,9 +407,20 @@ describe.runIf(hasFfmpeg)('AppService', { timeout: 60_000 }, () => {
         resolve(__dirname, '../config', DEFAULT_VIDEO_TRANSFORM_CONFIG),
         'utf-8',
       );
+      // a tile as the API's gallery layout engine lays it out
+      const tile = {
+        key: 'original',
+        width: 241,
+        height: 393,
+        fit: 'contain',
+        column: 1,
+        row: 1,
+        columnSpan: 1,
+        rowSpan: 2,
+      };
 
       const outputs = await firstValueFrom(
-        service.processFromConfig('original.mp4'),
+        service.processFromConfig('original.mp4', { tile }),
       );
 
       expect(outputs).toMatchObject([
@@ -368,9 +432,26 @@ describe.runIf(hasFfmpeg)('AppService', { timeout: 60_000 }, () => {
           metadata: { variant: 'video', hasAudio: true },
         },
         { key: 'original/poster.jpeg', format: 'jpeg', width: 640 },
-        { key: 'original/preview.mp4', format: 'mp4', width: 480, height: 270 },
+        {
+          key: 'original/tile.mp4',
+          format: 'mp4',
+          // rounded down to even sizes, letterboxed
+          width: 240,
+          height: 392,
+          metadata: { variant: 'tile', tile },
+        },
+        {
+          key: 'original/tile-poster.jpeg',
+          format: 'jpeg',
+          width: 240,
+          height: 392,
+          metadata: { variant: 'tilePoster', tile },
+        },
       ]);
       expect(outputs[2]?.duration).toBeCloseTo(2, 0);
+      await expect(
+        ffmpeg.probe(path.join(root, 'original/tile.mp4')),
+      ).resolves.toMatchObject({ hasAudio: false });
     });
 
     it('rejects variables that are not valid operation args', async () => {

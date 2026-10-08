@@ -5,15 +5,11 @@ import {
   CardHeader,
   CardTitle,
 } from 'src/components/ui/card/Card.tsx';
-import type {
-  LayoutTile,
-  PhotoSource,
-  PostDto,
-} from 'src/services/api/types.ts';
+import type { LayoutTile, PostDto } from 'src/services/api/types.ts';
 import React from 'react';
 import { Link } from 'react-router';
 import { useDialogManager } from 'src/lib/dialog-manager/context.tsx';
-import { getImageByVariant, getImageUrl } from 'src/lib/utils/image-source.ts';
+import { getMediaUrl, getTileSource } from 'src/lib/utils/image-source.ts';
 import {
   UserAvatar,
   UserBadge,
@@ -33,9 +29,9 @@ const getImageCellStyle = (tile: LayoutTile): React.CSSProperties => ({
 function PostGalleryTiles({ post }: { post: PostDto }) {
   const { getDialogSearchParams } = useDialogManager();
 
-  return post.photos.map((photo) => {
-    const tile = getImageByVariant<PhotoSource>(photo.sourceSet, 'tile');
-    if (!tile || tile.metadata?.variant !== 'tile') return null;
+  return post.media.map((photo) => {
+    const tile = getTileSource(photo);
+    if (!tile?.metadata || !('tile' in tile.metadata)) return null;
     return (
       <Link
         key={photo.id}
@@ -52,7 +48,7 @@ function PostGalleryTiles({ post }: { post: PostDto }) {
       >
         <img
           key={photo.id}
-          src={getImageUrl(tile.key)}
+          src={getMediaUrl(photo, tile.key)}
           width={tile.width}
           height={tile.height}
           loading="lazy"
@@ -71,7 +67,7 @@ function PostGalleryTiles({ post }: { post: PostDto }) {
 }
 
 function Post({ data: post }: { data: PostDto }) {
-  const hasPhotos = post.photos.length > 0;
+  const hasPhotos = post.media.length > 0;
 
   return (
     <Card size="sm">

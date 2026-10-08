@@ -15,8 +15,9 @@ import {
   PostNotFoundError,
 } from './errors/post-service-error.js';
 
-// Gallery errors (InvalidImageError, GalleryLayoutError, ImageProcessingError)
-// happen after the response is sent and are handled inside PostService
+// Gallery errors (InvalidImageError, InvalidVideoError, GalleryLayoutError,
+// ImageProcessingError, VideoProcessingError) happen after the response is
+// sent and are handled inside PostService
 export class PostErrorFilter extends ServiceErrorFilter {
   protected readonly mappings = [
     mapping(InvalidCursorError, (e) =>

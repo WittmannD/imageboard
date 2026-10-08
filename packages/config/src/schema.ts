@@ -23,6 +23,8 @@ const port = z.number().int().min(1).max(65_535);
 const positiveInt = z.number().int().positive();
 const mime = z.string().regex(mimeTypeRegex);
 const imageFileFormat = z.enum(imageFileFormats);
+// subtypes of the video/* mime types
+const videoFileFormat = z.enum(['mp4', 'webm', 'quicktime']);
 const url = z.url();
 
 /** A @nestjs/throttler limit: at most `limit` requests per `ttl` milliseconds. */
@@ -47,6 +49,8 @@ export const profileSchema = z.object({
 
   /** Public base URL browsers load processed images from (the S3 bucket). */
   imageServerUrl: url,
+  /** Public base URL browsers load processed videos from (the video S3 bucket). */
+  videoServerUrl: url,
 
   throttle: z.object({
     /** Per-IP rate limits. Off for e2e runs, where every request shares one client IP. */
@@ -169,6 +173,8 @@ export const profileSchema = z.object({
     timeoutMs: positiveInt,
     /** Jobs encoded at once; further jobs wait in the processor's queue. */
     concurrency: positiveInt,
+    /** How long a client waits for the dimensions of a video. */
+    probeTimeoutMs: positiveInt,
     s3: z.object({
       endpoint: url,
       region: z.string().min(1),
@@ -179,10 +185,14 @@ export const profileSchema = z.object({
   }),
 
   post: z.object({
-    maxImagesPerPost: positiveInt,
+    /** Images and videos together. */
+    maxMediaPerPost: positiveInt,
     imageSizeLimitBytes: positiveInt,
     allowedImageMimeTypes: z.array(mime),
     allowedImageFormats: z.array(imageFileFormat),
+    videoSizeLimitBytes: positiveInt,
+    allowedVideoMimeTypes: z.array(mime),
+    allowedVideoFormats: z.array(videoFileFormat),
   }),
 
   user: z.object({
@@ -224,6 +234,7 @@ export interface Urls {
   /** Where the IdP sends users for login/consent. Trailing slash matters: the provider resolves `login` against it. */
   interactions: string;
   imageServer: string;
+  videoServer: string;
   oidcRedirectUris: string[];
   oidcPostLogoutRedirectUris: string[];
   /** Service URLs on the internal Docker network (used by nginx). */

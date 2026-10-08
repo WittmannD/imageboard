@@ -12,7 +12,10 @@ const DAY_IN_SEC = 24 * HOUR_IN_SEC;
  * Defaults shared by every environment. Profiles only override what differs,
  * everything else lives here.
  */
-export const base: Omit<Profile, 'env' | 'domain' | 'imageServerUrl' | 'e2e'> = {
+export const base: Omit<
+  Profile,
+  'env' | 'domain' | 'imageServerUrl' | 'videoServerUrl' | 'e2e'
+> = {
   scheme: 'http',
   allowInsecureOidcRequests: false,
 
@@ -137,6 +140,7 @@ export const base: Omit<Profile, 'env' | 'domain' | 'imageServerUrl' | 'e2e'> = 
     timeoutMs: 10 * MINUTE_IN_MS, // 10 minutes
     // ffmpeg already uses every core for a single encode.
     concurrency: 1,
+    probeTimeoutMs: 30_000, // 30 seconds
     s3: {
       endpoint: 'https://s3.filebase.io',
       region: 'auto',
@@ -146,7 +150,7 @@ export const base: Omit<Profile, 'env' | 'domain' | 'imageServerUrl' | 'e2e'> = 
   },
 
   post: {
-    maxImagesPerPost: 5,
+    maxMediaPerPost: 5,
     allowedImageMimeTypes: [
       'image/jpeg',
       'image/jpg',
@@ -158,6 +162,9 @@ export const base: Omit<Profile, 'env' | 'domain' | 'imageServerUrl' | 'e2e'> = 
     ],
     allowedImageFormats: ['jpeg', 'jpg', 'png', 'gif', 'webp', 'bmp', 'avif'],
     imageSizeLimitBytes: 6291456, // 6MB
+    allowedVideoMimeTypes: ['video/mp4', 'video/webm', 'video/quicktime'],
+    allowedVideoFormats: ['mp4', 'webm', 'quicktime'],
+    videoSizeLimitBytes: 52428800, // 50MB
   },
 
   user: {

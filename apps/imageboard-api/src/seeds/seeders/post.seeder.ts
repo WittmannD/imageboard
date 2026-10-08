@@ -4,7 +4,7 @@ import { type Seeder, SeederFactoryManager } from 'typeorm-extension';
 
 import type { ImageOutput } from '@hdotu1/image-processor-contract';
 
-import { PhotoEntity } from '../../post/entities/photo.entity.js';
+import { MediaEntity } from '../../post/entities/media.entity.js';
 import { PostEntity } from '../../post/entities/post.entity.js';
 import { FederatedCredentialsEntity } from '../../federated-credentials/entities/federated-credentials.entity.js';
 import { UserEntity } from '../../user/entities/user.entity.js';
@@ -276,7 +276,7 @@ const galleries = [
   ],
 ];
 
-const photoGalleryFactory = (): ImageOutput[][] => {
+const mediaGalleryFactory = (): ImageOutput[][] => {
   const index = faker.number.int({ min: 0, max: galleries.length - 1 });
   const gallery = galleries[index];
 
@@ -295,7 +295,7 @@ export default class PostSeeder implements Seeder {
   ): Promise<void> {
     const userFactory = factoryManager.get(UserEntity);
     const postFactory = factoryManager.get(PostEntity);
-    const photoFactory = factoryManager.get(PhotoEntity);
+    const mediaFactory = factoryManager.get(MediaEntity);
     const credentialsFactory = factoryManager.get(FederatedCredentialsEntity);
 
     const users = await userFactory.saveMany(5);
@@ -305,10 +305,10 @@ export default class PostSeeder implements Seeder {
       const posts = await postFactory.setMeta({ user }).saveMany(5);
 
       for (const post of posts) {
-        const gallery = photoGalleryFactory();
+        const gallery = mediaGalleryFactory();
 
         for (const images of gallery) {
-          await photoFactory.setMeta({ post, sourceSet: images }).save();
+          await mediaFactory.setMeta({ post, sourceSet: images }).save();
         }
       }
     }

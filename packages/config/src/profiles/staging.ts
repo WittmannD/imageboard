@@ -10,6 +10,7 @@ export const staging: ProfileOverrides = {
   domain: 'staging.spottish.website',
   scheme: 'https',
   imageServerUrl: 'https://imageboard-staging.s3.filebase.io',
+  videoServerUrl: 'https://imageboard-video-staging.s3.filebase.io',
   database: {
     dropSchema: false,
     seed: true,

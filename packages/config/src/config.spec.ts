@@ -23,6 +23,7 @@ describe('getConfig', () => {
       auth: 'http://auth.e2e.test',
       interactions: 'http://e2e.test/auth/',
       imageServer: 'http://s3.e2e.test:9000/imageboard',
+      videoServer: 'http://s3.e2e.test:9000/imageboard-videos',
       oidcRedirectUris: ['http://e2e.test/auth/callback'],
       oidcPostLogoutRedirectUris: ['http://e2e.test/'],
       internal: {

@@ -27,6 +27,8 @@
     "@hdotu1/database-common": "file:../../packages/database-common",
     "@hdotu1/gallery-layout-engine": "file:../../packages/gallery-layout-engine",
     "@hdotu1/image-processor-client": "file:../../packages/image-processor-client",
+    "@hdotu1/video-processor-client": "file:../../packages/video-processor-client",
+    "@hdotu1/video-processor-contract": "file:../../packages/video-processor-contract",
     "@nestjs/common": "^11.1.2",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.2",

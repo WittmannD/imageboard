@@ -7,6 +7,7 @@ export const development: ProfileOverrides = {
   // The issuer is served over plain http.
   allowInsecureOidcRequests: true,
   imageServerUrl: 'https://imageboard.s3.filebase.io',
+  videoServerUrl: 'https://imageboard-videos.s3.filebase.io',
   database: {
     seed: true,
   },

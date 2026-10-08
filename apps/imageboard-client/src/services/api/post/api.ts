@@ -102,7 +102,7 @@ export const postsApi = createApi({
         }
 
         files.forEach((file) => {
-          formData.append('images', file);
+          formData.append('media', file);
         });
 
         return {

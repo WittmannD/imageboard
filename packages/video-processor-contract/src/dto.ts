@@ -22,3 +22,13 @@ export interface VideoProcessingMessage {
 export interface VideoProcessingResponse {
   outputs: VideoOutput[];
 }
+
+export interface VideoProbeMessage {
+  key: string;
+}
+
+// Display dimensions, i.e. with the rotation of the video applied
+export interface VideoProbeResponse {
+  width: number;
+  height: number;
+}

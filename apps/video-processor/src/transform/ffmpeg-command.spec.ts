@@ -152,6 +152,23 @@ describe('operations', () => {
       );
     });
 
+    it('letterboxes to exactly the box with contain', () => {
+      expect(filtersOf({ width: 200, height: 100, fit: 'contain' })).toEqual([
+        'scale=w=200:h=100:force_original_aspect_ratio=decrease:force_divisible_by=2',
+        'pad=200:100:(ow-iw)/2:(oh-ih)/2',
+        'setsar=1',
+      ]);
+    });
+
+    it('rounds sizes down to even ones', () => {
+      expect(filtersOf({ width: 241, height: 393, fit: 'cover' })).toEqual([
+        'scale=w=240:h=392:force_original_aspect_ratio=increase',
+        'crop=240:392',
+        'setsar=1',
+      ]);
+      expect(filtersOf({ width: 1 })[0]).toBe('scale=w=2:h=-2');
+    });
+
     it('needs a dimension', () => {
       expect(() => filtersOf({})).toThrow(TypeError);
     });

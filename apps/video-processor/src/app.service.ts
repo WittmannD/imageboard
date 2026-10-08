@@ -7,6 +7,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { defer, Observable } from 'rxjs';
 
 import type { StorageDriver } from '@hdotu1/media-storage/drivers';
+import type { VideoProbeResponse } from '@hdotu1/video-processor-contract';
 
 import { Ffmpeg } from './ffmpeg/ffmpeg.js';
 import { SOURCE_STORAGE } from './providers/storage/source-storage.provider.js';
@@ -63,6 +64,24 @@ export class AppService {
     } finally {
       await rm(workDir, { recursive: true, force: true });
     }
+  }
+
+  /**
+   * The display dimensions of the video. Not queued: probing takes
+   * milliseconds, so it should not wait behind encoding jobs.
+   */
+  public probe(videoKey: string): Observable<VideoProbeResponse> {
+    return defer(() =>
+      this.withSource(videoKey, async (input) => {
+        const { width, height } = await this.ffmpeg.probe(input);
+
+        if (width === undefined || height === undefined) {
+          throw new Error(`${videoKey} has no video stream`);
+        }
+
+        return { width, height };
+      }),
+    );
   }
 
   public process(

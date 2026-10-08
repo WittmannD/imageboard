@@ -25,7 +25,7 @@ export interface CreatePostFormProps {
 const acceptImageFormats = publicConfig.post.allowedImageFormats.map(
   (f) => `.${f}`,
 );
-const maxFiles = publicConfig.post.maxImagesPerPost;
+const maxFiles = publicConfig.post.maxMediaPerPost;
 const maxSize = publicConfig.post.imageSizeLimitBytes;
 
 export default function CreatePostForm({ onSuccess }: CreatePostFormProps) {

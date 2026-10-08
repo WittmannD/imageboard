@@ -104,7 +104,7 @@
       "properties": {
         "width": { "$ref": "#/$defs/Dimension" },
         "height": { "$ref": "#/$defs/Dimension" },
-        "fit": { "enum": ["inside", "cover", "fill"] },
+        "fit": { "enum": ["inside", "contain", "cover", "fill"] },
         "withoutEnlargement": { "type": "boolean" }
       }
     },

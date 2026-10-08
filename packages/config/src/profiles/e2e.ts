@@ -14,6 +14,7 @@ export const e2e: ProfileOverrides = {
   allowInsecureOidcRequests: true,
   // Public-read MinIO bucket the client renders <img> tags from.
   imageServerUrl: `http://s3.${domain}:${s3Port}/imageboard`,
+  videoServerUrl: `http://s3.${domain}:${s3Port}/imageboard-videos`,
 
   // Every request reaches the services from the client container's one IP, so
   // the per-IP rate limits cannot work for a test run.
