@@ -22,4 +22,7 @@ export const staging: ProfileOverrides = {
   imageProcessor: {
     s3: { bucket: 'imageboard-staging' },
   },
+  videoProcessor: {
+    s3: { bucket: 'imageboard-videos-staging' },
+  },
 };

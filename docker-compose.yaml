@@ -131,6 +131,23 @@ services:
     networks:
       - internal
 
+  video-processor:
+    build:
+      context: .
+      dockerfile: apps/video-processor/Dockerfile
+    container_name: video-processor
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      <<: *app-env
+    env_file:
+      - './.env'
+    volumes:
+      - shared-data:/shared
+    networks:
+      - internal
+
   imageboard-identity-provider:
     build:
       context: .

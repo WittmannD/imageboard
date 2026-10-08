@@ -1,0 +1,71 @@
+$schema: './schema/video-transform-config.schema.json'
+transform:
+  # The video, at most 720p
+  - - operation: scale
+      args:
+        width: 1280
+        height: 720
+        fit: inside
+        withoutEnlargement: true
+    - operation: h264
+      args:
+        crf: 23
+        preset: medium
+    - operation: save
+      args:
+        key: ${{file.name}}/video.mp4
+        contentType: video/mp4
+        metadata:
+          variant: video
+          hasAudio: ${{metadata.hasAudio}}
+
+  # Poster shown before playback starts
+  - - operation: frame
+      args:
+        time: 0
+        format: jpeg
+        quality: 85
+    - operation: scale
+      args:
+        width: 1280
+        height: 720
+        fit: inside
+        withoutEnlargement: true
+    - operation: save
+      args:
+        key: ${{file.name}}/poster.jpeg
+        contentType: image/jpeg
+        metadata:
+          variant: poster
+
+  # Short silent loop for gallery previews
+  - - operation: trim
+      args:
+        duration: 3
+    - operation: scale
+      args:
+        width: ${{variables.tile.width}}
+        height: ${{variables.tile.height}}
+        fit: inside
+        withoutEnlargement: true
+    - operation: mute
+      args: {}
+    - operation: h264
+      args:
+        crf: 28
+        preset: fast
+    - operation: save
+      args:
+        key: ${{file.name}}/preview.mp4
+        contentType: video/mp4
+        metadata:
+          variant: preview
+          tile:
+            key: ${{variables.tile.key}}
+            width: ${{variables.tile.width}}
+            height: ${{variables.tile.height}}
+            fit: ${{variables.tile.fit}}
+            column: ${{variables.tile.column}}
+            row: ${{variables.tile.row}}
+            columnSpan: ${{variables.tile.columnSpan}}
+            rowSpan: ${{variables.tile.rowSpan}}

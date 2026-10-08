@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "video-transform-config.schema.json",
+  "title": "Config",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["transform"],
+  "properties": {
+    "transform": { "$ref": "#/$defs/NestedTransformOperations" }
+  },
+  "$defs": {
+    "OperationName": {
+      "title": "OperationName",
+      "type": "string",
+      "enum": [
+        "crop",
+        "fps",
+        "frame",
+        "h264",
+        "mute",
+        "save",
+        "scale",
+        "trim",
+        "vp9"
+      ]
+    },
+
+    "Seconds": { "type": "number", "minimum": 0 },
+    "Dimension": { "type": "integer", "minimum": 1, "maximum": 8192 },
+    "AudioBitrate": {
+      "description": "Bits per second, e.g. 128k",
+      "type": "string",
+      "pattern": "^[0-9]+k?$"
+    },
+
+    "CropArgs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "$ref": "#/$defs/Dimension" },
+        "height": { "$ref": "#/$defs/Dimension" },
+        "x": { "type": "integer", "minimum": 0 },
+        "y": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "FpsArgs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fps"],
+      "properties": {
+        "fps": { "type": "number", "exclusiveMinimum": 0, "maximum": 240 }
+      }
+    },
+    "FrameArgs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "time": { "$ref": "#/$defs/Seconds" },
+        "format": { "enum": ["jpeg", "png", "webp"] },
+        "quality": { "type": "integer", "minimum": 1, "maximum": 100 }
+      }
+    },
+    "H264Args": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "crf": { "type": "integer", "minimum": 0, "maximum": 51 },
+        "preset": {
+          "enum": [
+            "ultrafast",
+            "superfast",
+            "veryfast",
+            "faster",
+            "fast",
+            "medium",
+            "slow",
+            "slower",
+            "veryslow"
+          ]
+        },
+        "audioBitrate": { "$ref": "#/$defs/AudioBitrate" },
+        "faststart": { "type": "boolean" }
+      }
+    },
+    "MuteArgs": {
+      "type": "object",
+      "additionalProperties": false
+    },
+    "SaveArgs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key"],
+      "properties": {
+        "key": { "type": "string", "minLength": 1 },
+        "contentType": { "type": "string" },
+        "metadata": { "type": "object" }
+      }
+    },
+    "ScaleArgs": {
+      "type": "object",
+      "additionalProperties": false,
+      "anyOf": [{ "required": ["width"] }, { "required": ["height"] }],
+      "properties": {
+        "width": { "$ref": "#/$defs/Dimension" },
+        "height": { "$ref": "#/$defs/Dimension" },
+        "fit": { "enum": ["inside", "cover", "fill"] },
+        "withoutEnlargement": { "type": "boolean" }
+      }
+    },
+    "TrimArgs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "start": { "$ref": "#/$defs/Seconds" },
+        "duration": { "type": "number", "exclusiveMinimum": 0 },
+        "end": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "Vp9Args": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "crf": { "type": "integer", "minimum": 0, "maximum": 63 },
+        "speed": { "type": "integer", "minimum": 0, "maximum": 8 },
+        "audioBitrate": { "$ref": "#/$defs/AudioBitrate" }
+      }
+    },
+
+    "TransformOperation": {
+      "title": "TransformOperation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation", "args"],
+      "properties": {
+        "operation": { "$ref": "#/$defs/OperationName" },
+        "args": { "type": "object" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "operation": { "const": "crop" } } },
+          "then": { "properties": { "args": { "$ref": "#/$defs/CropArgs" } } }
+        },
+        {
+          "if": { "properties": { "operation": { "const": "fps" } } },
+          "then": { "properties": { "args": { "$ref": "#/$defs/FpsArgs" } } }
+        },
+        {
+          "if": { "properties": { "operation": { "const": "frame" } } },
+          "then": { "properties": { "args": { "$ref": "#/$defs/FrameArgs" } } }
+        },
+        {
+          "if": { "properties": { "operation": { "const": "h264" } } },
+          "then": { "properties": { "args": { "$ref": "#/$defs/H264Args" } } }
+        },
+        {
+          "if": { "properties": { "operation": { "const": "mute" } } },
+          "then": { "properties": { "args": { "$ref": "#/$defs/MuteArgs" } } }
+        },
+        {
+          "if": { "properties": { "operation": { "const": "save" } } },
+          "then": { "properties": { "args": { "$ref": "#/$defs/SaveArgs" } } }
+        },
+        {
+          "if": { "properties": { "operation": { "const": "scale" } } },
+          "then": { "properties": { "args": { "$ref": "#/$defs/ScaleArgs" } } }
+        },
+        {
+          "if": { "properties": { "operation": { "const": "trim" } } },
+          "then": { "properties": { "args": { "$ref": "#/$defs/TrimArgs" } } }
+        },
+        {
+          "if": { "properties": { "operation": { "const": "vp9" } } },
+          "then": { "properties": { "args": { "$ref": "#/$defs/Vp9Args" } } }
+        }
+      ]
+    },
+
+    "NestedTransformOperation": {
+      "title": "NestedTransformOperation",
+      "description": "Either a TransformOperation object or a (nested) array of nested operations.",
+      "oneOf": [
+        { "$ref": "#/$defs/TransformOperation" },
+        { "$ref": "#/$defs/NestedTransformOperationArray" }
+      ]
+    },
+
+    "NestedTransformOperationArray": {
+      "title": "NestedTransformOperationArray",
+      "type": "array",
+      "items": { "$ref": "#/$defs/NestedTransformOperation" }
+    },
+
+    "NestedTransformOperations": {
+      "title": "NestedTransformOperations",
+      "type": "array",
+      "items": { "$ref": "#/$defs/NestedTransformOperation" }
+    }
+  }
+}

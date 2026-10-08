@@ -1,0 +1,30 @@
+{
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "src",
+  "entryFile": "app",
+  "compilerOptions": {
+    "tsConfigPath": "tsconfig.build.json",
+    "deleteOutDir": true,
+    "builder": {
+      "type": "swc",
+      "options": {
+        "swcrcPath": "../../.swcrc",
+        "stripLeadingPaths": true,
+        "ignore": ["**/*.spec.ts"]
+      }
+    },
+    "assets": [
+      {
+        "include": "../config/video-transform.config.yaml",
+        "outDir": "dist",
+        "watchAssets": true
+      },
+      {
+        "include": "./schema",
+        "outDir": "dist",
+        "watchAssets": true
+      }
+    ],
+    "typeCheck": true
+  }
+}

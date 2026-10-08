@@ -45,6 +45,14 @@ export const e2e: ProfileOverrides = {
     },
   },
 
+  videoProcessor: {
+    s3: {
+      endpoint: 'http://minio:9000',
+      region: 'us-east-1',
+      forcePathStyle: true,
+    },
+  },
+
   // Host ports, chosen so the stack can share a machine with the dev stack,
   // which already owns host port 80.
   e2e: {

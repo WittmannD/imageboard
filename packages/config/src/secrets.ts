@@ -34,10 +34,16 @@ export const imageProcessorSecrets = z.object({
   S3_SECRET_ACCESS_KEY: secret,
 });
 
+export const videoProcessorSecrets = z.object({
+  S3_ACCESS_KEY_ID: secret,
+  S3_SECRET_ACCESS_KEY: secret,
+});
+
 export type ApiSecrets = z.infer<typeof apiSecrets>;
 export type IdentityProviderSecrets = z.infer<typeof identityProviderSecrets>;
 export type ClientSecrets = z.infer<typeof clientSecrets>;
 export type ImageProcessorSecrets = z.infer<typeof imageProcessorSecrets>;
+export type VideoProcessorSecrets = z.infer<typeof videoProcessorSecrets>;
 
 /** Reads the secrets `schema` declares from `env`, reporting every missing name at once. */
 export function loadSecrets<T extends z.ZodObject>(

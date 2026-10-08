@@ -65,6 +65,19 @@ services:
     volumes:
       - shared-data:/shared
 
+  video-processor:
+    image: ghcr.io/wittmannd/imageboard/video-processor:${IMAGE_TAG:-production}
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      <<: *app-env
+    env_file:
+      - .env
+    volumes:
+      - shared-data:/shared
+
   imageboard-identity-provider:
     image: ghcr.io/wittmannd/imageboard/imageboard-identity-provider:${IMAGE_TAG:-production}
     restart: unless-stopped

@@ -163,6 +163,21 @@ export const profileSchema = z.object({
     }),
   }),
 
+  /** Writes its outputs to, and reads its transform configs from, its own bucket. */
+  videoProcessor: z.object({
+    /** How long a client waits for a video-processing RPC reply before giving up. */
+    timeoutMs: positiveInt,
+    /** Jobs encoded at once; further jobs wait in the processor's queue. */
+    concurrency: positiveInt,
+    s3: z.object({
+      endpoint: url,
+      region: z.string().min(1),
+      /** Path-style addressing (http://host/bucket/key), required by MinIO. */
+      forcePathStyle: z.boolean(),
+      bucket: z.string().min(1),
+    }),
+  }),
+
   post: z.object({
     maxImagesPerPost: positiveInt,
     imageSizeLimitBytes: positiveInt,

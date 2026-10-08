@@ -1,0 +1,43 @@
+{
+  "name": "video-processor",
+  "version": "0.1.0",
+  "description": "Video processor microservice",
+  "private": true,
+  "type": "module",
+  "main": "dist/app.js",
+  "scripts": {
+    "test": "vitest run",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
+    "build": "nest build",
+    "dev": "nest start --watch",
+    "start:prod": "NODE_ENV=production node dist/main.js",
+    "debug": "nest start --debug --watch"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1079.0",
+    "@aws-sdk/lib-storage": "^3.1079.0",
+    "@aws-sdk/s3-request-presigner": "^3.1079.0",
+    "@hdotu1/config": "file:../../packages/config",
+    "@hdotu1/media-storage": "file:../../packages/media-storage",
+    "@hdotu1/redis-transport": "file:../../packages/redis-transport",
+    "@hdotu1/video-processor-contract": "file:../../packages/video-processor-contract",
+    "@hdotu1/yaml-template": "file:../../packages/yaml-template",
+    "@nestjs/common": "^11.1.2",
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/core": "^11.1.2",
+    "@nestjs/microservices": "^11.1.9",
+    "@nestjs/platform-express": "^11.1.2",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.3",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.7",
+    "@nestjs/testing": "^11.1.2",
+    "@types/js-yaml": "^4.0.9"
+  }
+}

@@ -5,7 +5,8 @@ name: Deploy
 #   - generates config.env from the <env> profile in packages/config,
 #   - builds every image with APP_ENV=<env> and pushes it to
 #     ghcr.io/<owner>/<repo>/<app>, tagged <env> and <env>-<sha>,
-#   - uploads the image-processor transform configs to the <env> bucket,
+#   - uploads the image- and video-processor transform configs to their <env>
+#     buckets,
 #   - starts docker-compose.<env>.yaml of that commit in /opt/imageboard-<env>
 #     on the server of the <env> GitHub environment.
 
@@ -73,6 +74,7 @@ jobs:
       matrix:
         app:
           - image-processor
+          - video-processor
           - imageboard-api
           - imageboard-identity-provider
           - imageboard-client
@@ -128,8 +130,8 @@ jobs:
           cache-from: type=gha,scope=${{ inputs.environment }}-${{ matrix.app }}
           cache-to: type=gha,mode=max,scope=${{ inputs.environment }}-${{ matrix.app }}
 
-  # The image-processor reads its transform configs from the image bucket,
-  # so they are in place before the new image-processor starts.
+  # The image- and video-processor read their transform configs from their
+  # buckets, so they are in place before the new processors start.
   upload-transform-configs:
     runs-on: ubuntu-latest
     environment:
